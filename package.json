@@ -1,0 +1,46 @@
+{
+	"name": "titanium-sdk",
+	"description": "Appcelerator Titanium SDK Library",
+	"keywords": [
+		"appcelerator",
+		"titanium",
+		"mobile"
+	],
+	"version": "0.1.0",
+	"author": {
+		"name": "Appcelerator, Inc.",
+		"email": "info@appcelerator.com"
+	},
+	"maintainers": [
+		{"name": "Chris Barber", "email": "cbarber@appcelerator.com"}
+	],
+	"license": "Apache Public License v2",
+	"main": "./lib/titanium",
+	"directories": {
+		"lib": "./lib"
+	},
+	"dependencies": {
+		"async": "^2.3.0",
+		"node-appc": "^0.2.43",
+		"stream-splitter": "~0.3.2",
+		"uglify-js": "^2.8.21",
+		"unorm": "^1.4.1",
+		"wrench": "^1.5.9",
+		"xmldom": "0.1.22"
+	},
+	"devDependencies": {
+		"mocha": "*",
+		"mocha-jenkins-reporter": "0.3.7",
+		"should": "~7.1.1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/appcelerator/titanium-sdk.git"
+	},
+	"engines": {
+		"node": ">=0.6.6"
+	},
+	"scripts": {
+		"test": "JUNIT_REPORT_PATH=junit_report.xml mocha --require tests/init --reporter mocha-jenkins-reporter --check-leaks tests/test-tiappxml.js"
+	}
+}
