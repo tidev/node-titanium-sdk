@@ -1,5 +1,5 @@
 {
-	"name": "titanium-sdk",
+	"name": "node-titanium-sdk",
 	"description": "Appcelerator Titanium SDK Library",
 	"keywords": [
 		"appcelerator",
@@ -12,7 +12,8 @@
 		"email": "info@appcelerator.com"
 	},
 	"maintainers": [
-		{"name": "Chris Barber", "email": "cbarber@appcelerator.com"}
+		{"name": "Chris Barber", "email": "cbarber@appcelerator.com"},
+		{"name": "Chris Williams", "email": "cwilliams@appcelerator.com"}
 	],
 	"license": "Apache Public License v2",
 	"main": "./lib/titanium",
@@ -35,7 +36,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/appcelerator/titanium-sdk.git"
+		"url": "git://github.com/appcelerator/node-titanium-sdk.git"
 	},
 	"engines": {
 		"node": ">=0.6.6"
