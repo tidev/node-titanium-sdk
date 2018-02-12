@@ -6,7 +6,7 @@
 		"titanium",
 		"mobile"
 	],
-	"version": "0.4.8",
+	"version": "0.4.9",
 	"author": {
 		"name": "Appcelerator, Inc.",
 		"email": "info@appcelerator.com"
@@ -36,7 +36,7 @@
 		"babylon": "^7.0.0-beta.40",
 		"node-appc": "^0.2.43",
 		"regenerator-runtime": "^0.11.1",
-		"rollup": "^0.55.4",
+		"rollup": "^0.55.5",
 		"rollup-plugin-resolver": "^1.0.0",
 		"stream-splitter": "~0.3.2",
 		"unorm": "^1.4.1",
