@@ -1,17 +1,21 @@
-var spawn = require('child_process').spawn,
-	exitCode = 0,
+'use strict';
+
+const spawn = require('child_process').spawn, // eslint-disable-line security/detect-child-process
 	tests = [
-		'test-tiappxml.js'
+		'jsanalyze_test.js',
+		'tiappxml_test.js'
 	];
+
+let exitCode = 0;
 
 (function next() {
 	if (tests.length === 0) {
 		process.exit(exitCode);
 	}
-	
+
 	var file = tests.shift();
 	console.log(file);
-	
+
 	var proc = spawn('node', [ 'tests/' + file ]);
 	proc.stdout.pipe(process.stdout);
 	proc.stderr.pipe(process.stderr);
