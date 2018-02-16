@@ -6,7 +6,7 @@
 		"titanium",
 		"mobile"
 	],
-	"version": "0.4.8",
+	"version": "0.4.9",
 	"author": {
 		"name": "Appcelerator, Inc.",
 		"email": "info@appcelerator.com"
@@ -53,6 +53,6 @@
 		"node": ">=0.6.6"
 	},
 	"scripts": {
-		"test": "JUNIT_REPORT_PATH=junit_report.xml mocha --require tests/init --reporter mocha-jenkins-reporter --check-leaks tests/test-tiappxml.js"
+		"test": "JUNIT_REPORT_PATH=junit_report.xml mocha --require tests/init --reporter mocha-jenkins-reporter --check-leaks tests/*_test.js"
 	}
 }
