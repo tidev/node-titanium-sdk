@@ -6,7 +6,7 @@
 		"titanium",
 		"mobile"
 	],
-	"version": "0.4.11",
+	"version": "0.4.12",
 	"author": {
 		"name": "Appcelerator, Inc.",
 		"email": "info@appcelerator.com"
@@ -33,6 +33,7 @@
 		"babel-preset-env": "^1.7.0",
 		"babel-traverse": "^6.25.0",
 		"babel-types": "^6.25.0",
+		"babel-polyfill": "^6.26.0",
 		"babylon": "^6.17.4",
 		"css-parse": "^2.0.0",
 		"node-appc": "^0.2.47",
