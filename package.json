@@ -29,7 +29,7 @@
 	"dependencies": {
 		"async": "^2.4.1",
 		"babel-core": "^6.26.0",
-		"babel-preset-babili": "^0.1.4",
+		"babel-preset-minify": "^0.4.3",
 		"babel-preset-env": "^1.6.1",
 		"babel-traverse": "^6.26.0",
 		"babel-types": "^6.26.0",
