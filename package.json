@@ -6,7 +6,7 @@
 		"titanium",
 		"mobile"
 	],
-	"version": "0.4.11",
+	"version": "0.4.12",
 	"author": {
 		"name": "Appcelerator, Inc.",
 		"email": "info@appcelerator.com"
@@ -28,11 +28,12 @@
 	},
 	"dependencies": {
 		"async": "^2.4.1",
-		"babel-core": "^6.25.0",
+		"babel-core": "^6.26.0",
 		"babel-preset-babili": "^0.1.4",
 		"babel-preset-env": "^1.6.1",
-		"babel-traverse": "^6.25.0",
-		"babel-types": "^6.25.0",
+		"babel-traverse": "^6.26.0",
+		"babel-types": "^6.26.0",
+		"babel-polyfill": "^6.26.0",
 		"babylon": "^6.17.4",
 		"node-appc": "^0.2.43",
 		"stream-splitter": "~0.3.2",
