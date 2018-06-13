@@ -4,22 +4,22 @@ function MockConfig() {
 	};
 }
 
-var config = new MockConfig,
+var config = new MockConfig(),
 	ADB = require('../lib/adb'),
 	adb = new ADB(config);
 
-//testVersion();
-//testDevices();
-//testTrackDevices();
-//testShell();
-//testStartApp();
-//testStopApp();
-//testStopApp2();
-//testInstallApp();
-//testGetPid();
-//testForward();
-//testPull();
-//testPush();
+// testVersion();
+// testDevices();
+// testTrackDevices();
+// testShell();
+// testStartApp();
+// testStopApp();
+// testStopApp2();
+// testInstallApp();
+// testGetPid();
+// testForward();
+// testPull();
+// testPush();
 
 function testVersion() {
 	adb.version(function (err, ver) {

@@ -7,39 +7,39 @@ function MockConfig() {
 	};
 }
 
-var config = new MockConfig,
-	emulator = new (require('../lib/emulator'))(config);
+var config = new MockConfig(),
+	emulator = new(require('../lib/emulator'))(config);
 
 /*
  * uncomment a function below to test
  */
 
-//testDetectAny();
-//testDetectAvd();
-//testDetectGenymotion();
-//testDetectGenymotion2();
+// testDetectAny();
+// testDetectAvd();
+// testDetectGenymotion();
+// testDetectGenymotion2();
 
-//testIsRunning('titanium_10_HVGA_armeabi-v7a');
-//testIsRunning('titanium_10_HVGA_x86');
-//testIsRunning('Nexus 7 - 4.2.2 - with Google Apps - API 17 - 1280x800');
-//testIsRunning('Nexus S - 4.2.2 - with Google Apps - API 17 - 480x800');
-//testIsRunning('foo');
+// testIsRunning('titanium_10_HVGA_armeabi-v7a');
+// testIsRunning('titanium_10_HVGA_x86');
+// testIsRunning('Nexus 7 - 4.2.2 - with Google Apps - API 17 - 1280x800');
+// testIsRunning('Nexus S - 4.2.2 - with Google Apps - API 17 - 480x800');
+// testIsRunning('foo');
 
-//testIsEmulator('emulator-5554');
-//testIsEmulator('192.168.56.101:5555');
-//testIsEmulator('foo');
+// testIsEmulator('emulator-5554');
+// testIsEmulator('192.168.56.101:5555');
+// testIsEmulator('foo');
 
-//testStart('titanium_10_HVGA_x86');
-//testStart('titanium_1_HVGA_armeabi');
-//testStart('titanium_10_HVGA_armeabi-v7a');
-//testStart('Nexus 7 - 4.2.2 - with Google Apps - API 17 - 1280x800');
-//testStart('Nexus S - 4.2.2 - with Google Apps - API 17 - 480x800');
-//testStart('foo');
+// testStart('titanium_10_HVGA_x86');
+// testStart('titanium_1_HVGA_armeabi');
+// testStart('titanium_10_HVGA_armeabi-v7a');
+// testStart('Nexus 7 - 4.2.2 - with Google Apps - API 17 - 1280x800');
+// testStart('Nexus S - 4.2.2 - with Google Apps - API 17 - 480x800');
+// testStart('foo');
 
-//testStop('titanium_10_HVGA_armeabi-v7a');
-//testStop('Nexus 7 - 4.2.2 - with Google Apps - API 17 - 1280x800');
-//testStop('Nexus S - 4.2.2 - with Google Apps - API 17 - 480x800');
-//testStop('foo');
+// testStop('titanium_10_HVGA_armeabi-v7a');
+// testStop('Nexus 7 - 4.2.2 - with Google Apps - API 17 - 1280x800');
+// testStop('Nexus S - 4.2.2 - with Google Apps - API 17 - 480x800');
+// testStop('foo');
 
 function testDetectAny() {
 	emulator.detect(function (err, avds) {
