@@ -38,12 +38,12 @@
 		"stream-splitter": "~0.3.2",
 		"unorm": "^1.4.1",
 		"wrench": "^1.5.9",
-		"xmldom": "0.1.22"
+		"xmldom": "0.1.27"
 	},
 	"devDependencies": {
 		"mocha": "*",
-		"mocha-jenkins-reporter": "0.3.8",
-		"should": "~11.2.1"
+		"mocha-jenkins-reporter": "0.3.12",
+		"should": "~13.2.1"
 	},
 	"repository": {
 		"type": "git",
