@@ -1,4 +1,6 @@
-var ti = require('../lib/titanium'),
+const should = require('should'); // eslint-disable-line no-unused-vars
+
+const ti = require('../lib/titanium'),
 	fs = require('fs'),
 	path = require('path');
 

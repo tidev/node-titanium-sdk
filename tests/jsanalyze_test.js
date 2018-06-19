@@ -1,5 +1,6 @@
 'use strict';
 
+const should = require('should'); // eslint-disable-line no-unused-vars
 const jsanalyze = require('../lib/jsanalyze');
 
 describe('jsanalyze', function () {
