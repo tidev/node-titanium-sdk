@@ -1,3 +1,4 @@
+/* eslint no-unused-expressions: "off" */
 'use strict';
 
 function MockConfig() {
@@ -29,106 +30,84 @@ const emulator = new Emulator(config);
 describe('emulator', function () {
 	it('#detect() any', function (finished) {
 		emulator.detect(function (err, avds) {
-			console.log(avds);
+			avds.should.be.an.Array;
 			finished(err);
 		});
 	});
 
 	it('#detect() type: avd', function (finished) {
 		emulator.detect({ type: 'avd' }, function (err, avds) {
-			console.log(avds);
+			avds.should.be.an.Array;
 			finished(err);
 		});
 	});
 
 	it('#detect() type: genymotion', function (finished) {
 		emulator.detect({ type: 'genymotion' }, function (err, avds) {
-			console.log(avds);
+			avds.should.be.an.Array;
 			finished(err);
 		});
 	});
 
-	function testDetectGenymotion2() {
-		require('../lib/emulators/genymotion').detect(config, {}, function (err, results) {
-			if (err) {
-				console.error('ERROR! ' + err);
-			} else {
-				console.log(results);
-			}
-		});
-	}
+	describe('lifecycle', function () {
+		let avd;
 
-	it('#isRunning()', function (finished) {
-		emulator.isRunning(name, function (err, emu) {
-			if (err) {
-				console.error('ERROR! ' + err + '\n');
-			} else {
-				if (emu) {
-					console.log('Emulator "' + name + '" is running!\n');
-					console.log(emu);
-				} else {
-					console.log('Emulator "' + name + '" is not running');
+		before(function (finished) {
+			emulator.detect(function (err, avds) {
+				if (err) {
+					return finished(err);
 				}
-				console.log();
-			}
-			finished(err);
+				if (avds.length === 0) {
+					return finished(new Error('Tests require at least one emulator defined!'));
+				}
+				avd = avds[0];
+				finished();
+			});
 		});
-	});
 
-	it('#isEmulator()', function (finished) {
-		const name = 'emulator-5554';
-		emulator.isEmulator(name, function (err, emu) {
-			if (err) {
-				console.error('ERROR! ' + err + '\n');
-			} else {
-				console.log(name, !!emu);
-				console.log(emu);
-				console.log();
-			}
-			finished(err);
+		it('#isRunning() returns null object when not running', function (finished) {
+			emulator.isRunning(avd.name, function (err, emu) {
+				should(emu).not.be.ok;
+
+				finished(err);
+			});
 		});
-	});
 
-	it('#start()', function (finished) {
-		const name = 'emulator-5554';
-		emulator.start(name, function (err, emulator) {
-			if (err) {
-				console.error(err + '\n');
-			} else {
-				console.log('emulator booting\n');
+		// FIXME: This test isn't right. I think it will only pass when the emulator is running and we pass in the id (that has port in the value)?
+		// it('#isEmulator() returns matching emulator?', function (finished) {
+		// 	emulator.isEmulator(avd.name, function (err, emu) {
+		// 		emu.should.be.ok;
+		// 		finished(err);
+		// 	});
+		// });
 
-				emulator.on('booted', function (device) {
-					console.log('booted!\n');
-					console.log(device);
-					console.log('\n');
+		it('#start(), #isRunning() and #stop()', function (finished) {
+			this.timeout(30000);
+
+			emulator.start(avd.name, function (err, emu) {
+				if (err) {
+					return finished(err);
+				}
+
+				emu.should.be.ok;
+
+				emu.on('ready', function (device) {
+					device.should.be.ok;
+
+					emulator.isRunning(device.emulator.id, function (err, emu) {
+						emu.should.be.ok;
+
+						emulator.stop(device.emulator.id, function (errOrCode) {
+							errOrCode.should.eql(0);
+							finished();
+						});
+					});
 				});
 
-				emulator.on('ready', function (device) {
-					console.log('ready!\n');
-					console.log(device);
-					console.log('\n');
-					finished();
+				emu.on('timeout', function () {
+					finished(new Error('emulator.start() timed out'));
 				});
-
-				emulator.on('timeout', function () {
-					console.log('timeout!\n');
-				});
-
-				console.log(emulator);
-				console.log();
-			}
-		});
-	});
-
-	it('#start()', function (finished) {
-		const name = 'emulator-5554';
-		emulator.stop(name, function (err) {
-			if (err) {
-				console.error(err + '\n');
-			} else {
-				console.log('emulator stopping\n');
-			}
-			finished(err);
+			});
 		});
 	});
 });
