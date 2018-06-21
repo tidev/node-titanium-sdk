@@ -39,7 +39,7 @@ describe('adb', function () {
 			if (err) {
 				return finished(err);
 			}
-			ver.should.eql('1.0.39');
+			ver.should.eql('1.0.39'); // FIXME: Occasionally this will return '1.0.NaN'!
 			finished();
 		});
 	});
@@ -106,9 +106,10 @@ describe('adb', function () {
 		});
 
 		after(function (finished) {
+			this.timeout(35000);
 			emulator.stop(device.emulator.id, function (errOrCode) {
 				errOrCode.should.eql(0);
-				finished();
+				setTimeout(finished, 5000); // let it wait 5 seconds or else adb will still report it as connected
 			});
 		});
 

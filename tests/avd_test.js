@@ -11,6 +11,7 @@ function MockConfig() {
 }
 
 const should = require('should'); // eslint-disable-line no-unused-vars
+
 const config = new MockConfig();
 const Emulator = require('../lib/emulator');
 const android = require('../lib/android');
@@ -99,7 +100,7 @@ describe('emulator', function () {
 
 						emulator.stop(device.emulator.id, function (errOrCode) {
 							errOrCode.should.eql(0);
-							finished();
+							finished(); // TODO wait 5 seconds here or else future start call that quickly follows will get messed up!. See adb_test
 						});
 					});
 				});
