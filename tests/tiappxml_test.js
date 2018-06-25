@@ -1,4 +1,6 @@
-var ti = require('../lib/titanium'),
+const should = require('should'); // eslint-disable-line no-unused-vars
+
+const ti = require('../lib/titanium'),
 	fs = require('fs'),
 	path = require('path');
 
@@ -79,23 +81,23 @@ describe('tiappxml', function () {
 }());
 */
 
-it('tiapp2.xml', function () {
-	var xmlPath = path.join(__dirname, 'resources', 'tiapp2.xml'),
-		xml = fs.readFileSync(xmlPath).toString(),
-		tiapp = new ti.tiappxml(xmlPath);
+	it('tiapp2.xml', function () {
+		var xmlPath = path.join(__dirname, 'resources', 'tiapp2.xml'),
+			xml = fs.readFileSync(xmlPath).toString(),
+			tiapp = new ti.tiappxml(xmlPath);
 
-	tiapp.toString().should.eql('[object Object]');
-	(tiapp.toString('json')+'\n').should.eql(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.json')).toString());
-	(tiapp.toString('pretty-json') + '\n').should.eql(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.pretty.json')).toString());
-	// have to ignore newlines, since thye can differ in OS-style
-	(tiapp.toString('xml').replace(/(\r\n|\n|\r)/gm, '')).should.eql(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.xml')).toString().replace(/(\r\n|\n|\r)/gm, ''));
-});
+		tiapp.toString().should.eql('[object Object]');
+		(tiapp.toString('json') + '\n').should.eql(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.json')).toString());
+		(tiapp.toString('pretty-json') + '\n').should.eql(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.pretty.json')).toString());
+		// have to ignore newlines, since thye can differ in OS-style
+		(tiapp.toString('xml').replace(/(\r\n|\n|\r)/gm, '')).should.eql(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.xml')).toString().replace(/(\r\n|\n|\r)/gm, ''));
+	});
 
-it('tiapp4.xml', function () {
-	var tiapp = new ti.tiappxml(path.join(__dirname, '/resources/tiapp4.xml'));
-	tiapp.id.should.eql('ti.testapp');
-	tiapp.windows.id.should.eql('com.windows.example');
-});
+	it('tiapp4.xml', function () {
+		var tiapp = new ti.tiappxml(path.join(__dirname, '/resources/tiapp4.xml'));
+		tiapp.id.should.eql('ti.testapp');
+		tiapp.windows.id.should.eql('com.windows.example');
+	});
 
 /*
 (function () {

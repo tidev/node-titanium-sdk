@@ -21,7 +21,7 @@
 			"email": "cwilliams@appcelerator.com"
 		}
 	],
-	"license": "Apache Public License v2",
+	"license": "Apache-2.0",
 	"main": "./lib/titanium",
 	"directories": {
 		"lib": "./lib"
@@ -30,11 +30,12 @@
 		"async": "^2.4.1",
 		"babel-core": "^6.26.3",
 		"babel-polyfill": "^6.26.0",
-		"babel-preset-minify": "^0.4.3",
 		"babel-preset-env": "^1.7.0",
+		"babel-preset-minify": "^0.4.3",
 		"babel-traverse": "^6.26.0",
 		"babel-types": "^6.26.0",
 		"babylon": "^6.17.4",
+		"colors": "^1.3.0",
 		"css-parse": "^2.0.0",
 		"node-appc": "^0.2.47",
 		"node-uuid": "^1.4.8",
@@ -44,9 +45,15 @@
 		"xmldom": "0.1.27"
 	},
 	"devDependencies": {
-		"mocha": "*",
-		"mocha-jenkins-reporter": "^0.3.7",
-		"should": "~13.2.1"
+		"eslint-plugin-mocha": "^5.0.0",
+		"grunt": "^1.0.3",
+		"grunt-appc-js": "^2.1.0",
+		"grunt-cli": "^1.2.0",
+		"grunt-mocha-istanbul": "^5.0.2",
+		"istanbul": "^0.4.5",
+		"mocha": "^5.2.0",
+		"mocha-jenkins-reporter": "0.3.7",
+		"should": "^13.2.1"
 	},
 	"repository": {
 		"type": "git",
@@ -56,6 +63,6 @@
 		"node": ">=0.6.6"
 	},
 	"scripts": {
-		"test": "JUNIT_REPORT_PATH=junit_report.xml mocha --require tests/init --reporter mocha-jenkins-reporter --check-leaks tests/*_test.js"
+		"test": "JUNIT_REPORT_PATH=junit_report.xml grunt"
 	}
 }
