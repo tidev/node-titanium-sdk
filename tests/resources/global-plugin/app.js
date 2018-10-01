@@ -1,6 +1,7 @@
 function foobar() {
 	var x = 'bar';
 }
+global.aGlobalVar = 'foobar';
 const foo = () => {};
 let win = Ti.UI.createWindow({
 	backgroundColor: 'white'

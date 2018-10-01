@@ -2,6 +2,7 @@ function foobar() {
 	var x = 'bar';
 }
 global.foobar = foobar;
+global.aGlobalVar = 'foobar';
 const foo = () => {};
 global.foo = foo;
 let win = Ti.UI.createWindow({
