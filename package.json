@@ -6,7 +6,7 @@
 		"titanium",
 		"mobile"
 	],
-	"version": "0.6.3",
+	"version": "0.6.4",
 	"author": {
 		"name": "Appcelerator, Inc.",
 		"email": "info@appcelerator.com"
@@ -45,6 +45,7 @@
 		"xmldom": "0.1.27"
 	},
 	"devDependencies": {
+		"babel-plugin-tester": "^5.5.1",
 		"eslint-plugin-mocha": "^5.0.0",
 		"grunt": "^1.0.3",
 		"grunt-appc-js": "^2.1.0",
@@ -53,6 +54,7 @@
 		"istanbul": "^0.4.5",
 		"mocha": "^5.2.0",
 		"mocha-jenkins-reporter": "0.3.7",
+		"semver": "^5.5.1",
 		"should": "^13.2.1"
 	},
 	"repository": {
