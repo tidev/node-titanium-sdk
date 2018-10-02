@@ -54,6 +54,7 @@
 		"istanbul": "^0.4.5",
 		"mocha": "^5.2.0",
 		"mocha-jenkins-reporter": "0.3.7",
+		"semver": "^5.5.1",
 		"should": "^13.2.1"
 	},
 	"repository": {

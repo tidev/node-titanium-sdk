@@ -9,9 +9,8 @@ function MockConfig() {
 
 const fs = require('fs');
 const path = require('path');
-
+const semver = require('semver');
 const should = require('should'); // eslint-disable-line no-unused-vars
-
 const android = require('../lib/android');
 android.androidPackageJson({
 	vendorDependencies: {
@@ -34,12 +33,12 @@ const emulator = new Emulator(config);
 
 describe('adb', function () {
 
-	it('#version() returns 1.0.39', function (finished) {
+	it('#version() returns a valid semver string', function (finished) {
 		adb.version(function (err, ver) {
 			if (err) {
 				return finished(err);
 			}
-			ver.should.eql('1.0.39'); // FIXME: Occasionally this will return '1.0.NaN'!
+			should(semver.valid(ver)).not.be.null();
 			finished();
 		});
 	});
