@@ -8,7 +8,8 @@ module.exports = function (grunt) {
 			src: [
 				'Gruntfile.js',
 				'lib/**/*.js',
-				'tests/**/*.js'
+				'tests/**/*.js',
+				'!tests/resources/**'
 			]
 		},
 		mocha_istanbul: {

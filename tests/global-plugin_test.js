@@ -1,8 +1,10 @@
 const path = require('path');
+const babel = require('@babel/core');
 const pluginTester = require('babel-plugin-tester');
 const plugin = require('../lib/babel-plugins/global-scope');
 
 pluginTester({
+	babel,
 	plugin,
 	tests: {
 		'exposes declerations as global variables': {
