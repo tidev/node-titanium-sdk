@@ -87,7 +87,7 @@ describe('adb', function () {
 				}
 				avd = avds[0];
 
-				emulator.start(avd.name, function (err, emu) {
+				emulator.start(avd.id, function (err, emu) {
 					if (err) {
 						return finished(err);
 					}
