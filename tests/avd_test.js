@@ -67,7 +67,7 @@ describe('emulator', function () {
 		});
 
 		it('#isRunning() returns null object when not running', function (finished) {
-			emulator.isRunning(avd.name, function (err, emu) {
+			emulator.isRunning(avd.id, function (err, emu) {
 				should(emu).not.be.ok;
 
 				finished(err);
@@ -85,7 +85,7 @@ describe('emulator', function () {
 		it('#start(), #isRunning() and #stop()', function (finished) {
 			this.timeout(30000);
 
-			emulator.start(avd.name, function (err, emu) {
+			emulator.start(avd.id, function (err, emu) {
 				if (err) {
 					return finished(err);
 				}
