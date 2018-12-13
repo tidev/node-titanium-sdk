@@ -1,0 +1,19 @@
+{
+  "extends": [ "axway/env-node", "axway/+mocha"],
+  "parserOptions": {
+    "ecmaVersion": 2015,
+    "sourceType": "script"
+  },
+  "rules": {
+    "no-implicit-globals": "off"
+  },
+  "overrides": [
+    {
+      "files": [ "dangerfile.js" ],
+      "parserOptions": {
+        "ecmaVersion": 2017,
+        "sourceType": "module"
+      },
+    },
+  ]
+}
