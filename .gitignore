@@ -2,4 +2,4 @@ junit_report.xml
 node_modules/
 .DS_Store
 coverage/
-retirejs.output.json
+.nyc_output/
