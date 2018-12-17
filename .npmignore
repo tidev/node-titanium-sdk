@@ -3,5 +3,9 @@ Jenkinsfile
 yarn.lock
 junit_report.xml
 coverage/
-retirejs.output.json
-Gruntfile.js
+.nyc_output/
+dangerfile.js
+Jenkinsfile
+.eslintrc
+.eslintignore
+.gitignore
