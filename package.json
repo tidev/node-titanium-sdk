@@ -52,7 +52,7 @@
 		"babel-plugin-tester": "^5.5.1",
 		"danger": "^6.1.12",
 		"eslint": "^5.10.0",
-		"eslint-config-axway": "^4.1.1",
+		"eslint-config-axway": "^4.2.1",
 		"eslint-plugin-mocha": "^5.2.0",
 		"husky": "^1.2.0",
 		"lint-staged": "^8.1.0",
