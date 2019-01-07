@@ -23,17 +23,17 @@ describe('jsanalyze', function () {
 
 		it('converts global "this" references into "global" references when transpiling', function () {
 			const results = jsanalyze.analyzeJs('this.myGlobalMethod = function() {};', { transpile: true });
-			results.contents.should.eql('"use strict";global.myGlobalMethod = function () {};');
+			results.contents.should.eql('global.myGlobalMethod = function () {};');
 		});
 
 		it('doesn\'t converts function-scoped "this" references into "global" references when transpiling', function () {
 			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };', { transpile: true });
-			results.contents.should.eql('"use strict";var myGlobalMethod = function myGlobalMethod() {return this;};');
+			results.contents.should.eql('var myGlobalMethod = function myGlobalMethod() {return this;};');
 		});
 
 		it('handles polyfilling implicitly under the hood', function () {
 			const results = jsanalyze.analyzeJs('const result = Array.from(1, 2, 3);', { transpile: true, resourcesDir: tmpDir });
-			results.contents.should.eql('"use strict";require("core-js/modules/es6.string.iterator");require("core-js/modules/es6.array.from");var result = Array.from(1, 2, 3);');
+			results.contents.should.eql('require("core-js/modules/es6.string.iterator");require("core-js/modules/es6.array.from");var result = Array.from(1, 2, 3);');
 			// Verify that core-js, @babel/polyfill, regenerator-runtime are copied over!
 			fs.existsSync(path.join(tmpDir, 'node_modules', '@babel', 'polyfill')).should.eql.true;
 			fs.existsSync(path.join(tmpDir, 'node_modules', '@babel', 'polyfill', 'node_modules', 'core-js')).should.eql.false;
