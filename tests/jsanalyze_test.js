@@ -40,5 +40,11 @@ describe('jsanalyze', function () {
 			fs.existsSync(path.join(tmpDir, 'node_modules', 'core-js')).should.eql.true;
 			fs.existsSync(path.join(tmpDir, 'node_modules', 'regenerator-runtime')).should.eql.true;
 		});
+
+		it('does not inject web polyfills', function () {
+			const results = jsanalyze.analyzeJs('Object.getOwnPropertyNames({}).forEach(function (name) {properties[name] = this[name];});', { transpile: true, targets: { ios: 8 }, resourcesDir: tmpDir });
+			// DOES NOT CONTAIN require of web.dom.iterable!
+			results.contents.should.eql('Object.getOwnPropertyNames({}).forEach(function (name) {properties[name] = this[name];});');
+		});
 	});
 });
