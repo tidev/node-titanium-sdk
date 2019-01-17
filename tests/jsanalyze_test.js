@@ -32,6 +32,8 @@ describe('jsanalyze', function () {
 		});
 
 		it('handles polyfilling implicitly under the hood', function () {
+			this.timeout(5000);
+			this.slow(2000);
 			const results = jsanalyze.analyzeJs('const result = Array.from(1, 2, 3);', { transpile: true, resourcesDir: tmpDir });
 			results.contents.should.eql('require("core-js/modules/es6.string.iterator");require("core-js/modules/es6.array.from");var result = Array.from(1, 2, 3);');
 			// Verify that core-js, @babel/polyfill, regenerator-runtime are copied over!
