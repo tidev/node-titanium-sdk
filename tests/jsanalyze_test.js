@@ -21,6 +21,11 @@ describe('jsanalyze', function () {
 			fs.remove(tmpDir, finish);
 		});
 
+		it('tracks Ti API symbols', function () {
+			const results = jsanalyze.analyzeJs('Ti.API.info("yeah");', {});
+			results.symbols.should.eql([ 'API.info', 'API' ]);
+		});
+
 		it('converts global "this" references into "global" references when transpiling', function () {
 			const results = jsanalyze.analyzeJs('this.myGlobalMethod = function() {};', { transpile: true });
 			results.contents.should.eql('global.myGlobalMethod = function () {};');
