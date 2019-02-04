@@ -26,6 +26,18 @@ describe('jsanalyze', function () {
 			results.symbols.should.eql([ 'API.info', 'API' ]);
 		});
 
+		it('tracks Ti API usage across multiple calls', function () {
+			const results = jsanalyze.analyzeJs('Ti.UI.createView({});', {});
+			results.symbols.should.eql([ 'UI.createView', 'UI' ]); // symbols only includes from this call
+			// includes symbols from this test and the one above!
+			jsanalyze.getAPIUsage().should.eql({
+				'Titanium.API.info': 1,
+				'Titanium.API': 1,
+				'Titanium.UI.createView': 1,
+				'Titanium.UI': 1
+			});
+		});
+
 		it('converts global "this" references into "global" references when transpiling', function () {
 			const results = jsanalyze.analyzeJs('this.myGlobalMethod = function() {};', { transpile: true });
 			results.contents.should.eql('global.myGlobalMethod = function () {};');
