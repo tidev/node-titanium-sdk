@@ -38,6 +38,7 @@ describe('adb', function () {
 			if (err) {
 				return finished(err);
 			}
+			ver.should.match(/^1\.0\.\d+/);
 			should(semver.valid(ver)).not.be.null();
 			finished();
 		});
