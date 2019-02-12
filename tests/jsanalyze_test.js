@@ -47,23 +47,5 @@ describe('jsanalyze', function () {
 			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };', { transpile: true });
 			results.contents.should.eql('var myGlobalMethod = function myGlobalMethod() {return this;};');
 		});
-
-		it('handles polyfilling implicitly under the hood', function () {
-			this.timeout(5000);
-			this.slow(2000);
-			const results = jsanalyze.analyzeJs('const result = Array.from(1, 2, 3);', { transpile: true, resourcesDir: tmpDir });
-			results.contents.should.eql('require("core-js/modules/es6.string.iterator");require("core-js/modules/es6.array.from");var result = Array.from(1, 2, 3);');
-			// Verify that core-js, @babel/polyfill, regenerator-runtime are copied over!
-			fs.existsSync(path.join(tmpDir, 'node_modules', '@babel', 'polyfill')).should.eql.true;
-			fs.existsSync(path.join(tmpDir, 'node_modules', '@babel', 'polyfill', 'node_modules', 'core-js')).should.eql.false;
-			fs.existsSync(path.join(tmpDir, 'node_modules', 'core-js')).should.eql.true;
-			fs.existsSync(path.join(tmpDir, 'node_modules', 'regenerator-runtime')).should.eql.true;
-		});
-
-		it('does not inject web polyfills', function () {
-			const results = jsanalyze.analyzeJs('Object.getOwnPropertyNames({}).forEach(function (name) {properties[name] = this[name];});', { transpile: true, targets: { ios: 8 }, resourcesDir: tmpDir });
-			// DOES NOT CONTAIN require of web.dom.iterable!
-			results.contents.should.eql('Object.getOwnPropertyNames({}).forEach(function (name) {properties[name] = this[name];});');
-		});
 	});
 });
