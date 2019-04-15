@@ -44,7 +44,7 @@
 	"devDependencies": {
 		"@seadub/danger-plugin-dependencies": "0.1.0",
 		"@seadub/danger-plugin-eslint": "^1.0.0",
-		"@seadub/danger-plugin-junit": "0.1.0",
+		"@seadub/danger-plugin-junit": "0.1.1",
 		"babel-plugin-tester": "^6.0.1",
 		"danger": "^7.1.2",
 		"eslint": "^5.16.0",
