@@ -28,7 +28,7 @@
 	},
 	"dependencies": {
 		"@babel/core": "^7.4.5",
-		"@babel/parser": "^7.0.0",
+		"@babel/parser": "^7.4.5",
 		"@babel/plugin-transform-property-literals": "^7.0.0",
 		"@babel/preset-env": "^7.4.3",
 		"async": "^2.6.2",
