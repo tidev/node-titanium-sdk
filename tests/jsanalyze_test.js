@@ -64,7 +64,7 @@ describe('jsanalyze', function () {
 						dest: outputJSFile,
 						filename: 'input.js'
 					});
-				results.contents.should.eql('var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=output.js.map');
+				results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceURL=file://input.js\n//# sourceMappingURL=file://${__dirname}/output.js.map\n`);
 				fs.pathExistsSync(mapFile).should.eql(true);
 				const sourceMap = fs.readJsonSync(mapFile);
 				sourceMap.file.should.eql(outputJSFile);
