@@ -54,25 +54,15 @@ describe('jsanalyze', function () {
 		});
 
 		it('generates source maps alongside js file', function () {
-			const mapFile = path.join(__dirname, 'output.js.map');
 			const outputJSFile = path.join(__dirname, 'output.js');
-			try {
-				const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };',
-					{
-						transpile: true,
-						sourceMap: true,
-						dest: outputJSFile,
-						filename: 'input.js'
-					});
-				results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceURL=file://input.js\n//# sourceMappingURL=file://${__dirname}/output.js.map\n`);
-				fs.pathExistsSync(mapFile).should.eql(true);
-				const sourceMap = fs.readJsonSync(mapFile);
-				sourceMap.file.should.eql(outputJSFile);
-				sourceMap.sources.should.be.an.Array;
-				sourceMap.sources[0].should.eql('input.js');
-			} finally {
-				fs.removeSync(mapFile);
-			}
+			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };',
+				{
+					transpile: true,
+					sourceMap: true,
+					dest: outputJSFile,
+					filename: 'input.js'
+				});
+			results.contents.should.eql('var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceURL=file://input.js\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQUcsU0FBakJBLGNBQWlCLEdBQVcsQ0FBRSxPQUFPLElBQVAsQ0FBYyxDQUFoRCIsInNvdXJjZXNDb250ZW50IjpbInZhciBteUdsb2JhbE1ldGhvZCA9IGZ1bmN0aW9uKCkgeyByZXR1cm4gdGhpczsgfTsiXX0=\n');
 		});
 
 	});
