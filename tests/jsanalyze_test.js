@@ -53,16 +53,36 @@ describe('jsanalyze', function () {
 			results.contents.should.eql('function asyncGeneratorStep(gen,resolve,reject,_next,_throw,key,arg){try{var info=gen[key](arg),value=info.value}catch(error){return void reject(error)}info.done?resolve(value):Promise.resolve(value).then(_next,_throw)}function _asyncToGenerator(fn){return function(){var self=this,args=arguments;return new Promise(function(resolve,reject){function _next(value){asyncGeneratorStep(gen,resolve,reject,_next,_throw,"next",value)}function _throw(err){asyncGeneratorStep(gen,resolve,reject,_next,_throw,"throw",err)}var gen=fn.apply(self,args);_next(void 0)})}}function other(){return _other.apply(this,arguments)}function _other(){return _other=_asyncToGenerator(regeneratorRuntime.mark(function _callee(){return regeneratorRuntime.wrap(function _callee$(_context){for(;1;)switch(_context.prev=_context.next){case 0:return _context.abrupt("return",1);case 1:case"end":return _context.stop();}},_callee)})),_other.apply(this,arguments)};function first(){return _first.apply(this,arguments)}function _first(){return _first=_asyncToGenerator(regeneratorRuntime.mark(function _callee2(){var result;return regeneratorRuntime.wrap(function _callee2$(_context2){for(;1;)switch(_context2.prev=_context2.next){case 0:return _context2.next=2,other();case 2:return result=_context2.sent,_context2.abrupt("return",result+3);case 4:case"end":return _context2.stop();}},_callee2)})),_first.apply(this,arguments)};');
 		});
 
-		it('generates source maps inline js file', function () {
+		it('generates source maps inline into generated js file', function () {
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
-			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };',
+			const contents = fs.readFileSync(inputJSFile, 'utf-8');
+			const expectedSourceMap = fs.readJSONSync(inputJSFile + '.map');
+			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
+			const results = jsanalyze.analyzeJs(contents,
 				{
 					transpile: true,
 					sourceMap: true,
 					filename: inputJSFile
 				});
-			// eslint-disable-next-line max-len
-			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceURL=file://${inputJSFile}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQUcsU0FBakJBLGNBQWlCLEdBQVcsQ0FBRSxPQUFPLElBQVAsQ0FBYyxDQUFoRCIsInNvdXJjZXNDb250ZW50IjpbInZhciBteUdsb2JhbE1ldGhvZCA9IGZ1bmN0aW9uKCkgeyByZXR1cm4gdGhpczsgfTsiXX0=\n`);
+			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
+			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
+		});
+
+		it('generates source maps inline into generated js file and removes sourcesContent for android platform', function () {
+			const inputJSFile = path.join(__dirname, 'resources/input.js');
+			const contents = fs.readFileSync(inputJSFile, 'utf-8');
+			const expectedSourceMap = fs.readJSONSync(inputJSFile + '.map');
+			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
+			delete expectedSourceMap.sourcesContent;
+			const results = jsanalyze.analyzeJs(contents,
+				{
+					transpile: true,
+					sourceMap: true,
+					filename: inputJSFile,
+					platform: 'android',
+				});
+			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
+			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
 
 		it('handles input JS file with existing sourceMappingURL pointing to file', function () {
@@ -74,21 +94,25 @@ describe('jsanalyze', function () {
 					sourceMap: true,
 					filename: 'intermediate.js'
 				});
-			// eslint-disable-next-line max-len
-			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n\n//# sourceURL=file://${inputJSFile}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQWRBLFNBQUFBLGNBQUFBLEdBQUFBLENBQUFBLE9BQUFBLElBQUFBLENBQUosQ0FBQSIsInNvdXJjZXNDb250ZW50IjpbInZhciBteUdsb2JhbE1ldGhvZCA9IGZ1bmN0aW9uKCkgeyByZXR1cm4gdGhpczsgfTsiXX0=\n`);
+			const expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/intermediate.js.map'));
+			expectedSourceMap.sourceRoot = path.dirname(inputJSFile); // passes along the original source file via sources/sourceRoot
+			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
+			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
 
 		it('handles input JS file with existing sourceMappingURL with data: uri', function () {
+			const originalSourceFile = path.join(__dirname, 'resources/input.js');
 			// given that it's inlined, it will try to resolve the relative 'input.js' source as relative to the JS filename we pass along in options.
-			const inputJSFile = path.join(__dirname, 'resources/input.js');
 			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQUcsU0FBakJBLGNBQWlCLEdBQVcsQ0FBRSxPQUFPLElBQVAsQ0FBYyxDQUFoRCIsInNvdXJjZXNDb250ZW50IjpbInZhciBteUdsb2JhbE1ldGhvZCA9IGZ1bmN0aW9uKCkgeyByZXR1cm4gdGhpczsgfTsiXX0=',
 				{
 					transpile: true,
 					sourceMap: true,
 					filename: path.join(__dirname, 'resources/intermediate.js')
 				});
-			// eslint-disable-next-line max-len
-			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n\n//# sourceURL=file://${inputJSFile}\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQWRBLFNBQUFBLGNBQUFBLEdBQUFBLENBQUFBLE9BQUFBLElBQUFBLENBQUosQ0FBQSIsInNvdXJjZXNDb250ZW50IjpbInZhciBteUdsb2JhbE1ldGhvZCA9IGZ1bmN0aW9uKCkgeyByZXR1cm4gdGhpczsgfTsiXX0=\n`);
+			const expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/intermediate.js.map'));
+			expectedSourceMap.sourceRoot = path.dirname(originalSourceFile); // passes along the original source file via sources/sourceRoot
+			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
+			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
 
 	});
