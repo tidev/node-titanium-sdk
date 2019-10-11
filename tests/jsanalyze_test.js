@@ -115,5 +115,21 @@ describe('jsanalyze', function () {
 			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
 
+		it('handles input JS file with existing sourceMappingURL pointing to non-existent file', function () {
+			// treat like there is no original input source map....
+			// only difference here is that there's an extra newline to deal with versus the "base" test case
+			const inputJSFile = path.join(__dirname, 'resources/input.nonexistent.sourcemapfile.js');
+			const contents = fs.readFileSync(inputJSFile, 'utf-8');
+			const expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/input.nonexistent.sourcemapfile.js.map'));
+			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
+			const results = jsanalyze.analyzeJs(contents,
+				{
+					transpile: true,
+					sourceMap: true,
+					filename: inputJSFile
+				});
+			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
+			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
+		});
 	});
 });
