@@ -129,7 +129,7 @@ describe('jsanalyze', function () {
 					filename: inputJSFile
 				});
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
-			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
+			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
 	});
 });

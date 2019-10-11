@@ -1,1 +1,1 @@
-{"version":3,"sources":["input.nonexistent.sourcemapfile.js"],"names":["myGlobalMethod"],"mappings":"AAAA,IAAIA,cAAc,GAAG,SAAjBA,cAAiB,GAAW,CAAE,OAAO,IAAP,CAAc,CAAhD;AACA","sourcesContent":["var myGlobalMethod = function() { return this; };\n"]}
+{"version":3,"sources":["input.nonexistent.sourcemapfile.js"],"names":["myGlobalMethod"],"mappings":"AAAA,IAAIA,cAAc,GAAG,SAAjBA,cAAiB,GAAW,CAAE,OAAO,IAAP,CAAc,CAAhD","sourcesContent":["var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=madeup.js.map"]}
