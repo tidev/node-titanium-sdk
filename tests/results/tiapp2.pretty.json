@@ -346,6 +346,12 @@
 			"allow-loading": true
 		}
 	},
+	"webpack": {
+		"type": "alloy",
+		"transpileDependencies": [
+			"some_module"
+		]
+	},
 	"modules": [
 		{
 			"id": "ti.alltest",

@@ -332,6 +332,12 @@
 			<allow-loading>true</allow-loading>
 		</unsupported-platforms>
 	</mobileweb>
+	<webpack>
+		<type>alloy</type>
+		<transpile-dependencies>
+			<dep>some_module</dep>
+		</transpile-dependencies>
+	</webpack>
 	<modules>
 		<module version="1.2.3">ti.alltest</module>
 		<module platform="commonjs" version="1.2.3">ti.cjstest</module>
