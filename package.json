@@ -47,7 +47,7 @@
 		"@seadub/danger-plugin-eslint": "^1.0.1",
 		"@seadub/danger-plugin-junit": "0.1.2",
 		"babel-plugin-tester": "^7.0.1",
-		"danger": "^9.2.1",
+		"danger": "^9.2.9",
 		"eslint": "^6.5.1",
 		"eslint-config-axway": "^4.3.0",
 		"eslint-plugin-mocha": "^6.1.0",
