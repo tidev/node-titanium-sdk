@@ -131,5 +131,11 @@ describe('jsanalyze', function () {
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
 			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
+
+		// babel-plugin-transform-titanium
+		it('converts OS_IOS into boolean', () => {
+			const results = jsanalyze.analyzeJs('if (OS_IOS) {}', { transpile: true, transform: { platform: 'ios' } });
+			results.contents.should.eql('if (true) {}');
+		});
 	});
 });
