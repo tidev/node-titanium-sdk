@@ -43,7 +43,7 @@
 		"xmldom": "0.3.0"
 	},
 	"devDependencies": {
-		"@seadub/danger-plugin-dependencies": "0.1.0",
+		"@seadub/danger-plugin-dependencies": "1.0.0",
 		"@seadub/danger-plugin-eslint": "^2.0.0",
 		"@seadub/danger-plugin-junit": "0.2.0",
 		"babel-plugin-tester": "^10.0.0",
