@@ -7,40 +7,31 @@ on:
   pull_request:
 
 jobs:
-  android:
+  build:
     runs-on: ubuntu-latest
-    name: Android
+    strategy:
+      matrix:
+        node: [ '12', '14' ]
+    name: Node ${{ matrix.node }}
     steps:
-    - uses: actions/checkout@v2
-
-# TODO: Do a matrix of node versions?
-
-    - name: Use Node.js 12.x
-      uses: actions/setup-node@v1
-      with:
-        node-version: '12.x'
-
-    - name: Cache Node.js modules
-      id: node-cache
-      uses: actions/cache@v2
-      with:
-        path: node_modules
-        key: ${{ runner.OS }}-node-modules-${{ hashFiles('package-lock.json') }}
-        restore-keys: |
-          ${{ runner.OS }}-node-modules-
-          ${{ runner.OS }}-
-
-    - run: npm ci
-      name: Install dependencies
-      if: steps.node-cache.outputs.cache-hit != 'true'
+      - uses: actions/checkout@v2
+      - name: Setup node
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm ci
+        name: Install dependencies
+        if: steps.node-cache.outputs.cache-hit != 'true'
  
-    - run: npm test
-      name: Build
+      - run: npm test
+        name: Build
 
-    - run: npm pack
-      name: Package
+      - run: npm pack
+        name: Package
+        if: env.node == '12'
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: node-titanium-sdk
-        path: node-titanium-sdk-*.tgz
+      - uses: actions/upload-artifact@v2
+        if: env.node == '12'
+        with:
+          name: node-titanium-sdk
+          path: node-titanium-sdk-*.tgz
