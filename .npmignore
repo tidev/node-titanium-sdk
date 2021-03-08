@@ -9,3 +9,5 @@ Jenkinsfile
 .eslintrc
 .eslintignore
 .gitignore
+.github/
+.husky/
