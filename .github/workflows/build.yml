@@ -1,0 +1,46 @@
+name: Build
+on:
+  push:
+    branches:
+    - master
+    - "[0-9]+_[0-9]+_X"
+  pull_request:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    name: Android
+    steps:
+    - uses: actions/checkout@v2
+
+# TODO: Do a matrix of node versions?
+
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+
+    - name: Cache Node.js modules
+      id: node-cache
+      uses: actions/cache@v2
+      with:
+        path: node_modules
+        key: ${{ runner.OS }}-node-modules-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.OS }}-node-modules-
+          ${{ runner.OS }}-
+
+    - run: npm ci
+      name: Install dependencies
+      if: steps.node-cache.outputs.cache-hit != 'true'
+ 
+    - run: npm test
+      name: Build
+
+    - run: npm pack
+      name: Package
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: node-titanium-sdk
+        path: node-titanium-sdk-*.tgz
