@@ -162,7 +162,11 @@ describe('adb', function () {
 				try {
 					fs.existsSync(dest).should.eql(true);
 				} finally {
-					fs.unlinkSync(dest);
+					try {
+						fs.unlinkSync(dest);
+					} catch (_error) {
+						// squash
+					}
 				}
 				finished();
 			});
