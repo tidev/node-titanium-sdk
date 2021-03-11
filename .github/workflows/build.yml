@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     strategy:
       matrix:
         node: [ '12', '14' ]
@@ -21,12 +21,30 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - name: Cache Node.js modules
+        id: node-cache
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.OS }}-node-modules-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-modules-
+            ${{ runner.OS }}-
+
       - run: npm ci
         name: Install dependencies
         if: steps.node-cache.outputs.cache-hit != 'true'
  
-      - run: npm test
-        name: Build
+      - run: npm run lint
+        name: Lint
+      
+      - name: Build and Test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: playstore
+          script: npm run unit-test
+          disable-animations: false # defaulting to true, the commands sent to emulator to do this sometimes run too quickly after boot and cause "adb: device offline" failures
 
       - run: npm pack
         name: Package
