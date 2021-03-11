@@ -50,7 +50,7 @@ describe('adb', function () {
 			if (err) {
 				return finished(err);
 			}
-			devices.should.be.an.Array;
+			devices.should.be.an.Array();
 			finished();
 		});
 	});
@@ -67,7 +67,7 @@ describe('adb', function () {
 				return done(err);
 			}
 			// console.log('trackDevicesCallback: ' + JSON.stringify(devices));
-			devices.should.be.an.Array;
+			devices.should.be.an.Array();
 			done();
 		});
 	});
@@ -120,7 +120,7 @@ describe('adb', function () {
 				}
 
 				// data is a Buffer!
-				data.should.be.ok;
+				data.should.be.ok();
 				// (typeof data).should.eql('Buffer');
 
 				finished();
@@ -138,12 +138,12 @@ describe('adb', function () {
 				data.should.be.ok; // TODO: Test data.toString() holds particular text?
 
 				adb.getPid(device.id, appId, function (err, pid) {
-					should(err).not.be.ok;
+					should(err).not.be.ok();
 
-					pid.should.be.a.Number;
+					pid.should.be.a.Number();
 
 					adb.stopApp(device.id, appId, function (err) {
-						should(err).not.be.ok;
+						should(err).not.be.ok();
 
 						finished();
 					});
@@ -152,10 +152,10 @@ describe('adb', function () {
 		});
 
 		it('#pull()', function (finished) {
-			const dest = path.join(__dirname, 'build.prop');
+			const dest = path.join(__dirname, 'hosts');
 			fs.existsSync(dest).should.eql(false);
 
-			adb.pull(device.id, '/system/build.prop', __dirname, function (err) {
+			adb.pull(device.id, '/system/etc/hosts', __dirname, function (err) {
 				should(err).not.be.ok;
 
 				// verify build.prop exists in current dir now!
@@ -177,15 +177,15 @@ describe('adb', function () {
 
 			// Ensure dest file doesn't exist
 			adb.shell(device.id, 'rm -f ' + dest, function (err) {
-				should(err).not.be.ok;
+				should(err).not.be.ok();
 
 				// Then piush this file to dest
 				adb.push(device.id, __filename, dest, function (err) {
-					should(err).not.be.ok;
+					should(err).not.be.ok();
 
 					// verify it now exists and matches
 					adb.shell(device.id, 'cat ' + dest, function (err, data) {
-						should(err).not.be.ok;
+						should(err).not.be.ok();
 
 						// data is a Buffer!
 						data.should.be.ok;
