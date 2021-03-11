@@ -130,8 +130,8 @@ describe('adb', function () {
 		it('#startApp(), #getPid() and #stopApp()', function (finished) {
 			this.timeout(30000);
 
-			const appId = 'com.android.browser';
-			adb.startApp(device.id, appId, 'BrowserActivity', function (err, data) {
+			const appId = 'com.android.settings';
+			adb.startApp(device.id, appId, 'wifi.WifiStatusTest', function (err, data) {
 				should(err).not.be.ok();
 
 				// data is a Buffer!
