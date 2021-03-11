@@ -141,6 +141,7 @@ describe('adb', function () {
 					should(err).not.be.ok();
 
 					pid.should.be.a.Number();
+					pid.should.not.eql(0);
 
 					adb.stopApp(device.id, appId, function (err) {
 						should(err).not.be.ok();
