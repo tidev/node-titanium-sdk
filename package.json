@@ -71,12 +71,14 @@
   "scripts": {
     "lint": "eslint .",
     "test": "npm run lint && npm run unit-test",
-    "unit-test": "JUNIT_REPORT_PATH=junit_report.xml nyc mocha tests/*_test.js --reporter=mocha-jenkins-reporter",
+    "unit-test": "nyc mocha tests/*_test.js",
     "prepare": "husky install"
   },
   "mocha": {
     "timeout": 30000,
-    "check-leaks": true
+    "check-leaks": true,
+    "reporter": "mocha-jenkins-reporter",
+		"reporter-option": "junit_report_path=junit_report.xml"
   },
   "nyc": {
     "check-coverage": true,
