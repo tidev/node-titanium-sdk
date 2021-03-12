@@ -71,7 +71,7 @@
   "scripts": {
     "lint": "eslint .",
     "test": "npm run lint && npm run unit-test",
-    "unit-test": "nyc mocha tests/*_test.js",
+    "unit-test": "nyc mocha tests/*_test.js --exit",
     "prepare": "husky install"
   },
   "mocha": {
