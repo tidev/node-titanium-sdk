@@ -35,7 +35,7 @@ describe('jsanalyze', function () {
 			const view = Ti.UI.createLabel();
 			console.log(\`version is \${Ti.API.version}\`);
 			"Ti.Test".toUpperCase();
-			Ti['UI'].createWebView()
+			Ti['UI'].createWebView();
 			"Ti.Test"`, {});
 			results.symbols.should.eql([ 'API.info', 'API', 'UI.createLabel', 'UI', 'API.version', 'UI.createWebView' ]);
 		});
