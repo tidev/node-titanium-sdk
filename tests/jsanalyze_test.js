@@ -33,8 +33,11 @@ describe('jsanalyze', function () {
 			const message = \`Ti.UI.TabbedBar changed to index: \${index}\`;
 			const messageAfterTranspile = "Ti.UI.TabbedBar changed to index: ".concat(index);
 			const view = Ti.UI.createLabel();
-			console.log(\`version is \${Ti.API.version}\`);`, {});
-			results.symbols.should.eql([ 'API.info', 'API', 'UI.createLabel', 'UI', 'API.version' ]);
+			console.log(\`version is \${Ti.API.version}\`);
+			"Ti.Test".toUpperCase();
+			Ti['UI'].createWebView()
+			"Ti.Test"`, {});
+			results.symbols.should.eql([ 'API.info', 'API', 'UI.createLabel', 'UI', 'API.version', 'UI.createWebView' ]);
 		});
 
 		it('tracks Ti API usage across multiple calls', function () {
@@ -45,9 +48,10 @@ describe('jsanalyze', function () {
 				'Titanium.API': 4,
 				'Titanium.API.info': 3,
 				'Titanium.API.version': 1,
-				'Titanium.UI': 2,
+				'Titanium.UI': 3,
 				'Titanium.UI.createLabel': 1,
 				'Titanium.UI.createView': 1,
+				'Titanium.UI.createWebView': 1
 			});
 		});
 
