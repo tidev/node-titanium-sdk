@@ -26,15 +26,32 @@ describe('jsanalyze', function () {
 			results.symbols.should.eql([ 'API.info', 'API' ]);
 		});
 
+		it('Should ignore Ti in string', function () {
+			const results = jsanalyze.analyzeJs(`
+			Ti.API.info("Ti. In A String Causes Issues?".toUpperCase());
+			Ti.API.info(\`Ti.UI.AlertDialog selected button at index: \${index}\`);
+			const message = \`Ti.UI.TabbedBar changed to index: \${index}\`;
+			const messageAfterTranspile = "Ti.UI.TabbedBar changed to index: ".concat(index);
+			const view = Ti.UI.createLabel();
+			console.log(\`version is \${Ti.API.version}\`);
+			"Ti.Test".toUpperCase();
+			Ti['UI'].createWebView();
+			"Ti.Test"`, {});
+			results.symbols.should.eql([ 'API.info', 'API', 'UI.createLabel', 'UI', 'API.version', 'UI.createWebView' ]);
+		});
+
 		it('tracks Ti API usage across multiple calls', function () {
 			const results = jsanalyze.analyzeJs('Ti.UI.createView({});', {});
 			results.symbols.should.eql([ 'UI.createView', 'UI' ]); // symbols only includes from this call
 			// includes symbols from this test and the one above!
 			jsanalyze.getAPIUsage().should.eql({
-				'Titanium.API.info': 1,
-				'Titanium.API': 1,
+				'Titanium.API': 4,
+				'Titanium.API.info': 3,
+				'Titanium.API.version': 1,
+				'Titanium.UI': 3,
+				'Titanium.UI.createLabel': 1,
 				'Titanium.UI.createView': 1,
-				'Titanium.UI': 1
+				'Titanium.UI.createWebView': 1
 			});
 		});
 
