@@ -91,13 +91,13 @@ describe('emulator', function () {
 					return finished(err);
 				}
 
-				emu.should.be.ok;
+				emu.should.be.ok();
 
 				emu.on('ready', function (device) {
-					device.should.be.ok;
+					device.should.be.ok();
 
 					emulator.isRunning(device.emulator.id, function (err, emu) {
-						emu.should.be.ok;
+						emu.should.be.ok();
 
 						emulator.stop(device.emulator.id, function (errOrCode) {
 							errOrCode.should.eql(0);
