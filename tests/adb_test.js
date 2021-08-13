@@ -107,6 +107,11 @@ describe('adb', function () {
 
 		after(function (finished) {
 			this.timeout(35000);
+			// Just call finished if there is no device, there may have been an issue when starting
+			// the emulator in the before
+			if (!device) {
+				return finished();
+			}
 			emulator.stop(device.emulator.id, function (errOrCode) {
 				errOrCode.should.eql(0);
 				setTimeout(finished, 5000); // let it wait 5 seconds or else adb will still report it as connected
