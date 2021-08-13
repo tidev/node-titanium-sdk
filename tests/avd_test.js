@@ -101,7 +101,7 @@ describe('emulator', function () {
 
 						emulator.stop(device.emulator.id, function (errOrCode) {
 							errOrCode.should.eql(0);
-							finished(); // TODO wait 5 seconds here or else future start call that quickly follows will get messed up!. See adb_test
+							setTimeout(finished, 5000); // let it wait 5 seconds or else adb will still report it as connected
 						});
 					});
 				});
