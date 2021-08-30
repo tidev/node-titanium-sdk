@@ -2,8 +2,7 @@ const should = require('should'); // eslint-disable-line no-unused-vars
 
 const ti = require('../lib/titanium'),
 	fs = require('fs'),
-	path = require('path'),
-	os = require('os');
+	path = require('path');
 
 describe('tiappxml', function () {
 /*
@@ -84,7 +83,6 @@ describe('tiappxml', function () {
 
 	it('tiapp2.xml', function () {
 		var xmlPath = path.join(__dirname, 'resources', 'tiapp2.xml'),
-			xml = fs.readFileSync(xmlPath).toString(),
 			tiapp = new ti.tiappxml(xmlPath);
 
 		tiapp.toString().should.eql('[object Object]');
