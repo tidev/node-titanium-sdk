@@ -3,6 +3,7 @@
 
 const should = require('should'); // eslint-disable-line no-unused-vars
 const i18n = require('../lib/i18n');
+const path = require('path');
 
 describe('i18n', function () {
 	it('#load()', function () {
@@ -19,5 +20,15 @@ describe('i18n', function () {
 		result.es.should.have.ownProperty('app');
 		result.es.app.should.have.ownProperty('whatever');
 		result.es.app.whatever.should.eql('my spanish value');
+	});
+
+	it('#findLaunchSreens()', function () {
+		const results = i18n.findLaunchScreens(__dirname, console);
+
+		results.should.be.an.Array();
+		results.length.should.equal(1);
+		results.should.deepEqual([
+			path.join(__dirname, 'i18n', 'en', 'Default-568h@2x.png')
+		]);
 	});
 });

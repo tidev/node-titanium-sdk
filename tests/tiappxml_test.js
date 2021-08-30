@@ -2,7 +2,8 @@ const should = require('should'); // eslint-disable-line no-unused-vars
 
 const ti = require('../lib/titanium'),
 	fs = require('fs'),
-	path = require('path');
+	path = require('path'),
+	os = require('os');
 
 describe('tiappxml', function () {
 /*
@@ -99,6 +100,16 @@ describe('tiappxml', function () {
 		tiapp.windows.id.should.eql('com.windows.example');
 	});
 
+	it('should throw if file does not exist', function () {
+		should(() => new ti.tiappxml('foo')).throw('tiapp.xml file does not exist');
+	});
+
+	it('should support parsing a tiapp from a string', function () {
+		var contents = fs.readFileSync(path.join(__dirname, 'resources', 'tiapp2.xml'), 'utf8');
+		var tiapp = new ti.tiappxml();
+		tiapp.parse(contents);
+		(tiapp.toString('json') + '\n').should.eql(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.json')).toString());
+	});
 /*
 (function () {
 	var tiapp = new ti.tiappxml(path.dirname(module.filename) + '/resources/tiapp3.xml');
