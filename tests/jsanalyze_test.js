@@ -154,5 +154,58 @@ describe('jsanalyze', function () {
 			const results = jsanalyze.analyzeJs('if (OS_IOS) {}', { transpile: true, transform: { platform: 'ios' } });
 			results.contents.should.eql('if (true) {}');
 		});
+
+		it('should fallback to looser parsing if required', () => {
+			const results = jsanalyze.analyzeJs('return "foo";');
+			results.contents.should.eql('return "foo";');
+		});
+
+		it('should handle errors', () => {
+			should(() => jsanalyze.analyzeJs('return foo!;console.log("bar");')).throw('Failed to parse undefined\nMissing semicolon. (1:10)');
+		});
+	});
+
+	describe('#analyzeJsFile()', function () {
+		it('should transform contents', function () {
+			const inputJSFile = path.join(__dirname, 'resources/input.js');
+
+			const expectedSourceMap = fs.readJSONSync(inputJSFile + '.map');
+			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
+			const results = jsanalyze.analyzeJsFile(inputJSFile,
+				{
+					transpile: true,
+					sourceMap: true
+				});
+			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
+			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
+		});
+	});
+
+	describe('#analyzeHtml', function () {
+		it('should analyze an html file', function () {
+			const inputFile = path.join(__dirname, 'resources/hello.html');
+
+			const results = jsanalyze.analyzeHtml(fs.readFileSync(inputFile, 'utf8'));
+			results.should.be.an.Array();
+			results.length.should.equal(2);
+			results.should.deepEqual([
+				'input.js',
+				'resources/input.js'
+			]);
+		});
+	});
+
+	describe('#analyzeHtmlFile', function () {
+		it('should analyze an html file', function () {
+			const inputFile = path.join(__dirname, 'resources/hello.html');
+
+			const results = jsanalyze.analyzeHtmlFile(inputFile);
+			results.should.be.an.Array();
+			results.length.should.equal(2);
+			results.should.deepEqual([
+				'input.js',
+				'resources/input.js'
+			]);
+		});
 	});
 });
