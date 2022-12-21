@@ -5,6 +5,7 @@
     "sourceType": "script"
   },
   "rules": {
+    "no-empty": ["error", { "allowEmptyCatch": true }],
     "no-implicit-globals": "off"
   },
   "overrides": [
