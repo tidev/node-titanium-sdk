@@ -5,23 +5,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const should = require('should'); // eslint-disable-line no-unused-vars
 const jsanalyze = require('../lib/jsanalyze');
-
-function sortObject (o) {
-	var sorted = {},
-		key,
-		a = [];
-
-	for (key in o) {
-		a.push(key);
-	}
-
-	a.sort();
-
-	for (key = 0; key < a.length; key++) {
-		sorted[a[key]] = o[a[key]];
-	}
-	return sorted;
-}
+const sortObject = require('../lib/jsanalyze').sortObject;
 
 describe('jsanalyze', function () {
 	describe('#analyzeJs()', function () {
@@ -85,7 +69,7 @@ describe('jsanalyze', function () {
 		it('generates source maps inline into generated js file', function () {
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
 			const contents = fs.readFileSync(inputJSFile, 'utf-8');
-			var expectedSourceMap = fs.readJSONSync(inputJSFile + '.map');
+			let expectedSourceMap = fs.readJSONSync(`${inputJSFile}.map`);
 
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
@@ -103,7 +87,7 @@ describe('jsanalyze', function () {
 		it('generates source maps inline into generated js file and removes sourcesContent for android platform', function () {
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
 			const contents = fs.readFileSync(inputJSFile, 'utf-8');
-			var expectedSourceMap = fs.readJSONSync(inputJSFile + '.map');
+			let expectedSourceMap = fs.readJSONSync(`${inputJSFile}.map`);
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			delete expectedSourceMap.sourcesContent;
 			expectedSourceMap = sortObject(expectedSourceMap);
@@ -127,7 +111,7 @@ describe('jsanalyze', function () {
 					sourceMap: true,
 					filename: 'intermediate.js'
 				});
-			var expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/intermediate.js.map'));
+			let expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/intermediate.js.map'));
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile); // passes along the original source file via sources/sourceRoot
 			expectedSourceMap = sortObject(expectedSourceMap);
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
@@ -143,7 +127,7 @@ describe('jsanalyze', function () {
 					sourceMap: true,
 					filename: path.join(__dirname, 'resources/intermediate.js')
 				});
-			var expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/intermediate.js.map'));
+			let expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/intermediate.js.map'));
 			expectedSourceMap.sourceRoot = path.dirname(originalSourceFile); // passes along the original source file via sources/sourceRoot
 			expectedSourceMap = sortObject(expectedSourceMap);
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
@@ -155,7 +139,7 @@ describe('jsanalyze', function () {
 			// only difference here is that there's an extra newline to deal with versus the "base" test case
 			const inputJSFile = path.join(__dirname, 'resources/input.nonexistent.sourcemapfile.js');
 			const contents = fs.readFileSync(inputJSFile, 'utf-8');
-			var expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/input.nonexistent.sourcemapfile.js.map'));
+			let expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/input.nonexistent.sourcemapfile.js.map'));
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
 			const results = jsanalyze.analyzeJs(contents,
@@ -188,7 +172,7 @@ describe('jsanalyze', function () {
 		it('should transform contents', function () {
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
 
-			var expectedSourceMap = fs.readJSONSync(inputJSFile + '.map');
+			let expectedSourceMap = fs.readJSONSync(`${inputJSFile}.map`);
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
 			const results = jsanalyze.analyzeJsFile(inputJSFile,
