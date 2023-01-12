@@ -137,7 +137,7 @@ describe('jsanalyze', function () {
 		it('handles input JS file with existing sourceMappingURL with data: uri', function () {
 			const originalSourceFile = path.join(__dirname, 'resources/input.js');
 			// given that it's inlined, it will try to resolve the relative 'input.js' source as relative to the JS filename we pass along in options.
-			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQUcsU0FBakJBLGNBQWlCLEdBQVcsQ0FBRSxPQUFPLElBQVAsQ0FBYyxDQUFoRCIsInNvdXJjZXNDb250ZW50IjpbInZhciBteUdsb2JhbE1ldGhvZCA9IGZ1bmN0aW9uKCkgeyByZXR1cm4gdGhpczsgfTsiXX0=',
+			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQUcsU0FBakJBLGNBQWMsR0FBYyxDQUFFLE9BQU8sSUFBSSxDQUFFLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJ2YXIgbXlHbG9iYWxNZXRob2QgPSBmdW5jdGlvbigpIHsgcmV0dXJuIHRoaXM7IH07Il19',
 				{
 					transpile: true,
 					sourceMap: true,
