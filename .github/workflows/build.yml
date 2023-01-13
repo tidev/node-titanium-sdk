@@ -11,7 +11,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        node: [ '12', '14' ]
+        node: [ '16' ]
     name: Node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v2
@@ -34,10 +34,10 @@ jobs:
       - run: npm ci
         name: Install dependencies
         if: steps.node-cache.outputs.cache-hit != 'true'
- 
+
       - run: npm run lint
         name: Lint
-      
+
       - name: Build and Test
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -48,10 +48,10 @@ jobs:
 
       - run: npm pack
         name: Package
-        if: matrix.node == '12'
+        if: matrix.node == '16'
 
       - uses: actions/upload-artifact@v2
-        if: matrix.node == '12'
+        if: matrix.node == '16'
         with:
           name: node-titanium-sdk
           path: node-titanium-sdk-*.tgz

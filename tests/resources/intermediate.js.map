@@ -1,1 +1,1 @@
-{"version":3,"sources":["input.js"],"names":["myGlobalMethod"],"mappings":"AAAA,IAAIA,cAAc,GAAdA,SAAAA,cAAAA,GAAAA,CAAAA,OAAAA,IAAAA,CAAJ,CAAA","sourcesContent":["var myGlobalMethod = function() { return this; };"]}
+{"version":3,"sources":["input.js"],"names":["myGlobalMethod"],"mappings":"AAAA,IAAIA,cAAc,GAAG,SAAjBA,cAAc,GAAdA,YAAc,CAAc,CAAE","sourcesContent":["var myGlobalMethod = function() { return this; };"]}
