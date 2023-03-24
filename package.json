@@ -27,10 +27,10 @@
     "lib": "./lib"
   },
   "dependencies": {
-    "@babel/core": "^7.20.12",
-    "@babel/parser": "^7.20.7",
-    "@babel/plugin-transform-property-literals": "^7.8.3",
-    "@babel/preset-env": "^7.20.2",
+    "@babel/core": "7.8.7",
+    "@babel/parser": "7.8.8",
+    "@babel/plugin-transform-property-literals": "7.10.1",
+    "@babel/preset-env": "7.10.2",
     "async": "^3.2.4",
     "babel-plugin-transform-titanium": "^0.1.1",
     "babel-preset-minify": "^0.5.2",
@@ -48,7 +48,7 @@
     "@seadub/danger-plugin-dependencies": "1.0.0",
     "@seadub/danger-plugin-eslint": "^2.0.0",
     "@seadub/danger-plugin-junit": "0.3.0",
-    "babel-plugin-tester": "^10.1.0",
+    "babel-plugin-tester": "8.0.1",
     "danger": "^11.2.1",
     "eslint": "^7.4.0",
     "eslint-config-axway": "^6.0.0",
