@@ -164,7 +164,7 @@ describe('jsanalyze', function () {
 		});
 
 		it('should handle errors', () => {
-			should(() => jsanalyze.analyzeJs('return foo!;console.log("bar");')).throw('Failed to parse undefined\nMissing semicolon. (1:10)');
+			should(() => jsanalyze.analyzeJs('return foo!;console.log("bar");')).throw('Failed to parse undefined\nUnexpected token, expected ";" (1:10)');
 		});
 	});
 
