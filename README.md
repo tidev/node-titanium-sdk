@@ -4,9 +4,6 @@
 
 This is the Titanium SDK common library used for all SDK specific CLI commands.
 
-## License
+## Legal
 
-This project is open source and provided under the Apache Public License (version 2). Please make sure you see the `LICENSE` file
-included in this distribution for more details on the license.  Also, please take notice of the privacy notice at the end of the file.
-
-#### (C) Copyright 2012-2017, [Appcelerator](http://www.appcelerator.com/) Inc. All Rights Reserved.
+Titanium is a registered trademark of TiDev Inc. All Titanium trademark and patent rights were transferred and assigned to TiDev Inc. on 4/7/2022. Please see the LEGAL information about using our trademarks, privacy policy, terms of usage and other legal information at https://tidev.io/legal.
