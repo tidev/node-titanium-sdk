@@ -95,7 +95,6 @@ describe('tiappxml', function () {
 	it('tiapp4.xml', function () {
 		var tiapp = new ti.tiappxml(path.join(__dirname, '/resources/tiapp4.xml'));
 		tiapp.id.should.eql('ti.testapp');
-		tiapp.windows.id.should.eql('com.windows.example');
 	});
 
 	it('should throw if file does not exist', function () {

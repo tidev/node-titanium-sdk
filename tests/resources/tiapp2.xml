@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ti:app xmlns:ti="http://ti.appcelerator.org">
+<ti:app xmlns:ti="http://ti.tidev.io">
 	<deployment-targets>
-		<target device="mobileweb">true</target>
 		<target device="iphone">true</target>
 		<target device="ipad">true</target>
 		<target device="android">true</target>
-		<target device="blackberry">false</target>
 	</deployment-targets>
 	<sdk-version>2.2.0</sdk-version>
 	<id>ti.testapp</id>
@@ -199,36 +197,6 @@
 			</type>
 		</types>
 	</iphone>
-	<blackberry>
-		<orientation>auto</orientation>
-		<build-id>1</build-id>
-		<permissions>
-			<permission>access_shared</permission>
-			<permission>record_audio</permission>
-			<permission>use_camera</permission>
-			<permission>access_internet</permission>
-			<permission>play_audio</permission>
-			<permission>post_notification</permission>
-			<permission>set_audio_volume</permission>
-			<permission>read_device_identifying_information</permission>
-		</permissions>
-		<permission system="true">run_native</permission>
-		<permission system="true">_sys_use_consumer_push</permission>
-		<invoke-target id="ti.testapp.invoke.push">
-		  <type>APPLICATION</type>
-		  <filter>
-			 <action>bb.action.PUSH</action>
-			 <mime-type>application/vnd.push</mime-type>
-		  </filter>
-		</invoke-target>
-		<invoke-target id="ti.testapp.invoke.open">
-		  <type>APPLICATION</type>
-		  <filter>
-			 <action>bb.action.OPEN</action>
-			 <mime-type>text/plain</mime-type>
-		  </filter>
-		</invoke-target>
-	</blackberry>
 	<android xmlns:android="http://schemas.android.com/apk/res/android">
 		<manifest>
 			<uses-sdk android:minSdkVersion="10" android:targetSdkVersion="17" android:maxSdkVersion="18"/>
@@ -259,79 +227,6 @@
 			<service type="interval" url="testservice.js"/>
 		</services>
 	</android>
-	<mobileweb>
-		<build>
-			<production>
-				<action>clean</action>
-				<js>
-					<minify>true</minify>
-					<keep-line-breaks>false</keep-line-breaks>
-					<keep-comments>false</keep-comments>
-					<keep-uncompressed>false</keep-uncompressed>
-					<log-inject-filename-lineno>false</log-inject-filename-lineno>
-					<ti-log-level>warn</ti-log-level>
-					<console-log-level>warn</console-log-level>
-				</js>
-				<css>
-					<minify>true</minify>
-					<keep-line-breaks>false</keep-line-breaks>
-					<keep-comments>false</keep-comments>
-					<keep-uncompressed>false</keep-uncompressed>
-					<inline-images>false</inline-images>
-					<inline-imports>true</inline-imports>
-				</css>
-				<html>
-					<minify>true</minify>
-					<keep-line-breaks>false</keep-line-breaks>
-					<keep-comments>false</keep-comments>
-					<keep-uncompressed>false</keep-uncompressed>
-					<inline-js>true</inline-js>
-					<inline-css>true</inline-css>
-					<strip-attribute-quotes>false</strip-attribute-quotes>
-				</html>
-				<precache-modules>true</precache-modules>
-				<precache-includes>true</precache-includes>
-			</production>
-		</build>
-		<analytics>
-			<use-xhr>false</use-xhr>
-		</analytics>
-		<base-url></base-url>
-		<disable-error-screen>true</disable-error-screen>
-		<filesystem>
-			<backend>Ti/_/Filesystem/Local</backend>
-			<registry>preload</registry>
-		</filesystem>
-		<force-absolute-paths>true</force-absolute-paths>
-		<instrumentation>true</instrumentation>
-		<main>app.js</main>
-		<map>
-			<apikey>API_KEY_GOES_HERE</apikey>
-			<backend>Ti/_/Map/Google</backend>
-		</map>
-		<precache>
-			<image>/assets/myImage.png</image>
-			<image>/assets/myImage2.png</image>
-			<include>/myapp/mylib.js</include>
-			<include>/myapp/mylib2.js</include>
-			<locale>en</locale>
-			<locale>es</locale>
-			<locale>fr</locale>
-			<locale>de</locale>
-			<require>myapp/mymodule</require>
-			<require>myapp/mymodule2</require>
-		</precache>
-		<splash>
-			<enabled>true</enabled>
-			<inline-css-images>true</inline-css-images>
-			<duration>1000</duration>
-		</splash>
-		<theme>default</theme>
-		<unsupported-platforms>
-			<display-warning>true</display-warning>
-			<allow-loading>true</allow-loading>
-		</unsupported-platforms>
-	</mobileweb>
 	<webpack>
 		<type>alloy</type>
 		<transpile-dependencies>
