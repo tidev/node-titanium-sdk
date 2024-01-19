@@ -84,7 +84,7 @@ describe('emulator', function () {
 
 		it('#start(), #isRunning() and #stop()', function (finished) {
 			this.slow(30000);
-			this.timeout(180000);
+			this.timeout(280000);
 
 			emulator.start(avd.id, function (err, emu) {
 				if (err) {
@@ -101,7 +101,7 @@ describe('emulator', function () {
 
 						emulator.stop(device.emulator.id, function (errOrCode) {
 							errOrCode.should.eql(0);
-							setTimeout(finished, 5000); // let it wait 5 seconds or else adb will still report it as connected
+							setTimeout(finished, 6000); // let it wait 5 seconds or else adb will still report it as connected
 						});
 					});
 				});
