@@ -5,7 +5,8 @@ on:
     - master
     - "[0-9]+_[0-9]+_X"
   pull_request:
-
+env:
+  ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 170 # Default is 20
 jobs:
   build:
     runs-on: macos-latest
@@ -23,7 +24,7 @@ jobs:
 
       - name: Cache Node.js modules
         id: node-cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: node_modules
           key: ${{ runner.OS }}-node-modules-${{ hashFiles('package-lock.json') }}
@@ -44,7 +45,8 @@ jobs:
           api-level: 29
           target: playstore
           script: npm run unit-test
-          disable-animations: false # defaulting to true, the commands sent to emulator to do this sometimes run too quickly after boot and cause "adb: device offline" failures
+          emulator-options: -no-window -noaudio -no-boot-anim
+          disable-animations: true # defaulting to true, the commands sent to emulator to do this sometimes run too quickly after boot and cause "adb: device offline" failures
 
       - run: npm pack
         name: Package

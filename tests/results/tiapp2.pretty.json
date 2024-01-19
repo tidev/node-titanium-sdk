@@ -1,10 +1,8 @@
 {
 	"deployment-targets": {
-		"mobileweb": true,
 		"iphone": true,
 		"ipad": true,
-		"android": true,
-		"blackberry": false
+		"android": true
 	},
 	"sdk-version": "2.2.0",
 	"id": "ti.testapp",
@@ -234,21 +232,6 @@
 			}
 		]
 	},
-	"blackberry": {
-		"other": "<permission system=\"true\">run_native</permission>\n<permission system=\"true\">_sys_use_consumer_push</permission>\n<invoke-target id=\"ti.testapp.invoke.push\">\n\t\t  <type>APPLICATION</type>\n\t\t  <filter>\n\t\t\t <action>bb.action.PUSH</action>\n\t\t\t <mime-type>application/vnd.push</mime-type>\n\t\t  </filter>\n\t\t</invoke-target>\n<invoke-target id=\"ti.testapp.invoke.open\">\n\t\t  <type>APPLICATION</type>\n\t\t  <filter>\n\t\t\t <action>bb.action.OPEN</action>\n\t\t\t <mime-type>text/plain</mime-type>\n\t\t  </filter>\n\t\t</invoke-target>\n",
-		"orientation": "auto",
-		"build-id": 1,
-		"permissions": {
-			"access_shared": true,
-			"record_audio": true,
-			"use_camera": true,
-			"access_internet": true,
-			"play_audio": true,
-			"post_notification": true,
-			"set_audio_volume": true,
-			"read_device_identifying_information": true
-		}
-	},
 	"android": {
 		"manifest": "<manifest>\n\t\t\t<uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"17\" android:maxSdkVersion=\"18\"/>\n\t\t\t<supports-screens android:anyDensity=\"false\" android:xlargeScreens=\"true\"/>\n\t\t\t<application>\n\t\t\t\t<activity android:alwaysRetainTaskState=\"true\" android:configChanges=\"keyboardHidden|orientation\" android:label=\"testapp\" android:name=\".TestappActivity\" android:theme=\"@style/Theme.Titanium\">\n\t\t\t\t\t<intent-filter>\n\t\t\t\t\t\t<action android:name=\"android.intent.action.MAIN\"/>\n\t\t\t\t\t\t<category android:name=\"android.intent.category.LAUNCHER\"/>\n\t\t\t\t\t</intent-filter>\n\t\t\t\t</activity>\n\t\t\t\t<activity android:screenOrientation=\"landscape\" android:name=\"ti.modules.titanium.facebook.FBActivity\" android:theme=\"@android:style/Theme.Translucent.NoTitleBar\"/>\n\t\t\t\t<activity android:screenOrientation=\"landscape\" android:name=\"org.appcelerator.titanium.TiActivity\" android:configChanges=\"keyboardHidden|orientation\"/>\n\t\t\t\t<activity android:screenOrientation=\"landscape\" android:name=\"org.appcelerator.titanium.TiModalActivity\" android:configChanges=\"keyboardHidden|orientation\" android:theme=\"@android:style/Theme.Translucent.NoTitleBar.Fullscreen\"/>\n\t\t\t\t<activity android:screenOrientation=\"landscape\" android:name=\"ti.modules.titanium.ui.TiTabActivity\" android:configChanges=\"keyboardHidden|orientation\"/>\n\t\t\t\t<activity android:screenOrientation=\"landscape\" android:name=\"ti.modules.titanium.media.TiVideoActivity\" android:configChanges=\"keyboardHidden|orientation\" android:theme=\"@android:style/Theme.NoTitleBar.Fullscreen\"/>\n\t\t\t\t<activity android:screenOrientation=\"landscape\" android:name=\"ti.modules.titanium.ui.android.TiPreferencesActivity\"/>\n\t\t\t</application>\n\t\t</manifest>",
 		"tool-api-level": 10,
@@ -263,87 +246,6 @@
 				"url": "testservice.js",
 				"classname": "TestserviceService"
 			}
-		}
-	},
-	"mobileweb": {
-		"build": {
-			"production": {
-				"action": "clean",
-				"js": {
-					"minify": true,
-					"keep-line-breaks": false,
-					"keep-comments": false,
-					"keep-uncompressed": false,
-					"log-inject-filename-lineno": false,
-					"ti-log-level": "warn",
-					"console-log-level": "warn"
-				},
-				"css": {
-					"minify": true,
-					"keep-line-breaks": false,
-					"keep-comments": false,
-					"keep-uncompressed": false,
-					"inline-images": false,
-					"inline-imports": true
-				},
-				"html": {
-					"minify": true,
-					"keep-line-breaks": false,
-					"keep-comments": false,
-					"keep-uncompressed": false,
-					"inline-js": true,
-					"inline-css": true,
-					"strip-attribute-quotes": false
-				},
-				"precache-modules": true,
-				"precache-includes": true
-			}
-		},
-		"analytics": {
-			"use-xhr": false
-		},
-		"base-url": "",
-		"disable-error-screen": true,
-		"filesystem": {
-			"backend": "Ti/_/Filesystem/Local",
-			"registry": "preload"
-		},
-		"force-absolute-paths": true,
-		"instrumentation": true,
-		"main": "app.js",
-		"map": {
-			"apikey": "API_KEY_GOES_HERE",
-			"backend": "Ti/_/Map/Google"
-		},
-		"precache": {
-			"image": [
-				"/assets/myImage.png",
-				"/assets/myImage2.png"
-			],
-			"include": [
-				"/myapp/mylib.js",
-				"/myapp/mylib2.js"
-			],
-			"locale": [
-				"en",
-				"es",
-				"fr",
-				"de"
-			],
-			"require": [
-				"myapp/mymodule",
-				"myapp/mymodule2"
-			]
-		},
-		"splash": {
-			"enabled": true,
-			"inline-css-images": true,
-			"duration": 1000
-		},
-		"theme": "default",
-		"unsupported-platforms": {
-			"display-warning": true,
-			"allow-loading": true
 		}
 	},
 	"webpack": {
