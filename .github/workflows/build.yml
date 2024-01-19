@@ -45,7 +45,7 @@ jobs:
           api-level: 29
           target: playstore
           script: npm run unit-test
-          emulator-options: -no-window -gpu -noaudio -no-boot-anim
+          emulator-options: -no-window -noaudio -no-boot-anim
           disable-animations: true # defaulting to true, the commands sent to emulator to do this sometimes run too quickly after boot and cause "adb: device offline" failures
 
       - run: npm pack
