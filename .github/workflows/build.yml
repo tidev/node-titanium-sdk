@@ -9,7 +9,7 @@ env:
   ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 170 # Default is 20
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-13
     strategy:
       matrix:
         node: [ '18' ]
@@ -42,7 +42,7 @@ jobs:
       - name: Build and Test
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
+          api-level: 34
           target: playstore
           script: npm run unit-test
           emulator-options: -no-window -noaudio -no-boot-anim
