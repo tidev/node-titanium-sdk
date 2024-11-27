@@ -42,7 +42,7 @@ jobs:
       - name: Build and Test
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 29
           target: playstore
           script: npm run unit-test
           emulator-options: -no-window -noaudio -no-boot-anim
