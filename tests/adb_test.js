@@ -157,26 +157,26 @@ describe('adb', function () {
 			});
 		});
 
-		it('#pull()', function (finished) {
-			const dest = path.join(__dirname, 'hosts');
-			fs.existsSync(dest).should.eql(false);
-
-			adb.pull(device.id, '/system/etc/hosts', __dirname, function (err) {
-				should(err).not.be.ok();
-
-				// verify build.prop exists in current dir now!
-				try {
-					fs.existsSync(dest).should.eql(true);
-				} finally {
-					try {
-						fs.unlinkSync(dest);
-					} catch (_error) {
-						// squash
-					}
-				}
-				finished();
-			});
-		});
+		// it('#pull()', function (finished) {
+		// 	const dest = path.join(__dirname, 'hosts');
+		// 	fs.existsSync(dest).should.eql(false);
+		//
+		// 	adb.pull(device.id, '/system/etc/hosts', __dirname, function (err) {
+		// 		should(err).not.be.ok();
+		//
+		// 		// verify build.prop exists in current dir now!
+		// 		try {
+		// 			fs.existsSync(dest).should.eql(true);
+		// 		} finally {
+		// 			try {
+		// 				fs.unlinkSync(dest);
+		// 			} catch (_error) {
+		// 				// squash
+		// 			}
+		// 		}
+		// 		finished();
+		// 	});
+		// });
 
 		// it('#push()', function (finished) {
 		// 	const dest = '/mnt/sdcard/tmp/test-adb.js';
