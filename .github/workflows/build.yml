@@ -6,7 +6,7 @@ on:
     - "[0-9]+_[0-9]+_X"
   pull_request:
 env:
-  ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 1000 # Default is 20
+  ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 2000 # Default is 20
 jobs:
   build:
     runs-on: macos-13
@@ -42,7 +42,7 @@ jobs:
       - name: Build and Test
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
+          api-level: 26
           target: playstore
           script: npm run unit-test
           emulator-options: -no-window -noaudio -no-boot-anim
