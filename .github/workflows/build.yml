@@ -6,7 +6,7 @@ on:
     - "[0-9]+_[0-9]+_X"
   pull_request:
 env:
-  ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 170 # Default is 20
+  ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 1000 # Default is 20
 jobs:
   build:
     runs-on: macos-13
