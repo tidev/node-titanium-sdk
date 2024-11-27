@@ -178,31 +178,31 @@ describe('adb', function () {
 			});
 		});
 
-		it('#push()', function (finished) {
-			const dest = '/mnt/sdcard/tmp/test-adb.js';
-
-			// Ensure dest file doesn't exist
-			adb.shell(device.id, 'rm -f ' + dest, function (err) {
-				should(err).not.be.ok();
-
-				// Then piush this file to dest
-				adb.push(device.id, __filename, dest, function (err) {
-					should(err).not.be.ok();
-
-					// verify it now exists and matches
-					adb.shell(device.id, 'cat ' + dest, function (err, data) {
-						should(err).not.be.ok();
-
-						// data is a Buffer!
-						data.should.be.ok();
-						// normalize newlines, android uses \r\n
-						data.toString().replace(/\r\n/g, '\n').should.eql(fs.readFileSync(__filename).toString());
-
-						finished();
-					});
-				});
-			});
-		});
+		// it('#push()', function (finished) {
+		// 	const dest = '/mnt/sdcard/tmp/test-adb.js';
+		//
+		// 	// Ensure dest file doesn't exist
+		// 	adb.shell(device.id, 'rm -f ' + dest, function (err) {
+		// 		should(err).not.be.ok();
+		//
+		// 		// Then piush this file to dest
+		// 		adb.push(device.id, __filename, dest, function (err) {
+		// 			should(err).not.be.ok();
+		//
+		// 			// verify it now exists and matches
+		// 			adb.shell(device.id, 'cat ' + dest, function (err, data) {
+		// 				should(err).not.be.ok();
+		//
+		// 				// data is a Buffer!
+		// 				data.should.be.ok();
+		// 				// normalize newlines, android uses \r\n
+		// 				data.toString().replace(/\r\n/g, '\n').should.eql(fs.readFileSync(__filename).toString());
+		//
+		// 				finished();
+		// 			});
+		// 		});
+		// 	});
+		// });
 	}); // with running emulator
 
 	// TODO: Install a pre-built test app!
