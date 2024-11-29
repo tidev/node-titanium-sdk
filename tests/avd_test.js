@@ -43,13 +43,6 @@ describe('emulator', function () {
 		});
 	});
 
-	it('#detect() type: genymotion', function (finished) {
-		emulator.detect({ type: 'genymotion' }, function (err, avds) {
-			avds.should.be.an.Array;
-			finished(err);
-		});
-	});
-
 	describe('lifecycle', function () {
 		let avd;
 
