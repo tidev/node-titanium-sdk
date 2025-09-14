@@ -50,10 +50,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/appcelerator/node-titanium-sdk.git"
-  },
-  "engines": {
-    "node": ">=16"
+    "url": "git://github.com/tidev/node-titanium-sdk.git"
   },
   "scripts": {
     "lint": "eslint .",
