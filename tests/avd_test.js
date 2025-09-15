@@ -3,9 +3,6 @@
 
 function MockConfig() {
 	this.get = function (s, d) {
-		if (s === 'genymotion.enabled') {
-			return true;
-		}
 		return d;
 	};
 }

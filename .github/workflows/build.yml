@@ -12,7 +12,7 @@ jobs:
     runs-on: macos-13
     strategy:
       matrix:
-        node: [ '18' ]
+        node: [ '22' ]
     name: Node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v4
@@ -50,10 +50,10 @@ jobs:
 
       - run: npm pack
         name: Package
-        if: matrix.node == '18'
+        if: matrix.node == '22'
 
       - uses: actions/upload-artifact@v4
-        if: matrix.node == '18'
+        if: matrix.node == '22'
         with:
           name: node-titanium-sdk
           path: node-titanium-sdk-*.tgz
