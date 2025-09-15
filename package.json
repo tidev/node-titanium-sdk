@@ -48,10 +48,9 @@
     "semver": "7.3.8",
     "should": "13.2.3"
   },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/tidev/node-titanium-sdk.git"
-  },
+  "homepage": "https://titaniumsdk.com",
+  "bugs": "https://github.com/tidev/node-titanium-sdk/issues",
+  "repository": "https://github.com/tidev/node-titanium-sdk",
   "scripts": {
     "lint": "eslint .",
     "test": "npm run lint && npm run unit-test",
