@@ -42,7 +42,7 @@
     "eslint-plugin-mocha": "9.0.0",
     "husky": "8.0.3",
     "lint-staged": "13.2.0",
-    "mocha": "8.1.1",
+    "mocha": "11.7.4",
     "mocha-jenkins-reporter": "0.4.8",
     "nyc": "15.1.0",
     "semver": "7.3.8",
