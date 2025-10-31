@@ -24,8 +24,7 @@
     "@xmldom/xmldom": "0.8.11",
     "babel-plugin-transform-titanium": "0.1.1",
     "babel-preset-minify": "0.5.2",
-    "stream-splitter": "0.3.2",
-    "unorm": "1.6.0"
+    "stream-splitter": "0.3.2"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "4.0.5",
