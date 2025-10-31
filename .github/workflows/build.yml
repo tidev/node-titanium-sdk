@@ -2,7 +2,7 @@ name: Build
 on:
   push:
     branches:
-    - master
+    - main
     - "[0-9]+_[0-9]+_X"
   pull_request:
 env:
@@ -15,10 +15,10 @@ jobs:
         node: [ '22' ]
     name: Node ${{ matrix.node }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
 
@@ -27,7 +27,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: node_modules
-          key: ${{ runner.OS }}-node-modules-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.OS }}-node-modules-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.OS }}-node-modules-
             ${{ runner.OS }}-

@@ -1,14 +1,14 @@
-/* eslint no-unused-expressions: "off" */
-'use strict';
+import { describe, it, before, after } from 'vitest';
+import { jsanalyze } from '../lib/jsanalyze.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const path = require('path');
-const fs = require('fs-extra');
-const should = require('should'); // eslint-disable-line no-unused-vars
-const jsanalyze = require('../lib/jsanalyze');
-const sortObject = require('../lib/jsanalyze').sortObject;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const { sortObject } = jsanalyze;
 
-describe('jsanalyze', function () {
-	describe('#analyzeJs()', function () {
+describe('jsanalyze', () => {
+	describe('#analyzeJs()', () => {
 		const tmpDir = path.join(__dirname, 'tmp');
 
 		before(function (finish) {
@@ -22,12 +22,12 @@ describe('jsanalyze', function () {
 			fs.remove(tmpDir, finish);
 		});
 
-		it('tracks Ti API symbols', function () {
+		it('tracks Ti API symbols', () => {
 			const results = jsanalyze.analyzeJs('Ti.API.info("yeah");', {});
-			results.symbols.should.eql([ 'API.info', 'API' ]);
+			expect(results.symbols).toEqual([ 'API.info', 'API' ]);
 		});
 
-		it('Should ignore Ti in string', function () {
+		it('Should ignore Ti in string', () => {
 			const results = jsanalyze.analyzeJs(`
 			Ti.API.info("Ti. In A String Causes Issues?".toUpperCase());
 			Ti.API.info(\`Ti.UI.AlertDialog selected button at index: \${index}\`);
@@ -38,14 +38,14 @@ describe('jsanalyze', function () {
 			"Ti.Test".toUpperCase();
 			Ti['UI'].createWebView();
 			"Ti.Test"`, {});
-			results.symbols.should.eql([ 'API.info', 'API', 'UI.createLabel', 'UI', 'API.version', 'UI.createWebView' ]);
+			expect(results.symbols).toEqual([ 'API.info', 'API', 'UI.createLabel', 'UI', 'API.version', 'UI.createWebView' ]);
 		});
 
-		it('tracks Ti API usage across multiple calls', function () {
+		it('tracks Ti API usage across multiple calls', () => {
 			const results = jsanalyze.analyzeJs('Ti.UI.createView({});', {});
-			results.symbols.should.eql([ 'UI.createView', 'UI' ]); // symbols only includes from this call
+			expect(results.symbols).toEqual([ 'UI.createView', 'UI' ]); // symbols only includes from this call
 			// includes symbols from this test and the one above!
-			jsanalyze.getAPIUsage().should.eql({
+			expect(jsanalyze.getAPIUsage()).toEqual({
 				'Titanium.API': 4,
 				'Titanium.API.info': 3,
 				'Titanium.API.version': 1,
@@ -56,17 +56,17 @@ describe('jsanalyze', function () {
 			});
 		});
 
-		it('converts global "this" references into "global" references when transpiling', function () {
+		it('converts global "this" references into "global" references when transpiling', () => {
 			const results = jsanalyze.analyzeJs('this.myGlobalMethod = function() {};', { transpile: true });
-			results.contents.should.eql('global.myGlobalMethod = function () {};');
+			expect(results.contents).toEqual('global.myGlobalMethod = function () {};');
 		});
 
-		it('doesn\'t converts function-scoped "this" references into "global" references when transpiling', function () {
+		it('doesn\'t converts function-scoped "this" references into "global" references when transpiling', () => {
 			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };', { transpile: true });
-			results.contents.should.eql('var myGlobalMethod = function myGlobalMethod() {return this;};');
+			expect(results.contents).toEqual('var myGlobalMethod = function myGlobalMethod() {return this;};');
 		});
 
-		it('generates source maps inline into generated js file', function () {
+		it('generates source maps inline into generated js file', () => {
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
 			const contents = fs.readFileSync(inputJSFile, 'utf-8');
 			let expectedSourceMap = fs.readJSONSync(`${inputJSFile}.map`);
@@ -81,10 +81,10 @@ describe('jsanalyze', function () {
 					filename: inputJSFile
 				});
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
-			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
+			expect(results.contents).toEqual(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
 
-		it('generates source maps inline into generated js file and removes sourcesContent for android platform', function () {
+		it('generates source maps inline into generated js file and removes sourcesContent for android platform', () => {
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
 			const contents = fs.readFileSync(inputJSFile, 'utf-8');
 			let expectedSourceMap = fs.readJSONSync(`${inputJSFile}.map`);
@@ -99,10 +99,10 @@ describe('jsanalyze', function () {
 					platform: 'android',
 				});
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
-			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
+			expect(results.contents).toEqual(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
 
-		it('handles input JS file with existing sourceMappingURL pointing to file', function () {
+		it('handles input JS file with existing sourceMappingURL pointing to file', () => {
 			const inputMapFile = path.join(__dirname, 'resources/input.js.map');
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
 			const results = jsanalyze.analyzeJs(`var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=file://${inputMapFile}`,
@@ -115,10 +115,10 @@ describe('jsanalyze', function () {
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile); // passes along the original source file via sources/sourceRoot
 			expectedSourceMap = sortObject(expectedSourceMap);
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
-			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
+			expect(results.contents).toEqual(`var myGlobalMethod = function myGlobalMethod() {return this;};\n\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
 
-		it('handles input JS file with existing sourceMappingURL with data: uri', function () {
+		it('handles input JS file with existing sourceMappingURL with data: uri', () => {
 			const originalSourceFile = path.join(__dirname, 'resources/input.js');
 			// given that it's inlined, it will try to resolve the relative 'input.js' source as relative to the JS filename we pass along in options.
 			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQUcsU0FBakJBLGNBQWMsR0FBYyxDQUFFLE9BQU8sSUFBSSxDQUFFLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJ2YXIgbXlHbG9iYWxNZXRob2QgPSBmdW5jdGlvbigpIHsgcmV0dXJuIHRoaXM7IH07Il19',
@@ -131,10 +131,10 @@ describe('jsanalyze', function () {
 			expectedSourceMap.sourceRoot = path.dirname(originalSourceFile); // passes along the original source file via sources/sourceRoot
 			expectedSourceMap = sortObject(expectedSourceMap);
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
-			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
+			expect(results.contents).toEqual(`var myGlobalMethod = function myGlobalMethod() {return this;};\n\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
 
-		it('handles input JS file with existing sourceMappingURL pointing to non-existent file', function () {
+		it('handles input JS file with existing sourceMappingURL pointing to non-existent file', () => {
 			// treat like there is no original input source map....
 			// only difference here is that there's an extra newline to deal with versus the "base" test case
 			const inputJSFile = path.join(__dirname, 'resources/input.nonexistent.sourcemapfile.js');
@@ -149,27 +149,27 @@ describe('jsanalyze', function () {
 					filename: inputJSFile
 				});
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
-			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
+			expect(results.contents).toEqual(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
 
 		// babel-plugin-transform-titanium
 		it('converts OS_IOS into boolean', () => {
 			const results = jsanalyze.analyzeJs('if (OS_IOS) {}', { transpile: true, transform: { platform: 'ios' } });
-			results.contents.should.eql('if (true) {}');
+			expect(results.contents).toEqual('if (true) {}');
 		});
 
 		it('should fallback to looser parsing if required', () => {
 			const results = jsanalyze.analyzeJs('return "foo";');
-			results.contents.should.eql('return "foo";');
+			expect(results.contents).toEqual('return "foo";');
 		});
 
 		it('should handle errors', () => {
-			should(() => jsanalyze.analyzeJs('return foo!;console.log("bar");')).throw('Failed to parse undefined\nUnexpected token, expected ";" (1:10)');
+			expect(() => jsanalyze.analyzeJs('return foo!;console.log("bar");')).toThrow('Failed to parse undefined\nUnexpected token, expected ";" (1:10)');
 		});
 	});
 
-	describe('#analyzeJsFile()', function () {
-		it('should transform contents', function () {
+	describe('#analyzeJsFile()', () => {
+		it('should transform contents', () => {
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
 
 			let expectedSourceMap = fs.readJSONSync(`${inputJSFile}.map`);
@@ -181,32 +181,32 @@ describe('jsanalyze', function () {
 					sourceMap: true
 				});
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
-			results.contents.should.eql(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
+			expect(results.contents).toEqual(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
 	});
 
-	describe('#analyzeHtml', function () {
-		it('should analyze an html file', function () {
+	describe('#analyzeHtml', () => {
+		it('should analyze an html file', () => {
 			const inputFile = path.join(__dirname, 'resources/hello.html');
 
 			const results = jsanalyze.analyzeHtml(fs.readFileSync(inputFile, 'utf8'));
-			results.should.be.an.Array();
-			results.length.should.equal(2);
-			results.should.deepEqual([
+			expect(results).toBeInstanceOf(Array);
+			expect(results.length).toEqual(2);
+			expect(results).toEqual([
 				'input.js',
 				'resources/input.js'
 			]);
 		});
 	});
 
-	describe('#analyzeHtmlFile', function () {
-		it('should analyze an html file', function () {
+	describe('#analyzeHtmlFile', () => {
+		it('should analyze an html file', () => {
 			const inputFile = path.join(__dirname, 'resources/hello.html');
 
 			const results = jsanalyze.analyzeHtmlFile(inputFile);
-			results.should.be.an.Array();
-			results.length.should.equal(2);
-			results.should.deepEqual([
+			expect(results).toBeInstanceOf(Array);
+			expect(results.length).toEqual(2);
+			expect(results).toEqual([
 				'input.js',
 				'resources/input.js'
 			]);

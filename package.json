@@ -1,89 +1,48 @@
 {
   "name": "node-titanium-sdk",
-  "description": "Appcelerator Titanium SDK Library",
+  "version": "7.0.0",
+  "author": "TiDev, Inc. <npm@tidev.io>",
+  "description": "Titanium SDK Library",
+  "type": "module",
+  "exports": "./lib/titanium.js",
+  "license": "Apache-2.0",
   "keywords": [
-    "appcelerator",
     "titanium",
+    "titanium-sdk",
+    "tidev",
     "mobile"
   ],
-  "version": "6.1.0",
-  "author": "TiDev, Inc. <npm@tidev.io>",
-  "license": "Apache-2.0",
-  "main": "./lib/titanium",
-  "directories": {
-    "lib": "./lib"
-  },
+  "files": [
+    "./bin",
+    "./lib"
+  ],
   "dependencies": {
-    "@babel/core": "7.11.6",
-    "@babel/parser": "7.11.5",
-    "@babel/plugin-transform-property-literals": "7.10.1",
-    "@babel/preset-env": "7.10.2",
-    "async": "3.2.4",
+    "@babel/core": "7.28.5",
+    "@babel/parser": "7.28.5",
+    "@babel/plugin-transform-property-literals": "7.27.1",
+    "@babel/preset-env": "7.28.5",
+    "@xmldom/xmldom": "0.8.11",
     "babel-plugin-transform-titanium": "0.1.1",
     "babel-preset-minify": "0.5.2",
-    "colors": "1.4.0",
-    "fs-extra": "11.1.1",
-    "node-appc": "1.1.6",
-    "node-uuid": "1.4.8",
     "stream-splitter": "0.3.2",
-    "unorm": "1.6.0",
-    "xmldom": "0.6.0"
+    "unorm": "1.6.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "17.5.0",
-    "@commitlint/config-conventional": "17.4.4",
-    "@seadub/danger-plugin-dependencies": "1.0.0",
-    "@seadub/danger-plugin-eslint": "2.0.0",
-    "@seadub/danger-plugin-junit": "0.3.0",
-    "babel-plugin-tester": "10.1.0",
-    "danger": "11.2.4",
-    "eslint": "7.4.0",
-    "eslint-config-axway": "6.0.2",
-    "eslint-plugin-mocha": "9.0.0",
-    "husky": "8.0.3",
-    "lint-staged": "13.2.0",
-    "mocha": "8.1.1",
-    "mocha-jenkins-reporter": "0.4.8",
-    "nyc": "15.1.0",
-    "semver": "7.3.8",
-    "should": "13.2.3"
+    "@vitest/coverage-v8": "4.0.5",
+    "babel-plugin-tester": "12.0.0",
+    "oxlint": "1.25.0",
+    "semver": "7.7.3",
+    "vitest": "4.0.5"
   },
   "homepage": "https://github.com/tidev/node-titanium-sdk",
   "bugs": "https://github.com/tidev/node-titanium-sdk/issues",
-  "repository": "https://github.com/tidev/node-titanium-sdk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tidev/node-titanium-sdk"
+  },
   "scripts": {
-    "lint": "eslint .",
-    "test": "npm run lint && npm run unit-test",
-    "unit-test": "nyc mocha tests/*_test.js --exit",
-    "prepare": "husky install"
-  },
-  "mocha": {
-    "timeout": 30000,
-    "check-leaks": true,
-    "reporter": "mocha-jenkins-reporter",
-		"reporter-option": "junit_report_path=junit_report.xml"
-  },
-  "nyc": {
-    "check-coverage": true,
-    "lines": 56,
-    "statements": 56,
-    "functions": 60,
-    "branches": 40,
-    "exclude": [
-      "tests/**/*.js",
-      "locales/**/*.js"
-    ],
-    "reporter": [
-      "cobertura",
-      "text"
-    ]
-  },
-  "lint-staged": {
-    "*.js": "eslint"
-  },
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
+    "coverage": "vitest --coverage",
+    "lint": "oxlint",
+    "test": "vitest"
   }
 }

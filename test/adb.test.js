@@ -1,17 +1,12 @@
-/* eslint no-unused-expressions: "off" */
-'use strict';
+import { describe, it } from 'vitest';
+import { Emulator } from '../lib/emulator.js';
+import { android } from '../lib/android.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-function MockConfig() {
-	this.get = function (s, d) {
-		return d;
-	};
-}
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const fs = require('fs');
-const path = require('path');
-const semver = require('semver');
-const should = require('should'); // eslint-disable-line no-unused-vars
-const android = require('../lib/android');
 android.androidPackageJson({
 	vendorDependencies: {
 		'android sdk': '>=23.x <=27.x',
@@ -24,62 +19,64 @@ android.androidPackageJson({
 	},
 });
 
-const ADB = require('../lib/adb');
-const Emulator = require('../lib/emulator');
+function MockConfig() {
+	this.get = function (s, d) {
+		return d;
+	};
+}
 
 const config = new MockConfig();
 const adb = new ADB(config);
 const emulator = new Emulator(config);
 
-describe('adb', function () {
-
-	it('#version() returns a valid semver string', function (finished) {
-		adb.version(function (err, ver) {
+describe('adb', () => {
+	it('#version() returns a valid semver string', (finished) => {
+		adb.version((err, ver) => {
 			if (err) {
 				return finished(err);
 			}
-			ver.should.match(/^1\.0\.\d+/);
-			should(semver.valid(ver)).not.be.null();
+			expect(ver).toMatch(/^1\.0\.\d+/);
+			expect(semver.valid(ver)).not.toBeNull();
 			finished();
 		});
 	});
 
 	// TODO: Add test where we start an emulator first, get it in listing, then stop it?
-	it('#devices() returns empty Array when no emulators running', function (finished) {
-		adb.devices(function (err, devices) {
+	it('#devices() returns empty Array when no emulators running', (finished) => {
+		adb.devices((err, devices) => {
 			if (err) {
 				return finished(err);
 			}
-			devices.should.be.an.Array();
+			expect(devices).toBeInstanceOf(Array);
 			finished();
 		});
 	});
 
 	// TODO: Start an emulator, make sure we get event?
-	it('#trackDevices()', function (finished) {
+	it('#trackDevices()', (finished) => {
 		let connection;
 		function done(e) {
 			connection.end();
 			finished(e);
 		}
-		connection = adb.trackDevices(function (err, devices) {
+		connection = adb.trackDevices((err, devices) => {
 			if (err) {
 				return done(err);
 			}
 			// console.log('trackDevicesCallback: ' + JSON.stringify(devices));
-			devices.should.be.an.Array();
+			expect(devices).toBeInstanceOf(Array);
 			done();
 		});
 	});
 
-	describe('with an emulator running', function () {
+	describe('with an emulator running', () => {
 		let avd;
 		let device;
 
-		before(function (finished) {
+		before((finished) => {
 			this.timeout(30000);
 
-			emulator.detect(function (err, avds) {
+			emulator.detect((err, avds) => {
 				if (err) {
 					return finished(err);
 				}
@@ -88,68 +85,68 @@ describe('adb', function () {
 				}
 				avd = avds[0];
 
-				emulator.start(avd.id, function (err, emu) {
+				emulator.start(avd.id, (err, emu) => {
 					if (err) {
 						return finished(err);
 					}
 
-					emu.on('ready', function (d) {
+					emu.on('ready', (d) => {
 						device = d;
 						finished();
 					});
 
-					emu.on('timeout', function () {
+					emu.on('timeout', () => {
 						finished(new Error('emulator.start() timed out'));
 					});
 				});
 			});
 		});
 
-		after(function (finished) {
+		after((finished) => {
 			this.timeout(35000);
 			// Just call finished if there is no device, there may have been an issue when starting
 			// the emulator in the before
 			if (!device) {
 				return finished();
 			}
-			emulator.stop(device.emulator.id, function (errOrCode) {
-				errOrCode.should.eql(0);
+			emulator.stop(device.emulator.id, (errOrCode) => {
+				expect(errOrCode).toEqual(0);
 				setTimeout(finished, 5000); // let it wait 5 seconds or else adb will still report it as connected
 			});
 		});
 
-		it('#shell()', function (finished) {
-			adb.shell(device.id, 'cat /system/build.prop', function (err, data) {
+		it('#shell()', (finished) => {
+			adb.shell(device.id, 'cat /system/build.prop', (err, data) => {
 				if (err) {
 					return finished(err);
 				}
 
 				// data is a Buffer!
-				data.should.be.ok();
+				expect(data).toBeTruthy();
 				// (typeof data).should.eql('Buffer');
 
 				finished();
 			});
 		});
 
-		it('#startApp(), #getPid() and #stopApp()', function (finished) {
+		it('#startApp(), #getPid() and #stopApp()', (finished) => {
 			this.timeout(30000);
 
 			const appId = 'com.android.settings';
-			adb.startApp(device.id, appId, 'wifi.WifiStatusTest', function (err, data) {
-				should(err).not.be.ok();
+			adb.startApp(device.id, appId, 'wifi.WifiStatusTest', (err, data) => {
+				expect(err).toBeNull();
 
 				// data is a Buffer!
-				data.should.be.ok(); // TODO: Test data.toString() holds particular text?
+				expect(data).toBeTruthy(); // TODO: Test data.toString() holds particular text?
 
-				adb.getPid(device.id, appId, function (err, pid) {
-					should(err).not.be.ok();
+				adb.getPid(device.id, appId, (err, pid) => {
+					expect(err).toBeNull();
 
-					pid.should.be.a.Number();
-					pid.should.not.eql(0);
+					expect(pid).toBeInstanceOf(Number);
+					expect(pid).not.toEqual(0);
 
-					adb.stopApp(device.id, appId, function (err) {
-						should(err).not.be.ok();
+					adb.stopApp(device.id, appId, (err) => {
+						expect(err).toBeFalsy();
 
 						finished();
 					});
@@ -157,16 +154,16 @@ describe('adb', function () {
 			});
 		});
 
-		it('#pull()', function (finished) {
+		it('#pull()', (finished) => {
 			const dest = path.join(__dirname, 'hosts');
-			fs.existsSync(dest).should.eql(false);
+			expect(fs.existsSync(dest)).toBeFalsy();
 
-			adb.pull(device.id, '/system/etc/hosts', __dirname, function (err) {
-				should(err).not.be.ok();
+			adb.pull(device.id, '/system/etc/hosts', __dirname, (err) => {
+				expect(err).toBeFalsy();
 
 				// verify build.prop exists in current dir now!
 				try {
-					fs.existsSync(dest).should.eql(true);
+					expect(fs.existsSync(dest)).toBeTruthy();
 				} finally {
 					try {
 						fs.unlinkSync(dest);
@@ -178,25 +175,25 @@ describe('adb', function () {
 			});
 		});
 
-		it('#push()', function (finished) {
+		it('#push()', (finished) => {
 			const dest = '/mnt/sdcard/tmp/test-adb.js';
 
 			// Ensure dest file doesn't exist
-			adb.shell(device.id, 'rm -f ' + dest, function (err) {
-				should(err).not.be.ok();
+			adb.shell(device.id, 'rm -f ' + dest, (err) => {
+				expect(err).toBeFalsy();
 
 				// Then piush this file to dest
-				adb.push(device.id, __filename, dest, function (err) {
-					should(err).not.be.ok();
+				adb.push(device.id, __filename, dest, (err) => {
+					expect(err).toBeFalsy();
 
 					// verify it now exists and matches
-					adb.shell(device.id, 'cat ' + dest, function (err, data) {
-						should(err).not.be.ok();
+					adb.shell(device.id, 'cat ' + dest, (err, data) => {
+						expect(err).toBeFalsy();
 
 						// data is a Buffer!
-						data.should.be.ok();
+						expect(data).toBeTruthy();
 						// normalize newlines, android uses \r\n
-						data.toString().replace(/\r\n/g, '\n').should.eql(fs.readFileSync(__filename).toString());
+						expect(data.toString().replace(/\r\n/g, '\n')).toEqual(fs.readFileSync(__filename).toString());
 
 						finished();
 					});
@@ -207,7 +204,7 @@ describe('adb', function () {
 
 	// TODO: Install a pre-built test app!
 	// function testInstallApp() {
-	// 	adb.installApp('emulator-5554', '~/appc/workspace/testapp2/build/android/bin/app.apk', function (err, data) {
+	// 	adb.installApp('emulator-5554', '~/appc/workspace/testapp2/build/android/bin/app.apk', (err, data) => {
 	// 		if (err) {
 	// 			console.error('ERROR! ' + err + '\n');
 	// 		} else {
@@ -219,7 +216,7 @@ describe('adb', function () {
 	// }
 	//
 	// function testForward() {
-	// 	adb.forward('015d21d4ff181a17', 'tcp:5000', 'tcp:6000', function (err, data) {
+	// 	adb.forward('015d21d4ff181a17', 'tcp:5000', 'tcp:6000', (err, data) => {
 	// 		if (err) {
 	// 			console.error('ERROR! ' + err + '\n');
 	// 		} else {

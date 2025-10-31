@@ -1,6 +1,4 @@
-## Titanium-SDK
-
-[![Greenkeeper badge](https://badges.greenkeeper.io/appcelerator/node-titanium-sdk.svg)](https://greenkeeper.io/)
+## node-titanium-sdk
 
 This is the Titanium SDK common library used for all SDK specific CLI commands.
 

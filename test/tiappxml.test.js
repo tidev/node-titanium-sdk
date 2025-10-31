@@ -1,10 +1,12 @@
-const should = require('should'); // eslint-disable-line no-unused-vars
+import { describe, it } from 'vitest';
+import { tiappxml } from '../lib/tiappxml.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ti = require('../lib/titanium'),
-	fs = require('fs'),
-	path = require('path');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-describe('tiappxml', function () {
+describe('tiappxml', () => {
 /*
 (function () {
 	var tiapp = new ti.tiappxml();
@@ -81,31 +83,31 @@ describe('tiappxml', function () {
 }());
 */
 
-	it('tiapp2.xml', function () {
-		var xmlPath = path.join(__dirname, 'resources', 'tiapp2.xml'),
-			tiapp = new ti.tiappxml(xmlPath);
+	it('tiapp2.xml', () => {
+		const xmlPath = path.join(__dirname, 'resources', 'tiapp2.xml');
+		const tiapp = new tiappxml(xmlPath);
 
-		tiapp.toString().should.eql('[object Object]');
-		(tiapp.toString('json') + '\n').should.eql(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.json')).toString());
-		(tiapp.toString('pretty-json') + '\n').should.eql(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.pretty.json')).toString());
+		expect(tiapp.toString()).toBe('[object Object]');
+		expect(tiapp.toString('json') + '\n').toBe(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.json')).toString());
+		expect(tiapp.toString('pretty-json') + '\n').toBe(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.pretty.json')).toString());
 		// have to ignore newlines, since thye can differ in OS-style
-		(tiapp.toString('xml').replace(/(\r\n|\n|\r)/gm, '')).should.eql(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.xml')).toString().replace(/(\r\n|\n|\r)/gm, ''));
+		expect(tiapp.toString('xml').replace(/(\r\n|\n|\r)/gm, '')).toBe(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.xml')).toString().replace(/(\r\n|\n|\r)/gm, ''));
 	});
 
-	it('tiapp4.xml', function () {
-		var tiapp = new ti.tiappxml(path.join(__dirname, '/resources/tiapp4.xml'));
-		tiapp.id.should.eql('ti.testapp');
+	it('tiapp4.xml', () => {
+		const tiapp = new tiappxml(path.join(__dirname, '/resources/tiapp4.xml'));
+		expect(tiapp.id).toBe('ti.testapp');
 	});
 
-	it('should throw if file does not exist', function () {
-		should(() => new ti.tiappxml('foo')).throw('tiapp.xml file does not exist');
+	it('should throw if file does not exist', () => {
+		expect(() => new tiappxml('foo')).toThrow('tiapp.xml file does not exist');
 	});
 
-	it('should support parsing a tiapp from a string', function () {
-		var contents = fs.readFileSync(path.join(__dirname, 'resources', 'tiapp2.xml'), 'utf8');
-		var tiapp = new ti.tiappxml();
+	it('should support parsing a tiapp from a string', () => {
+		const contents = fs.readFileSync(path.join(__dirname, 'resources', 'tiapp2.xml'), 'utf8');
+		const tiapp = new tiappxml();
 		tiapp.parse(contents);
-		(tiapp.toString('json') + '\n').should.eql(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.json')).toString());
+		expect(tiapp.toString('json') + '\n').toBe(fs.readFileSync(path.join(__dirname, 'results', 'tiapp2.json')).toString());
 	});
 /*
 (function () {
