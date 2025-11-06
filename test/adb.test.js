@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-android.androidPackageJson({
+android.setAndroidPackageJson({
 	vendorDependencies: {
 		'android sdk': '>=23.x <=27.x',
 		'android build tools': '>=25.x <=27.x',
@@ -20,7 +20,7 @@ android.androidPackageJson({
 });
 
 function MockConfig() {
-	this.get = function (s, d) {
+	this.get = function (_s, d) {
 		return d;
 	};
 }
@@ -167,7 +167,7 @@ describe('adb', () => {
 				} finally {
 					try {
 						fs.unlinkSync(dest);
-					} catch (_error) {
+					} catch {
 						// squash
 					}
 				}

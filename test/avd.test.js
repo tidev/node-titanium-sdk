@@ -3,12 +3,12 @@ import { Emulator } from '../lib/emulator.js';
 import { android } from '../lib/android.js';
 
 function MockConfig() {
-	this.get = function (s, d) {
+	this.get = function (_s, d) {
 		return d;
 	};
 }
 
-android.androidPackageJson({
+android.setAndroidPackageJson({
 	vendorDependencies: {
 		'android sdk': '>=23.x <=27.x',
 		'android build tools': '>=25.x <=27.x',
