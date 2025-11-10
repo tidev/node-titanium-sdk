@@ -69,7 +69,7 @@ describe('jsanalyze', () => {
 		it('generates source maps inline into generated js file', () => {
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
 			const contents = fs.readFileSync(inputJSFile, 'utf-8');
-			let expectedSourceMap = fs.readJSONSync(`${inputJSFile}.map`);
+			let expectedSourceMap = JSON.parse(fs.readFileSync(`${inputJSFile}.map`, 'utf8'));
 
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
@@ -87,7 +87,7 @@ describe('jsanalyze', () => {
 		it('generates source maps inline into generated js file and removes sourcesContent for android platform', () => {
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
 			const contents = fs.readFileSync(inputJSFile, 'utf-8');
-			let expectedSourceMap = fs.readJSONSync(`${inputJSFile}.map`);
+			let expectedSourceMap = JSON.parse(fs.readFileSync(`${inputJSFile}.map`, 'utf8'));
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			delete expectedSourceMap.sourcesContent;
 			expectedSourceMap = sortObject(expectedSourceMap);
@@ -111,7 +111,7 @@ describe('jsanalyze', () => {
 					sourceMap: true,
 					filename: 'intermediate.js'
 				});
-			let expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/intermediate.js.map'));
+			let expectedSourceMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'resources/intermediate.js.map'), 'utf8'));
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile); // passes along the original source file via sources/sourceRoot
 			expectedSourceMap = sortObject(expectedSourceMap);
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
@@ -127,7 +127,7 @@ describe('jsanalyze', () => {
 					sourceMap: true,
 					filename: path.join(__dirname, 'resources/intermediate.js')
 				});
-			let expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/intermediate.js.map'));
+			let expectedSourceMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'resources/intermediate.js.map'), 'utf8'));
 			expectedSourceMap.sourceRoot = path.dirname(originalSourceFile); // passes along the original source file via sources/sourceRoot
 			expectedSourceMap = sortObject(expectedSourceMap);
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
@@ -139,7 +139,7 @@ describe('jsanalyze', () => {
 			// only difference here is that there's an extra newline to deal with versus the "base" test case
 			const inputJSFile = path.join(__dirname, 'resources/input.nonexistent.sourcemapfile.js');
 			const contents = fs.readFileSync(inputJSFile, 'utf-8');
-			let expectedSourceMap = fs.readJSONSync(path.join(__dirname, 'resources/input.nonexistent.sourcemapfile.js.map'));
+			let expectedSourceMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'resources/input.nonexistent.sourcemapfile.js.map'), 'utf8'));
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
 			const results = jsanalyze.analyzeJs(contents,
@@ -172,7 +172,7 @@ describe('jsanalyze', () => {
 		it('should transform contents', () => {
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
 
-			let expectedSourceMap = fs.readJSONSync(`${inputJSFile}.map`);
+			let expectedSourceMap = JSON.parse(fs.readFileSync(`${inputJSFile}.map`, 'utf8'));
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
 			const results = jsanalyze.analyzeJsFile(inputJSFile,
