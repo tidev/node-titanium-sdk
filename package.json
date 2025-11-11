@@ -24,12 +24,13 @@
     "@xmldom/xmldom": "0.8.11",
     "babel-plugin-transform-titanium": "0.1.1",
     "babel-preset-minify": "0.5.2",
-    "stream-splitter": "0.3.2"
+    "stream-splitter": "0.3.2",
+    "which": "6.0.0"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "4.0.8",
     "babel-plugin-tester": "12.0.0",
-    "oxlint": "1.26.0",
+    "oxlint": "1.28.0",
     "semver": "7.7.3",
     "vitest": "4.0.8"
   },
