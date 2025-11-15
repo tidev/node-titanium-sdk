@@ -1,4 +1,4 @@
-name: Build
+name: Tests
 
 on:
   pull_request:
@@ -16,7 +16,7 @@ env:
 
 jobs:
   build:
-    name: Node ${{ matrix.node }}
+    name: Test on Node.js ${{ matrix.node }}
     runs-on: macos-latest # macos-13
     strategy:
       matrix:
@@ -41,19 +41,15 @@ jobs:
 
       - name: Lint
         run: pnpm lint
-        name: Lint
 
-      # - name: Build and Test
-      #   uses: reactivecircus/android-emulator-runner@v2
-      #   with:
-      #     api-level: 29
-      #     target: playstore
-      #     script: npm run unit-test
-      #     emulator-options: -no-window -noaudio -no-boot-anim
-      #     disable-animations: true # defaulting to true, the commands sent to emulator to do this sometimes run too quickly after boot and cause "adb: device offline" failures
-
-      - name: Run tests
-        run: pnpm coverage
+      - name: Build and Test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: playstore
+          script: pnpm coverage
+          emulator-options: -no-window -noaudio -no-boot-anim
+          disable-animations: true # defaulting to true, the commands sent to emulator to do this sometimes run too quickly after boot and cause "adb: device offline" failures
 
       - run: npm pack
         name: Package
