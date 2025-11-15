@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { Emulator } from '../lib/emulator.js';
+import { EmulatorManager } from '../lib/emulator.js';
 import { setAndroidPackageJson } from '../lib/android.js';
 
 function MockConfig() {
@@ -18,7 +18,7 @@ setAndroidPackageJson({
 	},
 });
 const config = new MockConfig();
-const emulator = new Emulator(config);
+const emulator = new EmulatorManager(config);
 
 describe('emulator', () => {
 	it('#detect() any', async () => {

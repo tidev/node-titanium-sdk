@@ -1,5 +1,5 @@
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
-import { jsanalyze, sortObject } from '../lib/jsanalyze.js';
+import { analyzeJs, analyzeJsFile, analyzeHtml, analyzeHtmlFile, sortObject, getAPIUsage } from '../lib/jsanalyze.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,12 +24,12 @@ describe('jsanalyze', () => {
 		});
 
 		it('tracks Ti API symbols', () => {
-			const results = jsanalyze.analyzeJs('Ti.API.info("yeah");', {});
+			const results = analyzeJs('Ti.API.info("yeah");', {});
 			expect(results.symbols).toEqual([ 'API.info', 'API' ]);
 		});
 
 		it('Should ignore Ti in string', () => {
-			const results = jsanalyze.analyzeJs(`
+			const results = analyzeJs(`
 			Ti.API.info("Ti. In A String Causes Issues?".toUpperCase());
 			Ti.API.info(\`Ti.UI.AlertDialog selected button at index: \${index}\`);
 			const message = \`Ti.UI.TabbedBar changed to index: \${index}\`;
@@ -43,10 +43,10 @@ describe('jsanalyze', () => {
 		});
 
 		it('tracks Ti API usage across multiple calls', () => {
-			const results = jsanalyze.analyzeJs('Ti.UI.createView({});', {});
+			const results = analyzeJs('Ti.UI.createView({});', {});
 			expect(results.symbols).toEqual([ 'UI.createView', 'UI' ]); // symbols only includes from this call
 			// includes symbols from this test and the one above!
-			expect(jsanalyze.getAPIUsage()).toEqual({
+			expect(getAPIUsage()).toEqual({
 				'Titanium.API': 4,
 				'Titanium.API.info': 3,
 				'Titanium.API.version': 1,
@@ -58,12 +58,12 @@ describe('jsanalyze', () => {
 		});
 
 		it('converts global "this" references into "global" references when transpiling', () => {
-			const results = jsanalyze.analyzeJs('this.myGlobalMethod = function() {};', { transpile: true });
+			const results = analyzeJs('this.myGlobalMethod = function() {};', { transpile: true });
 			expect(results.contents).toEqual('global.myGlobalMethod = function () {};');
 		});
 
 		it('doesn\'t converts function-scoped "this" references into "global" references when transpiling', () => {
-			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };', { transpile: true });
+			const results = analyzeJs('var myGlobalMethod = function() { return this; };', { transpile: true });
 			expect(results.contents).toEqual('var myGlobalMethod = function myGlobalMethod() {return this;};');
 		});
 
@@ -75,7 +75,7 @@ describe('jsanalyze', () => {
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
 
-			const results = jsanalyze.analyzeJs(contents, {
+			const results = analyzeJs(contents, {
 				transpile: true,
 				sourceMap: true,
 				filename: inputJSFile
@@ -91,7 +91,7 @@ describe('jsanalyze', () => {
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			delete expectedSourceMap.sourcesContent;
 			expectedSourceMap = sortObject(expectedSourceMap);
-			const results = jsanalyze.analyzeJs(contents, {
+			const results = analyzeJs(contents, {
 				transpile: true,
 				sourceMap: true,
 				filename: inputJSFile,
@@ -104,7 +104,7 @@ describe('jsanalyze', () => {
 		it('handles input JS file with existing sourceMappingURL pointing to file', () => {
 			const inputMapFile = path.join(__dirname, 'resources/input.js.map');
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
-			const results = jsanalyze.analyzeJs(`var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=file://${inputMapFile}`, {
+			const results = analyzeJs(`var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=file://${inputMapFile}`, {
 				transpile: true,
 				sourceMap: true,
 				filename: 'intermediate.js'
@@ -119,7 +119,7 @@ describe('jsanalyze', () => {
 		it('handles input JS file with existing sourceMappingURL with data: uri', () => {
 			const originalSourceFile = path.join(__dirname, 'resources/input.js');
 			// given that it's inlined, it will try to resolve the relative 'input.js' source as relative to the JS filename we pass along in options.
-			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQUcsU0FBakJBLGNBQWMsR0FBYyxDQUFFLE9BQU8sSUFBSSxDQUFFLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJ2YXIgbXlHbG9iYWxNZXRob2QgPSBmdW5jdGlvbigpIHsgcmV0dXJuIHRoaXM7IH07Il19', {
+			const results = analyzeJs('var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQUcsU0FBakJBLGNBQWMsR0FBYyxDQUFFLE9BQU8sSUFBSSxDQUFFLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJ2YXIgbXlHbG9iYWxNZXRob2QgPSBmdW5jdGlvbigpIHsgcmV0dXJuIHRoaXM7IH07Il19', {
 				transpile: true,
 				sourceMap: true,
 				filename: path.join(__dirname, 'resources/intermediate.js')
@@ -139,7 +139,7 @@ describe('jsanalyze', () => {
 			let expectedSourceMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'resources/input.nonexistent.sourcemapfile.js.map'), 'utf8'));
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
-			const results = jsanalyze.analyzeJs(contents, {
+			const results = analyzeJs(contents, {
 				transpile: true,
 				sourceMap: true,
 				filename: inputJSFile
@@ -150,17 +150,17 @@ describe('jsanalyze', () => {
 
 		// babel-plugin-transform-titanium
 		it('converts OS_IOS into boolean', () => {
-			const results = jsanalyze.analyzeJs('if (OS_IOS) {}', { transpile: true, transform: { platform: 'ios' } });
+			const results = analyzeJs('if (OS_IOS) {}', { transpile: true, transform: { platform: 'ios' } });
 			expect(results.contents).toEqual('if (true) {}');
 		});
 
 		it('should fallback to looser parsing if required', () => {
-			const results = jsanalyze.analyzeJs('return "foo";');
+			const results = analyzeJs('return "foo";');
 			expect(results.contents).toEqual('return "foo";');
 		});
 
 		it('should handle errors', () => {
-			expect(() => jsanalyze.analyzeJs('return foo!;console.log("bar");')).toThrow('Failed to parse undefined\nUnexpected token, expected ";" (1:10)');
+			expect(() => analyzeJs('return foo!;console.log("bar");')).toThrow('Failed to parse undefined\nMissing semicolon. (1:10)');
 		});
 	});
 
@@ -171,7 +171,7 @@ describe('jsanalyze', () => {
 			let expectedSourceMap = JSON.parse(fs.readFileSync(`${inputJSFile}.map`, 'utf8'));
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
-			const results = jsanalyze.analyzeJsFile(inputJSFile, {
+			const results = analyzeJsFile(inputJSFile, {
 				transpile: true,
 				sourceMap: true
 			});
@@ -184,7 +184,7 @@ describe('jsanalyze', () => {
 		it('should analyze an html file', () => {
 			const inputFile = path.join(__dirname, 'resources/hello.html');
 
-			const results = jsanalyze.analyzeHtml(fs.readFileSync(inputFile, 'utf8'));
+			const results = analyzeHtml(fs.readFileSync(inputFile, 'utf8'));
 			expect(results).toBeInstanceOf(Array);
 			expect(results.length).toEqual(2);
 			expect(results).toEqual([
@@ -198,7 +198,7 @@ describe('jsanalyze', () => {
 		it('should analyze an html file', () => {
 			const inputFile = path.join(__dirname, 'resources/hello.html');
 
-			const results = jsanalyze.analyzeHtmlFile(inputFile);
+			const results = analyzeHtmlFile(inputFile);
 			expect(results).toBeInstanceOf(Array);
 			expect(results.length).toEqual(2);
 			expect(results).toEqual([

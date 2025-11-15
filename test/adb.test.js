@@ -1,5 +1,5 @@
 import { beforeAll, afterAll, describe, expect, it } from 'vitest';
-import { Emulator } from '../lib/emulator.js';
+import { EmulatorManager } from '../lib/emulator.js';
 import { setAndroidPackageJson } from '../lib/android.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -28,7 +28,7 @@ function MockConfig() {
 
 const config = new MockConfig();
 const adb = new ADB(config);
-const emulator = new Emulator(config);
+const emulator = new EmulatorManager(config);
 
 describe('adb', () => {
 	it('#version() returns a valid semver string', async () => {

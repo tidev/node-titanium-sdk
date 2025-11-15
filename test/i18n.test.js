@@ -23,7 +23,7 @@ describe('i18n', () => {
 	});
 
 	it('#findLaunchSreens()', () => {
-		const results = i18n.findLaunchScreens(__dirname, console);
+		const results = i18n.findLaunchScreens(__dirname);
 
 		expect(results).toBeInstanceOf(Array);
 		expect(results.length).toEqual(1);
