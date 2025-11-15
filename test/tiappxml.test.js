@@ -49,7 +49,7 @@ describe('tiappxml', () => {
 }());
 
 (function () {
-	var tiapp = new ti.tiappxml(path.dirname(module.filename) + '/resources/tiapp1.xml');
+	var tiapp = new ti.tiappxml(path.dirname(fileURLToPath(import.meta.url)) + '/resources/tiapp1.xml');
 
 	console.log('\nReading tiapp1.xml');
 	console.log('toString():')
@@ -63,7 +63,7 @@ describe('tiappxml', () => {
 }());
 
 (function () {
-	var tiapp = new ti.tiappxml(path.dirname(module.filename) + '/resources/tiapp1.xml');
+	var tiapp = new ti.tiappxml(path.dirname(fileURLToPath(import.meta.url)) + '/resources/tiapp1.xml');
 
 	tiapp.id = 'com.another.app';
 	tiapp.name = 'Another App';
@@ -111,7 +111,7 @@ describe('tiappxml', () => {
 	});
 /*
 (function () {
-	var tiapp = new ti.tiappxml(path.dirname(module.filename) + '/resources/tiapp3.xml');
+	var tiapp = new ti.tiappxml(path.dirname(fileURLToPath(import.meta.url)) + '/resources/tiapp3.xml');
 
 	console.log('\nReading tiapp3.xml');
 	console.log('toString():')

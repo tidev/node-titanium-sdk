@@ -31,6 +31,7 @@
     "@vitest/coverage-v8": "4.0.9",
     "babel-plugin-tester": "12.0.0",
     "oxlint": "1.28.0",
+    "rimraf": "6.1.0",
     "semver": "7.7.3",
     "vitest": "4.0.9"
   },

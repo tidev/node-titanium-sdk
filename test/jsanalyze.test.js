@@ -1,8 +1,10 @@
-import { describe, expect, it, before, after } from 'vitest';
+import { beforeAll, afterAll, describe, expect, it } from 'vitest';
 import { jsanalyze, sortObject } from '../lib/jsanalyze.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { rimraf } from 'rimraf';
+import { mkdir } from 'node:fs/promises';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -10,15 +12,15 @@ describe('jsanalyze', () => {
 	describe('#analyzeJs()', () => {
 		const tmpDir = path.join(__dirname, 'tmp');
 
-		before(function (finish) {
+		beforeAll(async () => {
 			if (fs.existsSync(tmpDir)) {
-				fs.removeSync(tmpDir);
+				await rimraf(tmpDir);
 			}
-			fs.ensureDir(tmpDir, finish);
+			await mkdir(tmpDir, { recursive: true });
 		});
 
-		after(function (finish) {
-			fs.remove(tmpDir, finish);
+		afterAll(async () => {
+			await rimraf(tmpDir);
 		});
 
 		it('tracks Ti API symbols', () => {
@@ -73,12 +75,11 @@ describe('jsanalyze', () => {
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
 
-			const results = jsanalyze.analyzeJs(contents,
-				{
-					transpile: true,
-					sourceMap: true,
-					filename: inputJSFile
-				});
+			const results = jsanalyze.analyzeJs(contents, {
+				transpile: true,
+				sourceMap: true,
+				filename: inputJSFile
+			});
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
 			expect(results.contents).toEqual(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
@@ -90,13 +91,12 @@ describe('jsanalyze', () => {
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			delete expectedSourceMap.sourcesContent;
 			expectedSourceMap = sortObject(expectedSourceMap);
-			const results = jsanalyze.analyzeJs(contents,
-				{
-					transpile: true,
-					sourceMap: true,
-					filename: inputJSFile,
-					platform: 'android',
-				});
+			const results = jsanalyze.analyzeJs(contents, {
+				transpile: true,
+				sourceMap: true,
+				filename: inputJSFile,
+				platform: 'android',
+			});
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
 			expect(results.contents).toEqual(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
@@ -104,12 +104,11 @@ describe('jsanalyze', () => {
 		it('handles input JS file with existing sourceMappingURL pointing to file', () => {
 			const inputMapFile = path.join(__dirname, 'resources/input.js.map');
 			const inputJSFile = path.join(__dirname, 'resources/input.js');
-			const results = jsanalyze.analyzeJs(`var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=file://${inputMapFile}`,
-				{
-					transpile: true,
-					sourceMap: true,
-					filename: 'intermediate.js'
-				});
+			const results = jsanalyze.analyzeJs(`var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=file://${inputMapFile}`, {
+				transpile: true,
+				sourceMap: true,
+				filename: 'intermediate.js'
+			});
 			let expectedSourceMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'resources/intermediate.js.map'), 'utf8'));
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile); // passes along the original source file via sources/sourceRoot
 			expectedSourceMap = sortObject(expectedSourceMap);
@@ -120,12 +119,11 @@ describe('jsanalyze', () => {
 		it('handles input JS file with existing sourceMappingURL with data: uri', () => {
 			const originalSourceFile = path.join(__dirname, 'resources/input.js');
 			// given that it's inlined, it will try to resolve the relative 'input.js' source as relative to the JS filename we pass along in options.
-			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQUcsU0FBakJBLGNBQWMsR0FBYyxDQUFFLE9BQU8sSUFBSSxDQUFFLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJ2YXIgbXlHbG9iYWxNZXRob2QgPSBmdW5jdGlvbigpIHsgcmV0dXJuIHRoaXM7IH07Il19',
-				{
-					transpile: true,
-					sourceMap: true,
-					filename: path.join(__dirname, 'resources/intermediate.js')
-				});
+			const results = jsanalyze.analyzeJs('var myGlobalMethod = function() { return this; };\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImlucHV0LmpzIl0sIm5hbWVzIjpbIm15R2xvYmFsTWV0aG9kIl0sIm1hcHBpbmdzIjoiQUFBQSxJQUFJQSxjQUFjLEdBQUcsU0FBakJBLGNBQWMsR0FBYyxDQUFFLE9BQU8sSUFBSSxDQUFFLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJ2YXIgbXlHbG9iYWxNZXRob2QgPSBmdW5jdGlvbigpIHsgcmV0dXJuIHRoaXM7IH07Il19', {
+				transpile: true,
+				sourceMap: true,
+				filename: path.join(__dirname, 'resources/intermediate.js')
+			});
 			let expectedSourceMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'resources/intermediate.js.map'), 'utf8'));
 			expectedSourceMap.sourceRoot = path.dirname(originalSourceFile); // passes along the original source file via sources/sourceRoot
 			expectedSourceMap = sortObject(expectedSourceMap);
@@ -141,12 +139,11 @@ describe('jsanalyze', () => {
 			let expectedSourceMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'resources/input.nonexistent.sourcemapfile.js.map'), 'utf8'));
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
-			const results = jsanalyze.analyzeJs(contents,
-				{
-					transpile: true,
-					sourceMap: true,
-					filename: inputJSFile
-				});
+			const results = jsanalyze.analyzeJs(contents, {
+				transpile: true,
+				sourceMap: true,
+				filename: inputJSFile
+			});
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
 			expect(results.contents).toEqual(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
@@ -174,11 +171,10 @@ describe('jsanalyze', () => {
 			let expectedSourceMap = JSON.parse(fs.readFileSync(`${inputJSFile}.map`, 'utf8'));
 			expectedSourceMap.sourceRoot = path.dirname(inputJSFile);
 			expectedSourceMap = sortObject(expectedSourceMap);
-			const results = jsanalyze.analyzeJsFile(inputJSFile,
-				{
-					transpile: true,
-					sourceMap: true
-				});
+			const results = jsanalyze.analyzeJsFile(inputJSFile, {
+				transpile: true,
+				sourceMap: true
+			});
 			const expectedBase64Map = Buffer.from(JSON.stringify(expectedSourceMap)).toString('base64');
 			expect(results.contents).toEqual(`var myGlobalMethod = function myGlobalMethod() {return this;};\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${expectedBase64Map}\n`);
 		});
