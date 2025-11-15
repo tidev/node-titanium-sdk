@@ -1,6 +1,6 @@
-import { describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Emulator } from '../lib/emulator.js';
-import { android } from '../lib/android.js';
+import { setAndroidPackageJson } from '../lib/android.js';
 
 function MockConfig() {
 	this.get = function (_s, d) {
@@ -8,7 +8,7 @@ function MockConfig() {
 	};
 }
 
-android.setAndroidPackageJson({
+setAndroidPackageJson({
 	vendorDependencies: {
 		'android sdk': '>=23.x <=27.x',
 		'android build tools': '>=25.x <=27.x',

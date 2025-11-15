@@ -1,5 +1,5 @@
-import { describe, it } from 'vitest';
-import { i18n } from '../lib/i18n.js';
+import { describe, expect, it } from 'vitest';
+import * as i18n from '../lib/i18n.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 

@@ -1,13 +1,15 @@
-import { describe, it } from 'vitest';
+import { describe, expect, it, before, after } from 'vitest';
 import { Emulator } from '../lib/emulator.js';
-import { android } from '../lib/android.js';
+import { setAndroidPackageJson } from '../lib/android.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ADB } from '../lib/adb.js';
+import { setTimeout as delay } from 'node:timers/promises';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-android.setAndroidPackageJson({
+setAndroidPackageJson({
 	vendorDependencies: {
 		'android sdk': '>=23.x <=27.x',
 		'android build tools': '>=25.x <=27.x',
@@ -73,46 +75,40 @@ describe('adb', () => {
 		let avd;
 		let device;
 
-		before((finished) => {
+		before(async () => {
 			this.timeout(30000);
 
-			emulator.detect((err, avds) => {
+			const avds = await emulator.detect();
+			if (avds.length === 0) {
+				return finished(new Error('Tests require at least one emulator defined!'));
+			}
+			avd = avds[0];
+
+			emulator.start(avd.id, (err, emu) => {
 				if (err) {
 					return finished(err);
 				}
-				if (avds.length === 0) {
-					return finished(new Error('Tests require at least one emulator defined!'));
-				}
-				avd = avds[0];
 
-				emulator.start(avd.id, (err, emu) => {
-					if (err) {
-						return finished(err);
-					}
+				emu.on('ready', (d) => {
+					device = d;
+					finished();
+				});
 
-					emu.on('ready', (d) => {
-						device = d;
-						finished();
-					});
-
-					emu.on('timeout', () => {
-						finished(new Error('emulator.start() timed out'));
-					});
+				emu.on('timeout', () => {
+					finished(new Error('emulator.start() timed out'));
 				});
 			});
 		});
 
-		after((finished) => {
+		after(async () => {
 			this.timeout(35000);
 			// Just call finished if there is no device, there may have been an issue when starting
 			// the emulator in the before
 			if (!device) {
 				return finished();
 			}
-			emulator.stop(device.emulator.id, (errOrCode) => {
-				expect(errOrCode).toEqual(0);
-				setTimeout(finished, 5000); // let it wait 5 seconds or else adb will still report it as connected
-			});
+			await emulator.stop(device.emulator.id);
+			await delay(5000); // let it wait 5 seconds or else adb will still report it as connected
 		});
 
 		it('#shell()', (finished) => {

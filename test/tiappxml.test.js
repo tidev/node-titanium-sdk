@@ -1,4 +1,4 @@
-import { describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { tiappxml } from '../lib/tiappxml.js';
 import fs from 'node:fs';
 import path from 'node:path';

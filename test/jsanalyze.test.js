@@ -1,11 +1,10 @@
-import { describe, it, before, after } from 'vitest';
-import { jsanalyze } from '../lib/jsanalyze.js';
+import { describe, expect, it, before, after } from 'vitest';
+import { jsanalyze, sortObject } from '../lib/jsanalyze.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const { sortObject } = jsanalyze;
 
 describe('jsanalyze', () => {
 	describe('#analyzeJs()', () => {
