@@ -1,0 +1,62 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+    - main
+    - "[0-9]+_[0-9]+_X"
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+env:
+  ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 2000 # Default is 20
+
+jobs:
+  build:
+    name: Test on Node.js ${{ matrix.node }}
+    runs-on: macos-latest # macos-13
+    strategy:
+      matrix:
+        node: [ '24' ]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build and Test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: playstore
+          script: pnpm coverage
+          emulator-options: -no-window -noaudio -no-boot-anim
+          disable-animations: true # defaulting to true, the commands sent to emulator to do this sometimes run too quickly after boot and cause "adb: device offline" failures
+
+      - run: npm pack
+        name: Package
+        if: matrix.node == '24'
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.node == '24'
+        with:
+          name: node-titanium-sdk
+          path: node-titanium-sdk-*.tgz
