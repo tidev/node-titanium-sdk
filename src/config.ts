@@ -1,4 +1,6 @@
-export const defaultConfig = {
+import type { Config } from './types.js';
+
+export const defaultConfig: Partial<Config> = {
 	android: {
 		adb: {
 			install: {
@@ -112,13 +114,11 @@ export const defaultConfig = {
 			 */
 			security: null,
 
-			sqlite: {
-				/**
-				 * Path to the `sqlite` or `sqlite3` executable. Used to read the Xcode teams database.
-				 * @type {String}
-				 */
-				path: null
-			},
+			/**
+			 * Path to the `sqlite` or `sqlite3` executable. Used to read the Xcode teams database.
+			 * @type {String}
+			 */
+			sqlite: null,
 
 			/**
 			 * Path to the `xcode-select` executable.
@@ -173,6 +173,8 @@ export const defaultConfig = {
 	},
 
 	jdk: {
+		javaHome: null,
+
 		/**
 		 * A list of paths to search for JDKs.
 		 * @type {String[]|Object}
@@ -311,3 +313,11 @@ export const defaultConfig = {
 		}
 	}
 };
+
+export let config: Partial<Config> = {
+	...defaultConfig
+};
+
+export function resetConfig(): void {
+	config = { ...defaultConfig };
+}

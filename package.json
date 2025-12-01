@@ -4,7 +4,14 @@
   "author": "TiDev, Inc. <npm@tidev.io>",
   "description": "Titanium SDK Library",
   "type": "module",
-  "exports": "./lib/titanium.js",
+  "module": "./dist/index.mjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.js",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
   "license": "Apache-2.0",
   "keywords": [
     "titanium",
@@ -13,8 +20,8 @@
     "mobile"
   ],
   "files": [
-    "./bin",
-    "./lib"
+    "bin",
+    "dist"
   ],
   "dependencies": {
     "@babel/core": "7.28.5",
@@ -24,16 +31,23 @@
     "@xmldom/xmldom": "0.8.11",
     "babel-plugin-transform-titanium": "0.1.1",
     "babel-preset-minify": "0.5.2",
+    "snooplogg": "6.1.1",
     "stream-splitter": "0.3.2",
     "which": "6.0.0"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "4.0.10",
+    "@rollup/plugin-replace": "6.0.3",
+    "@types/node": "24.10.1",
+    "@vitest/coverage-v8": "4.0.14",
     "babel-plugin-tester": "12.0.0",
-    "oxlint": "1.29.0",
-    "rimraf": "6.1.0",
+    "dprint": "0.50.2",
+    "lefthook": "2.0.4",
+    "oxlint": "1.30.0",
+    "rimraf": "6.1.2",
     "semver": "7.7.3",
-    "vitest": "4.0.10"
+    "tsdown": "0.16.8",
+    "typescript": "5.9.3",
+    "vitest": "4.0.14"
   },
   "homepage": "https://github.com/tidev/node-titanium-sdk",
   "bugs": "https://github.com/tidev/node-titanium-sdk/issues",
@@ -42,8 +56,15 @@
     "url": "https://github.com/tidev/node-titanium-sdk"
   },
   "scripts": {
+    "build": "rimraf dist && tsdown -c tsdown.config.ts",
+    "check": "pnpm type-check && pnpm lint",
     "coverage": "vitest --coverage",
+    "format": "dprint fmt",
     "lint": "oxlint",
-    "test": "vitest"
+    "prepublishOnly": "pnpm run build",
+    "test": "vitest",
+    "test:bun": "bun --bun test --config=bunfig.toml",
+    "test:deno": "deno run --allow-all --sloppy-imports ./node_modules/vitest/vitest.mjs",
+    "type-check": "tsc --noEmit"
   }
 }

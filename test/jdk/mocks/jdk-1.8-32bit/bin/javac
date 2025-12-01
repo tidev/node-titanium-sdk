@@ -1,0 +1,10 @@
+#!/bin/sh
+
+while test $# -gt 0; do
+	if [ "$1" = "-d64" ]; then
+		exit 1
+	fi
+	shift
+done
+
+>&2 echo "javac 1.8.0_92"

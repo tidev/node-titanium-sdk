@@ -1,5 +1,12 @@
 {
-	"ignorePatterns": [
-		"test/resources/**"
-	]
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "env": {
+    "node": true,
+    "es2024": true
+  },
+  "ignorePatterns": [
+    "coverage/**",
+    "dist/**",
+	"test/resources/**"
+  ]
 }
