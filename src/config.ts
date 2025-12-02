@@ -186,8 +186,12 @@ export const defaultConfig: Partial<Config> = {
 			],
 			linux: [
 				'/usr/lib/jvm'
+			],
+			win32: [
+				'%ProgramFiles%\\Java',
+				'%ProgramFiles(x86)%\\Java',
+				'~\\Java'
 			]
-			// note: for Windows, we check the Windows Registry
 		},
 
 		windows: {

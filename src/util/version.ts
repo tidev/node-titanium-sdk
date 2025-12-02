@@ -8,9 +8,14 @@ const versionRegExp = /^(\d+)\.(\d+)\.(\d+)(?:\.(\w+))?/i;
  * @param {String} b - Version B
  * @returns {Number}
  */
-export function compare(a, b) {
-	const [, amajor, aminor, apatch, atag] = format(a, 3).toLowerCase().match(versionRegExp);
-	const [, bmajor, bminor, bpatch, btag] = format(b, 3).toLowerCase().match(versionRegExp);
+export function compare(a: string, b: string): number {
+	const matchA = format(a, 3).toLowerCase().match(versionRegExp);
+	const matchB = format(b, 3).toLowerCase().match(versionRegExp);
+	if (!matchA || !matchB) {
+		throw new Error('Invalid version format');
+	}
+	const [, amajor, aminor, apatch, atag] = matchA;
+	const [, bmajor, bminor, bpatch, btag] = matchB;
 
 	let n = Number.parseInt(amajor) - Number.parseInt(bmajor);
 	if (n !== 0) {
@@ -42,21 +47,21 @@ export function compare(a, b) {
  * @param {Boolean} [chopDash] - If true, chops off the dash and anything after it
  * @returns {String} The formatted version
  */
-export function format(ver, min, max, chopDash) {
+export function format(ver: string, min?: number, max?: number, chopDash?: boolean): string {
 	ver = String(ver || 0);
 	if (chopDash) {
 		ver = ver.replace(/(-.*)?$/, '');
 	}
-	ver = ver.split('.');
+	const parts = ver.split('.');
 	if (min !== undefined) {
-		while (ver.length < min) {
-			ver.push('0');
+		while (parts.length < min) {
+			parts.push('0');
 		}
 	}
 	if (max !== undefined) {
-		ver = ver.slice(0, max);
+		return parts.slice(0, max).join('.');
 	}
-	return ver.join('.');
+	return parts.join('.');
 }
 
 /**
@@ -65,7 +70,7 @@ export function format(ver, min, max, chopDash) {
  * @param {String} v2 - The second version to compare
  * @returns {Boolean} True if the versions are equal
  */
-export function eq(v1, v2) {
+export function eq(v1: string, v2: string): boolean {
 	return semver.eq(format(v1, 3, 3), format(v2, 3, 3));
 }
 
@@ -76,7 +81,7 @@ export function eq(v1, v2) {
  * @param {String} v2 - The second version to compare
  * @returns {Boolean} True if the first version is less than the second version
  */
-export function lt(v1, v2) {
+export function lt(v1: string, v2: string): boolean {
 	return semver.lt(format(v1, 3, 3), format(v2, 3, 3));
 }
 
@@ -87,7 +92,7 @@ export function lt(v1, v2) {
  * @param {String} v2 - The second version to compare
  * @returns {Boolean} True if the first version is less than or equal to the second version
  */
-export function lte(v1, v2) {
+export function lte(v1: string, v2: string): boolean {
 	return semver.lte(format(v1, 3, 3), format(v2, 3, 3));
 }
 
@@ -98,7 +103,7 @@ export function lte(v1, v2) {
  * @param {String} v2 - The second version to compare
  * @returns {Boolean} True if the first version is greater than the second version
  */
-export function gt(v1, v2) {
+export function gt(v1: string, v2: string): boolean {
 	return semver.gt(format(v1, 3, 3), format(v2, 3, 3));
 }
 
@@ -109,7 +114,7 @@ export function gt(v1, v2) {
  * @param {String} v2 - The second version to compare
  * @returns {Boolean} True if the first version is greater than or equal to the second version
  */
-export function gte(v1, v2) {
+export function gte(v1: string, v2: string): boolean {
 	return semver.gte(format(v1, 3, 3), format(v2, 3, 3));
 }
 
@@ -118,7 +123,7 @@ export function gte(v1, v2) {
  * @param {String} v - The version to validate
  * @returns {Boolean}
  */
-export function isValid(v) {
+export function isValid(v: string): boolean {
 	return semver.valid(format(v, 3, 3));
 }
 
@@ -127,12 +132,12 @@ export function isValid(v) {
  * @param {String} str - A string contain one or more versions or version ranges
  * @returns {String} The minimum version found or undefined
  */
-export function parseMin(str) {
+export function parseMin(str: string): string | undefined {
 	let min;
 
 	for (const range of str.split(/\s*\|\|\s*/)) {
-		const x = range.split(' ').shift().replace(/[^.\d]/g, '');
-		if (!min || lt(x, min)) {
+		const x = range.split(' ').shift()?.replace(/[^.\d]/g, '');
+		if (x && (!min || lt(x, min))) {
 			min = x.replace(/\.$/, '');
 		}
 	}
@@ -146,17 +151,18 @@ export function parseMin(str) {
  * @param {Boolean} [allowX=false] - When true, treats 'x' as apart of the version
  * @returns {String} The maximum version found or undefined
  */
-export function parseMax(str, allowX) {
-	let max, lt;
+export function parseMax(str: string, allowX?: boolean): string | undefined {
+	let max: string | undefined;
+	let lt: boolean | undefined;
 
 	for (const range of str.split(/\s*\|\|\s*/)) {
-		let x = range.split(' ');
-		x = x.length === 1 ? x.shift() : x.slice(1).shift();
-		if (!allowX) {
+		const segments = range.split(' ');
+		let x = segments.length === 1 ? segments.shift() : segments.slice(1).shift();
+		if (x && !allowX) {
 			x = x.replace(/.x$/i, '');
 		}
-		const y = x.replace(allowX ? /[^.xX\d]/g : /[^.\d]/g, '');
-		if (!max || gt(y, max)) {
+		const y = x?.replace(allowX ? /[^.xX\d]/g : /[^.\d]/g, '');
+		if (x && y && (!max || gt(y, max))) {
 			lt = /^<[^=]\d/.test(x);
 			max = y.replace(/\.$/, '');
 		}
@@ -173,19 +179,19 @@ export function parseMax(str, allowX) {
  * one of the ranges, then it will return 'maybe'.
  * @returns {Boolean|String} True if the version matches one of the ranges
  */
-export function satisfies(ver, str, maybe) {
+export function satisfies(ver: string, str: string, maybe?: boolean): boolean | string {
 	ver = format(ver, 3, 3, true);
 
 	// if we get 1.x, we force it to 1.99999999 so that we should match
-	str = str.replace(/(<=?\d+(\.\d+)*?)\.x/g, '$1.99999999').replace(/(>=?\d+(\.\d+)*?)\.x/g, '$1.0');
+	const replacedStr = str.replace(/(<=?\d+(\.\d+)*?)\.x/g, '$1.99999999').replace(/(>=?\d+(\.\d+)*?)\.x/g, '$1.0');
 
 	try {
-		if (str === '*' || eq(ver, str)) {
+		if (replacedStr === '*' || eq(ver, replacedStr)) {
 			return true;
 		}
 	} catch {}
 
-	const r = str.split(/\s*\|\|\s*/).some(range => {
+	const r = replacedStr.split(/\s*\|\|\s*/).some(range => {
 		// semver is picky with the '-' in comparisons and it just so happens when it
 		// parses versions in the range, it will add '-0' and cause '1.0.0' != '1.0.0-0',
 		// so we test our version with and without the '-9'
@@ -198,7 +204,7 @@ export function satisfies(ver, str, maybe) {
 	}
 
 	// need to determine if the version is greater than any range
-	const range = new semver.Range(str);
+	const range = new semver.Range(replacedStr);
 	for (let i = 0; i < range.set.length; i++) {
 		const set = range.set[i];
 		for (let j = set.length - 1; j >= 0; j--) {
@@ -219,6 +225,6 @@ export function satisfies(ver, str, maybe) {
  * @param {Array} arr - The array of version numbers to sort
  * @returns {Array} The sorted versions
  */
-export function sort(arr) {
+export function sort(arr: string[]): string[] {
 	return arr.sort(compare);
 }

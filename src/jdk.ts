@@ -5,6 +5,13 @@ import { join } from 'node:path';
 import { isDir } from './util/is-dir.js';
 import { isFile } from './util/is-file.js';
 import { realpath } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import snooplogg from 'snooplogg';
+
+const { log } = snooplogg('jdk');
+
+const execFileAsync = promisify(execFile);
 
 /**
  * Common search paths for the JVM library. This is used only for validating if
@@ -37,20 +44,43 @@ export const libjvmLocations: Record<string, string[]> = {
 
 const exe = process.platform === 'win32' ? '.exe' : '';
 
-export class JDK {
-	architecture: string | null = null;
-	build: string | null = null;
-	executables: Record<string, string> = {};
-	path: string;
-	version: string | null = null;
+type JDKExecutables = {
+	java: string;
+	javac: string;
+	keytool: string;
+	jarsigner: string;
+};
 
-	constructor(path: string) {
+export class JDK {
+	build: number | null;
+	executables: JDKExecutables;
+	path: string;
+	version: string;
+
+	private constructor({
+		build,
+		executables,
+		path,
+		version,
+	}: {
+		build: number | null;
+		executables: JDKExecutables;
+		path: string;
+		version: string;
+	}) {
+		this.build = build;
+		this.executables = executables;
 		this.path = path;
+		this.version = version;
 	}
 
-	static async load(path: string): Promise<JDK | null> {
-		if (!path || typeof path !== 'string' || !isDir(path)) {
-			return null;
+	static async load(path: string): Promise<JDK> {
+		log(`Loading ${path}`);
+		if (typeof path !== 'string') {
+			throw new TypeError('Expected JDK path to be a valid string');
+		}
+		if (!isDir(path)) {
+			throw new Error('JDK path does not exist');
 		}
 
 		// on macOS, the JDK lives in Contents/Home
@@ -66,23 +96,50 @@ export class JDK {
 			throw new Error('Directory missing JVM library');
 		}
 
-		const executables: Record<string, string> = {};
+		const executables: JDKExecutables = {
+			java: '',
+			javac: '',
+			keytool: '',
+			jarsigner: '',
+		};
 
-		const commands = [ 'java', 'javac', 'keytool', 'jarsigner' ];
-		const results = await Promise.all(commands.map(async cmd => {
-			const p = join(path, 'bin', `${cmd}${exe}`);
-			if (isFile(p)) {
-				executables[cmd] = await realpath(p);
-				return true;
+		const results = await Promise.all(
+			Object.keys(executables).map(async cmd => {
+				const p = join(path, 'bin', `${cmd}${exe}`);
+				if (isFile(p)) {
+					executables[cmd] = await realpath(p);
+					return true;
+				}
+				return false;
 			}
-			return false;
-		}));
+		));
 
 		if (!results.every(result => result)) {
 			throw new Error('Directory missing required program');
 		}
 
-		return new JDK(path);
+		let output = '';
+		try {
+			const { stderr, stdout } = await execFileAsync(executables.javac, ['-version']);
+			output = stdout || stderr;
+		} catch (error: any) {
+			// javac -version may exit with non-zero code but still provide output
+			output = error.stderr || '';
+		}
+		
+		const result = output.trim().match(/javac (.+?)(?:_(.+))?$/);
+		const version = result?.[1] ?? '';
+		if (!version) {
+			throw new Error('Failed to determine JDK version');
+		}
+		const build = result?.[2] ? Number.parseInt(result[2]) : null;
+
+		return new JDK({
+			build,
+			executables,
+			path,
+			version,
+		});
 	}
 }
 
@@ -128,10 +185,10 @@ export async function findJDKs(options: {
 	}
 
 	if (process.platform === 'win32') {
-		// check the Windows Registry
+		// TODO: check the Windows Registry
 	}
 
-	await Promise.all(pending);
+	await Promise.all(pending).catch(() => {});
 
 	const result: JDKs = {
 		home,

@@ -9,7 +9,7 @@ export default defineConfig({
 		},
 		environment: 'node',
 		globals: false,
-		include: ['test/**/*.test.js'],
+		include: ['test/**/*.test.ts'],
 		reporters: ['verbose'],
 		silent: false,
 		watch: false
