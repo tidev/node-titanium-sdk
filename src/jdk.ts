@@ -9,7 +9,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import snooplogg from 'snooplogg';
 
-const { log } = snooplogg('jdk');
+const { error, log } = snooplogg('jdk');
 
 const execFileAsync = promisify(execFile);
 
@@ -75,12 +75,12 @@ export class JDK {
 	}
 
 	static async load(path: string): Promise<JDK> {
-		log(`Loading ${path}`);
+		log(`Loading: ${path}`);
 		if (typeof path !== 'string') {
 			throw new TypeError('Expected JDK path to be a valid string');
 		}
 		if (!isDir(path)) {
-			throw new Error('JDK path does not exist');
+			throw new Error(`JDK path does not exist: ${path}`);
 		}
 
 		// on macOS, the JDK lives in Contents/Home
@@ -93,7 +93,7 @@ export class JDK {
 
 		const libjvms = libjvmLocations[process.platform];
 		if (!libjvms || !libjvms.some(p => isFile(join(path, p)))) {
-			throw new Error('Directory missing JVM library');
+			throw new Error(`Directory missing JVM library: ${path}`);
 		}
 
 		const executables: JDKExecutables = {
@@ -115,7 +115,7 @@ export class JDK {
 		));
 
 		if (!results.every(result => result)) {
-			throw new Error('Directory missing required program');
+			throw new Error(`Directory missing required program: ${path}`);
 		}
 
 		let output = '';
@@ -126,13 +126,15 @@ export class JDK {
 			// javac -version may exit with non-zero code but still provide output
 			output = error.stderr || '';
 		}
-		
+
 		const result = output.trim().match(/javac (.+?)(?:_(.+))?$/);
 		const version = result?.[1] ?? '';
 		if (!version) {
-			throw new Error('Failed to determine JDK version');
+			throw new Error(`Failed to determine JDK version: ${path}`);
 		}
 		const build = result?.[2] ? Number.parseInt(result[2]) : null;
+
+		log(`Found JDK: ${path} (version: ${version}, build: ${build})`);
 
 		return new JDK({
 			build,
@@ -150,7 +152,7 @@ interface JDKs {
 
 let jdkCache: JDKs | null = null;
 
-export async function findJDKs(options: {
+export async function detect(options: {
 	bypassCache?: boolean,
 } = {}): Promise<JDKs> {
 	if (jdkCache !== null && !options.bypassCache) {
@@ -186,16 +188,28 @@ export async function findJDKs(options: {
 
 	if (process.platform === 'win32') {
 		// TODO: check the Windows Registry
+		// config.jdk.windows.registryKeys
 	}
 
-	await Promise.all(pending).catch(() => {});
+	const results = await Promise.allSettled(pending);
+	const jdks: JDK[] = [];
+	const errors: Error[] = [];
+	for (const result of results) {
+		if (result.status === 'fulfilled' && result.value) {
+			jdks.push(result.value);
+		} else if (result.status === 'rejected') {
+			errors.push(result.reason.message);
+		}
+	}
 
-	const result: JDKs = {
+	if (errors.length > 0) {
+		error(errors.join('\n'));
+	}
+
+	jdkCache = {
 		home,
-		jdks: [],
+		jdks,
 	};
-
-	jdkCache = result;
-	return result;
+	return jdkCache;
 }
 
