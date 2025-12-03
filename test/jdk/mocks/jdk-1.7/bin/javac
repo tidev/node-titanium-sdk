@@ -1,2 +1,0 @@
-#!/bin/sh
->&2 echo "javac 1.7.0_80"

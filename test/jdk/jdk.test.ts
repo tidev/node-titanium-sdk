@@ -16,6 +16,7 @@ describe('JDK', function () {
 	afterEach(() => {
 		delete process.env.MOCK_STDOUT;
 		delete process.env.MOCK_STDERR;
+		delete process.env.MOCK_EXITCODE;
 	});
 
 	afterAll(() => {
@@ -48,7 +49,8 @@ describe('JDK', function () {
 	});
 
 	it('should detect JDK 1.6', async () => {
-		const dir = path.join(__dirname, 'mocks', 'jdk-1.6');
+		const dir = path.join(__dirname, 'mocks', 'mock-jdk');
+		process.env.MOCK_STDERR = 'javac 1.6.0_45';
 		const jdk = await JDK.load(dir);
 
 		expect(jdk.build).to.equal(45);
@@ -63,7 +65,8 @@ describe('JDK', function () {
 	});
 
 	it('should detect JDK 1.7', async () => {
-		const dir = path.join(__dirname, 'mocks', 'jdk-1.7');
+		const dir = path.join(__dirname, 'mocks', 'mock-jdk');
+		process.env.MOCK_STDERR = 'javac 1.7.0_80';
 		const jdk = await JDK.load(dir);
 
 		expect(jdk.build).to.equal(80);
@@ -78,7 +81,8 @@ describe('JDK', function () {
 	});
 
 	it('should detect JDK 1.8', async () => {
-		const dir = path.join(__dirname, 'mocks', 'jdk-1.8');
+		const dir = path.join(__dirname, 'mocks', 'mock-jdk');
+		process.env.MOCK_STDERR = 'javac 1.8.0_92';
 		const jdk = await JDK.load(dir);
 
 		expect(jdk.build).to.equal(92);
@@ -93,7 +97,8 @@ describe('JDK', function () {
 	});
 
 	(process.platform === 'darwin' ? it : it.skip)('should detect JDK 1.8 with macOS pathing', async () => {
-		const dir = path.join(__dirname, 'mocks', 'jdk-1.8-darwin');
+		process.env.MOCK_STDERR = 'javac 1.8.0_92';
+		const dir = path.join(__dirname, 'mocks', 'mock-jdk-darwin');
 		const jdk = await JDK.load(dir);
 
 		expect(jdk.build).to.equal(92);
@@ -108,7 +113,8 @@ describe('JDK', function () {
 	});
 
 	it('should detect JDK 9', async () => {
-		const dir = path.join(__dirname, 'mocks', 'jdk-9');
+		const dir = path.join(__dirname, 'mocks', 'mock-jdk');
+		process.env.MOCK_STDOUT = 'javac 9';
 		const jdk = await JDK.load(dir);
 
 		expect(jdk.build).to.equal(null);
@@ -123,7 +129,8 @@ describe('JDK', function () {
 	});
 
 	(process.platform === 'darwin' ? it : it.skip)('should detect JDK 9 with macOS pathing', async () => {
-		const dir = path.join(__dirname, 'mocks', 'jdk-9-darwin');
+		const dir = path.join(__dirname, 'mocks', 'mock-jdk-darwin');
+		process.env.MOCK_STDOUT = 'javac 9.0.1';
 		const jdk = await JDK.load(dir);
 
 		expect(jdk.build).to.equal(11);
@@ -138,8 +145,8 @@ describe('JDK', function () {
 	});
 
 	it('should detect JDK 20.0.1', async () => {
+		const dir = path.join(__dirname, 'mocks', 'mock-jdk');
 		process.env.MOCK_STDOUT = 'javac 20.0.1';
-		const dir = path.join(__dirname, 'mocks', 'jdk-20.0.1');
 		const jdk = await JDK.load(dir);
 
 		expect(jdk.build).to.equal(null);
@@ -154,8 +161,8 @@ describe('JDK', function () {
 	});
 
 	it('should detect JDK 25', async () => {
+		const dir = path.join(__dirname, 'mocks', 'mock-jdk');
 		process.env.MOCK_STDOUT = 'javac 25';
-		const dir = path.join(__dirname, 'mocks', 'jdk-25');
 		const jdk = await JDK.load(dir);
 
 		expect(jdk.build).to.equal(null);
@@ -177,7 +184,8 @@ describe('JDK', function () {
 describe('findJDKs', function () {
 	it('should find JDKs', async () => {
 		try {
-			const dir = path.join(__dirname, 'mocks', 'jdk-9');
+			const dir = path.join(__dirname, 'mocks', 'mock-jdk');
+			process.env.MOCK_STDOUT = 'javac 9';
 			process.env.JAVA_HOME = dir;
 			const { home, jdks } = await detect({ bypassCache: true });
 			expect(home).to.equal(dir);
