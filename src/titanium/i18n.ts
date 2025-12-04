@@ -1,11 +1,10 @@
-import fs from 'node:fs';
 import path from 'node:path';
+import { readdir, readFile } from 'node:fs/promises';
 import { DOMParser } from '@xmldom/xmldom';
 import * as xml from '../util/xml.js';
 import snooplogg from 'snooplogg';
 import { expand } from '../util/expand.js';
 import { isDir } from '../util/is-dir.js';
-import { readdir } from 'node:fs/promises';
 import { isFile } from '../util/is-file.js';
 
 const { debug } = snooplogg('titanium')('i18n');
@@ -37,7 +36,7 @@ const launchScreensCache: LaunchScreensCache = {};
  * @param opts - The options for the i18n data.
  * @returns The i18n data.
  */
-export async function load(projectDir: string, opts: LoadOptions): Promise<I18NData> {
+export async function load(projectDir: string, opts: LoadOptions = {}): Promise<I18NData> {
 	const i18nDir = expand(projectDir, 'i18n');
 	const data: I18NData = {};
 	const ignoreDirs = opts?.ignoreDirs;
@@ -56,8 +55,8 @@ export async function load(projectDir: string, opts: LoadOptions): Promise<I18ND
 			continue;
 		}
 
-		const s: I18NLangData = {};
-		data[lang] = s;
+		const strings: I18NLangData = {};
+		data[lang] = strings;
 
 		for (const name of await readdir(langDir)) {
 			const file = path.join(langDir, name);
@@ -65,8 +64,11 @@ export async function load(projectDir: string, opts: LoadOptions): Promise<I18ND
 				debug(`Processing i18n file: ${lang}/${name}`);
 
 				const dest = name === 'app.xml' ? 'app' : 'strings';
-				const obj = s[dest] = s[dest] || {};
-				const dom = new DOMParser().parseFromString(fs.readFileSync(file, 'utf8'), 'text/xml');
+				if (!strings[dest]) {
+					strings[dest] = {};
+				}
+				const obj = strings[dest];
+				const dom = new DOMParser().parseFromString(await readFile(file, 'utf8'), 'text/xml');
 
 				xml.forEachElement(dom.documentElement, (elem) => {
 					if (elem.nodeType === xml.ELEMENT_NODE && elem.tagName === 'string') {
