@@ -1,6 +1,6 @@
 import semver from 'semver';
 
-const versionRegExp = /^(\d+)\.(\d+)\.(\d+)(?:\.(\w+))?/i;
+const versionRegExp = /^(\d+)\.(\d+)\.(\d+)(?:-(.+))?/i;
 
 /**
  * Compare function for sort().
@@ -8,7 +8,7 @@ const versionRegExp = /^(\d+)\.(\d+)\.(\d+)(?:\.(\w+))?/i;
  * @param {String} b - Version B
  * @returns {Number}
  */
-export function compare(a: string, b: string): number {
+export function compare(a: string | number, b: string | number): number {
 	const matchA = format(a, 3).toLowerCase().match(versionRegExp);
 	const matchB = format(b, 3).toLowerCase().match(versionRegExp);
 	if (!matchA || !matchB) {
@@ -47,7 +47,10 @@ export function compare(a: string, b: string): number {
  * @param {Boolean} [chopDash] - If true, chops off the dash and anything after it
  * @returns {String} The formatted version
  */
-export function format(ver: string, min?: number, max?: number, chopDash?: boolean): string {
+export function format(ver: string | number, min?: number, max?: number, chopDash?: boolean): string {
+	if (typeof ver !== 'string' && typeof ver !== 'number') {
+		throw new Error(`Invalid version "${ver}"`);
+	}
 	ver = String(ver || 0);
 	if (chopDash) {
 		ver = ver.replace(/(-.*)?$/, '');
@@ -70,7 +73,7 @@ export function format(ver: string, min?: number, max?: number, chopDash?: boole
  * @param {String} v2 - The second version to compare
  * @returns {Boolean} True if the versions are equal
  */
-export function eq(v1: string, v2: string): boolean {
+export function eq(v1: string | number, v2: string | number): boolean {
 	return semver.eq(format(v1, 3, 3), format(v2, 3, 3));
 }
 
@@ -81,7 +84,7 @@ export function eq(v1: string, v2: string): boolean {
  * @param {String} v2 - The second version to compare
  * @returns {Boolean} True if the first version is less than the second version
  */
-export function lt(v1: string, v2: string): boolean {
+export function lt(v1: string | number, v2: string | number): boolean {
 	return semver.lt(format(v1, 3, 3), format(v2, 3, 3));
 }
 
@@ -92,7 +95,7 @@ export function lt(v1: string, v2: string): boolean {
  * @param {String} v2 - The second version to compare
  * @returns {Boolean} True if the first version is less than or equal to the second version
  */
-export function lte(v1: string, v2: string): boolean {
+export function lte(v1: string | number, v2: string | number): boolean {
 	return semver.lte(format(v1, 3, 3), format(v2, 3, 3));
 }
 
@@ -103,7 +106,7 @@ export function lte(v1: string, v2: string): boolean {
  * @param {String} v2 - The second version to compare
  * @returns {Boolean} True if the first version is greater than the second version
  */
-export function gt(v1: string, v2: string): boolean {
+export function gt(v1: string | number, v2: string | number): boolean {
 	return semver.gt(format(v1, 3, 3), format(v2, 3, 3));
 }
 
@@ -114,17 +117,21 @@ export function gt(v1: string, v2: string): boolean {
  * @param {String} v2 - The second version to compare
  * @returns {Boolean} True if the first version is greater than or equal to the second version
  */
-export function gte(v1: string, v2: string): boolean {
+export function gte(v1: string | number, v2: string | number): boolean {
 	return semver.gte(format(v1, 3, 3), format(v2, 3, 3));
 }
 
 /**
  * Checks if a version is valid.
  * @param {String} v - The version to validate
- * @returns {Boolean}
+ * @returns {Boolean} `true` if the version is valid, `false` otherwise
  */
-export function isValid(v: string): boolean {
-	return semver.valid(format(v, 3, 3));
+export function isValid(v: string | number): boolean {
+	try {
+		return semver.valid(format(v, 3, 3)) !== null;
+	} catch {
+		return false;
+	}
 }
 
 /**

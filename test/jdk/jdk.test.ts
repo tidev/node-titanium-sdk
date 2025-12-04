@@ -175,13 +175,14 @@ describe('JDK', function () {
 		expect(jdk.path).to.equal(dir);
 		expect(jdk.version).to.equal('25');
 	});
+
 	it('should not detect version if javac is bad', async () => {
 		const dir = path.join(__dirname, 'mocks', 'bad-bin-jdk');
 		await expect(JDK.load(dir)).rejects.toThrow('Failed to determine JDK version');
 	});
 });
 
-describe('findJDKs', function () {
+describe('detect()', function () {
 	it('should find JDKs', async () => {
 		try {
 			const dir = path.join(__dirname, 'mocks', 'mock-jdk');
@@ -201,6 +202,30 @@ describe('findJDKs', function () {
 			});
 			expect(jdk!.path).to.equal(dir);
 			expect(jdk!.version).to.equal('9');
+		} finally {
+			delete process.env.JAVA_HOME;
+		}
+	});
+
+	it('should cache JDKs', async () => {
+		try {
+			const dir = path.join(__dirname, 'mocks', 'mock-jdk');
+			process.env.MOCK_STDOUT = 'javac 9';
+			process.env.JAVA_HOME = dir;
+			const results1 = await detect({ bypassCache: true });
+			const results2 = await detect();
+			expect(results1).toBe(results2);
+		} finally {
+			delete process.env.JAVA_HOME;
+		}
+	});
+
+	it('should find JDKs without JAVA_HOME', async () => {
+		try {
+			process.env.MOCK_STDOUT = 'javac 9';
+			process.env.JAVA_HOME = 'does_not_exist';
+			const { home } = await detect({ bypassCache: true });
+			expect(home).to.be.null;
 		} finally {
 			delete process.env.JAVA_HOME;
 		}

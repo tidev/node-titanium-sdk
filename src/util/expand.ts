@@ -6,6 +6,7 @@ const winEnvVarRegExp = /(%([^%]*)%)/g;
 
 export function expand(...segments: string[]): string {
 	segments[0] = segments[0].replace(homeDirRegExp, (process.env.HOME || process.env.USERPROFILE) + '$1');
+	/* v8 ignore next 6  */
 	if (winRegExp.test(process.platform)) {
 		return resolve(join(...segments).replace(winEnvVarRegExp, (_s, m, n) => {
 			return process.env[n] || m;

@@ -4,7 +4,7 @@ export default defineConfig({
 	test: {
 		allowOnly: true,
 		coverage: {
-			include: ['src/**/*.js'],
+			include: ['src/**/*.ts'],
 			reporter: ['html', 'lcov', 'text']
 		},
 		environment: 'node',
