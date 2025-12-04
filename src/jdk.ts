@@ -8,6 +8,7 @@ import { realpath } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import snooplogg from 'snooplogg';
+import { Issue } from './util/issue.js';
 
 const { error, log } = snooplogg('jdk');
 
@@ -115,7 +116,19 @@ export class JDK {
 		));
 
 		if (!results.every(result => result)) {
-			throw new Error(`Directory missing required program: ${path}`);
+			throw new Issue(`Directory missing required program: ${path}`, {
+				id: 'JDK_MISSING_PROGRAMS',
+				type: 'warning',
+				details: `JDK (Java Development Kit) at ${path} missing required programs: ${Object.keys(executables).filter(cmd => !executables[cmd]).join(', ')}
+${process.env.JAVA_HOME
+	? 'Please verify your __JAVA_HOME__ environment variable is correctly set to the JDK install location.\n'
+		+ `__JAVA_HOME__ is currently set to "${process.env.JAVA_HOME}".`
+	: 'Please set the __JAVA_HOME__ environment variable to the JDK install location and not the JRE (Java Runtime Environment).'
+}
+The __JAVA_HOME__ environment variable must point to the JDK and not the JRE (Java Runtime Environment).
+You may want to reinstall the JDK by downloading it from __https://www.oracle.com/java/technologies/downloads/__
+or __https://jdk.java.net/archive/__.`,
+			});
 		}
 
 		let output = '';
@@ -148,6 +161,7 @@ export class JDK {
 interface JDKs {
 	home: string | null;
 	jdks: JDK[];
+	issues: Issue[];
 }
 
 let jdkCache: JDKs | null = null;
@@ -193,22 +207,34 @@ export async function detect(options: {
 
 	const results = await Promise.allSettled(pending);
 	const jdks: JDK[] = [];
-	const errors: Error[] = [];
+	const issues: Issue[] = [];
+
 	for (const result of results) {
 		if (result.status === 'fulfilled' && result.value) {
 			jdks.push(result.value);
 		} else if (result.status === 'rejected') {
-			errors.push(result.reason.message);
+			error(result.reason.message);
+			if (result.reason instanceof Issue) {
+				issues.push(result.reason);
+			}
 		}
 	}
 
-	if (errors.length > 0) {
-		error(errors.join('\n'));
+	if (!jdks.length) {
+		issues.push(new Issue('No JDKs found', {
+			id: 'JDK_NOT_FOUND',
+			type: 'error',
+			details: `JDK (Java Development Kit) not installed.
+If you already have installed the JDK, verify your __JAVA_HOME__ environment variable is correctly set.
+The JDK is required for Titanium and must be manually downloaded and installed from __https://www.oracle.com/java/technologies/downloads/__
+or  __https://jdk.java.net/archive/__.`,
+		}));
 	}
 
 	jdkCache = {
 		home,
 		jdks,
+		issues,
 	};
 	return jdkCache;
 }

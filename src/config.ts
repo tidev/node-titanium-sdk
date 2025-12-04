@@ -1,6 +1,6 @@
 import type { Config } from './types.js';
 
-export const defaultConfig: Partial<Config> = {
+export const defaultConfig: Config = {
 	android: {
 		adb: {
 			install: {
@@ -318,7 +318,7 @@ export const defaultConfig: Partial<Config> = {
 	}
 };
 
-export let config: Partial<Config> = {
+export let config: Config = {
 	...defaultConfig
 };
 
