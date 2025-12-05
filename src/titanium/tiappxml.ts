@@ -1,14 +1,63 @@
-import { DOMParser } from '@xmldom/xmldom';
-import { capitalize } from './util/capitalize.js';
-import fs from 'node:fs';
+import { DOMParser, type Options } from '@xmldom/xmldom';
+import { capitalize } from '../util/capitalize.js';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import * as xml from './util/xml.js';
-import * as version from './util/version.js';
-import { plist } from './util/plist.js';
+import * as xml from '../util/xml.js';
+import * as version from '../util/version.js';
+import { Plist } from '../util/plist.js';
+import { isFile } from '../util/is-file.js';
 
-const defaultDOMParserArgs = { errorHandler: () => {} };
+interface TiappDocument extends XMLDocument {
+	create(tag: string, attrs: Record<string, any> | null, parent: Node, callback?: (node: Node) => void): Element;
+}
 
-function toXml(dom, parent, name, value) {
+interface TiappIOS {
+	capabilities?: Record<string, any>;
+	entitlements?: Record<string, any>;
+	plist?: Record<string, any>;
+	extensions?: Record<string, any>;
+	iphone?: Record<string, any>;
+	excludeDirFromAssetCatalog?: boolean;
+	enableLaunchScreenStoryboard?: boolean;
+	enableCoverage?: boolean;
+	enableMDFind?: boolean;
+	minIOSVer?: number;
+	defaultBackgroundColor?: string;
+}
+
+interface TiappIPhone {
+	orientations: Record<string, string[]>;
+	backgroundModes?: string[];
+	requiredFeatures?: string[];
+	types?: Record<string, any>;
+}
+
+interface TiappAndroid {
+	manifest?: string;
+	toolAPILevel?: number;
+	abi?: string[];
+	activities?: Record<string, any>;
+	services?: Record<string, any>;
+}
+
+interface TiappModules {
+	platform?: string;
+	version?: number;
+	deployType?: string;
+	id?: string;
+}
+
+declare module '@xmldom/xmldom' {
+	interface Options {
+		xmlns?: { [key: string]: string };
+	}
+}
+
+const defaultDOMParserArgs: Options = {
+	errorHandler: () => {}
+};
+
+function toXml(dom: TiappDocument, parent: Node, name: string, value: any) {
 	// properties is a super special case
 	if (name === 'properties') {
 		for (const v of Object.keys(value)) {
@@ -30,30 +79,6 @@ function toXml(dom, parent, name, value) {
 					device: v,
 					nodeValue: value[v]
 				}, node);
-			}
-			break;
-
-		case 'code-processor':
-			for (const key of Object.keys(value)) {
-				if (key === 'plugins') {
-					if (Array.isArray(value[key]) && value[key].length) {
-						dom.create('plugins', null, node, (plugins) => {
-							for (const p of value[key]) {
-								dom.create('plugin', { nodeValue: p }, plugins);
-							}
-						});
-					}
-				} else if (key === 'options') {
-					if (Object.prototype.toString.call(value[key]) === '[object Object]') {
-						dom.create('options', null, node, (options) => {
-							for (const opt of Object.keys(value[key])) {
-								dom.create(opt, { nodeValue: value[key][opt] }, options);
-							}
-						});
-					}
-				} else {
-					dom.create(key, { nodeValue: value[key] }, node);
-				}
 			}
 			break;
 
@@ -126,7 +151,7 @@ function toXml(dom, parent, name, value) {
 
 			if (value.entitlements) {
 				const enNode = dom.create('entitlements', null, node);
-				const pl = new plist();
+				const pl = new Plist();
 				Object.assign(pl, value.entitlements);
 				const doc = pl.toXml(3);
 				enNode.appendChild(dom.createTextNode('\r\n\t\t\t'));
@@ -138,7 +163,7 @@ function toXml(dom, parent, name, value) {
 
 			if (value.plist) {
 				const plNode = dom.create('plist', null, node);
-				const pl = new plist();
+				const pl = new Plist();
 				Object.assign(pl, value.plist);
 				const doc = pl.toXml(3);
 				plNode.appendChild(dom.createTextNode('\r\n\t\t\t'));
@@ -259,19 +284,6 @@ function toXml(dom, parent, name, value) {
 			}
 			break;
 
-		case 'webpack':
-			if (value.type) {
-				dom.create('type', { nodeValue: value.type }, node);
-			}
-			if (Array.isArray(value.transpileDependencies)) {
-				dom.create('transpile-dependencies', null, node, depsNode => {
-					for (const dep of value.transpileDependencies) {
-						dom.create('dep', { nodeValue: dep }, depsNode);
-					}
-				});
-			}
-			break;
-
 		case 'modules':
 			if (Array.isArray(value)) {
 				for (const mod of value) {
@@ -285,17 +297,6 @@ function toXml(dom, parent, name, value) {
 			}
 			break;
 
-		case 'plugins':
-			if (Array.isArray(value)) {
-				for (const plugin of value) {
-					dom.create('plugin', {
-						version: version.format(plugin.version, 2),
-						nodeValue: plugin.id
-					}, node);
-				}
-			}
-			break;
-
 		default:
 			node.appendChild(dom.createTextNode(value));
 			return;
@@ -304,24 +305,25 @@ function toXml(dom, parent, name, value) {
 	node.appendChild(dom.createTextNode(`\r\n${'\t'.repeat(2)}`));
 }
 
-function toJS(obj, doc, targetPlatform) {
+function toJS(obj: any, doc: Element, targetPlatform?: string) {
 	let node = doc.firstChild;
 	while (node) {
 		if (node.nodeType === xml.ELEMENT_NODE) {
-			switch (node.tagName) {
+			const elem = node as Element;
+			switch (elem.tagName) {
 				case 'property':
-					const name = xml.getAttr(node, 'name');
-					const type = xml.getAttr(node, 'type') || 'string';
-					const value = xml.getValue(node);
+					const name = xml.getAttr(elem, 'name');
+					const type = xml.getAttr(elem, 'type') || 'string';
+					const value = xml.getValue(elem);
 					if (name) {
 						if (!obj.properties) {
 							obj.properties = {};
 						}
 						obj.properties[name] = {
 							type: type,
-							value: type === 'bool' ? !!value
-								: type === 'int' ? (Number.parseInt(value) || 0)
-									: type === 'double' ? (parseFloat(value) || 0)
+							value: type === 'bool' ? (typeof value === 'boolean' ? value : value === 'true')
+								: type === 'int' ? (typeof value === 'string' ? Number.parseInt(value) : value || 0)
+									: type === 'double' ? (typeof value === 'string' ? Number.parseFloat(value) : value || 0)
 										: '' + value
 						};
 					}
@@ -329,41 +331,18 @@ function toJS(obj, doc, targetPlatform) {
 
 				case 'deployment-targets':
 					const targets = obj['deployment-targets'] = {};
-					xml.forEachElement(node, (elem) => {
+					xml.forEachElement(node as Element, (elem) => {
 						const dev = xml.getAttr(elem, 'device');
 						if (dev) {
-							targets[dev] = xml.getValue(elem);
-						}
-					});
-					break;
-
-				case 'code-processor':
-					const codeProcessor = obj['code-processor'] = {};
-					xml.forEachElement(node, (elem) => {
-						switch (elem.tagName) {
-							case 'plugins':
-								codeProcessor.plugins = [];
-								xml.forEachElement(elem, (elem) => {
-									if (elem.tagName === 'plugin') {
-										codeProcessor.plugins.push(xml.getValue(elem));
-									}
-								});
-								break;
-							case 'options':
-								codeProcessor.options = {};
-								xml.forEachElement(elem, (elem) => {
-									codeProcessor.options[elem.tagName] = xml.getValue(elem);
-								});
-								break;
-							default:
-								codeProcessor[elem.tagName] = xml.getValue(elem);
+							targets[dev] = xml.getValueString(elem);
 						}
 					});
 					break;
 
 				case 'ios':
-					const ios = obj.ios = {};
-					xml.forEachElement(node, (elem) => {
+					const ios: TiappIOS = {};
+					obj.ios = ios;
+					xml.forEachElement(node as Element, (elem) => {
 						switch (elem.tagName) {
 							case 'exclude-dir-from-asset-catalog':
 							case 'enable-launch-screen-storyboard':
@@ -377,23 +356,24 @@ function toJS(obj, doc, targetPlatform) {
 							case 'use-app-thinning':
 							case 'use-new-build-system':
 							case 'log-server-port':
-								ios[elem.tagName] = xml.getValue(elem);
+								ios[elem.tagName] = xml.getValueString(elem);
 								break;
 
 							case 'min-ios-ver':
 								if (elem.firstChild) {
-									ios['min-ios-ver'] = parseFloat(elem.firstChild.data) || 0;
+									ios['min-ios-ver'] = Number.parseFloat(xml.getValueString(elem)) || 0;
 								}
 								break;
 
 							case 'capabilities':
-								ios.capabilities = {};
+								const capabilities: Record<string, any> = {};
 								xml.forEachElement(elem, (elem) => {
 									if (elem.tagName === 'app-groups') {
-										const appGroups = ios.capabilities[elem.tagName] = [];
+										const appGroups: string[] = [];
+										capabilities[elem.tagName] = appGroups;
 										xml.forEachElement(elem, (elem) => {
 											if (elem.tagName === 'group') {
-												const group = xml.getValue(elem);
+												const group = xml.getValueString(elem);
 												if (group) {
 													appGroups.push(group);
 												}
@@ -401,42 +381,46 @@ function toJS(obj, doc, targetPlatform) {
 										});
 									}
 								});
+								ios.capabilities = capabilities;
 								break;
 
 							case 'entitlements':
-								ios.entitlements = {};
+								const entitlements: Record<string, any> = {};
 								xml.forEachElement(elem, (elem) => {
 									if (elem.tagName === 'dict') {
-										const pl = new plist().parse('<plist version="1.0">' + elem.toString() + '</plist>');
+										const pl = new Plist();
+										pl.parse(`<plist version="1.0">${elem.toString()}</plist>`);
 										for (const prop of Object.keys(pl)) {
-											ios.entitlements[prop] = pl[prop];
+											entitlements[prop] = pl[prop];
 										}
 									}
 								});
+								ios.entitlements = entitlements;
 								break;
 
 							case 'plist':
-								ios.plist = {};
+								const plist: Record<string, any> = {};
 								xml.forEachElement(elem, (elem) => {
 									if (elem.tagName === 'dict') {
-										const pl = new plist().parse('<plist version="1.0">' + elem.toString() + '</plist>');
+										const pl = new Plist().parse(`<plist version="1.0">${elem.toString()}</plist>`);
 										for (const prop of Object.keys(pl)) {
 											if (!/^CFBundle(DisplayName|Executable|IconFile|Identifier|InfoDictionaryVersion|Name|PackageType|Signature)|LSRequiresIPhoneOS$/.test(prop)) {
-												ios.plist[prop] = pl[prop];
+												plist[prop] = pl[prop];
 											}
 										}
 									}
 								});
+								ios.plist = plist;
 								break;
 
 							case 'extensions':
-								const extensions = ios.extensions = [];
+								const extensions: Record<string, any>[] = [];
 								xml.forEachElement(elem, (elem) => {
 									if (elem.tagName !== 'extension') {
 										return;
 									}
 
-									const ext = {
+									const ext: Record<string, any> = {
 										projectPath: elem.getAttribute('projectPath') || null,
 										targets: []
 									};
@@ -447,7 +431,7 @@ function toJS(obj, doc, targetPlatform) {
 											return;
 										}
 
-										const target = {
+										const target: Record<string, any> = {
 											name: elem.getAttribute('name'),
 											ppUUIDs: {}
 										};
@@ -456,32 +440,33 @@ function toJS(obj, doc, targetPlatform) {
 										xml.forEachElement(elem, (elem) => {
 											if (elem.tagName === 'provisioning-profiles') {
 												xml.forEachElement(elem, (elem) => {
-													target.ppUUIDs[elem.tagName] = xml.getValue(elem);
+													target.ppUUIDs[elem.tagName] = xml.getValue(elem) as string;
 												});
 											}
 										});
 									});
 								});
+								ios.extensions = extensions;
 								break;
 						}
 					});
 					break;
 
 				case 'iphone':
-					const iphone = obj.iphone = {};
-					xml.forEachElement(node, (elem) => {
+					const iphone: TiappIPhone = {
+						orientations: {},
+					};
+					obj.iphone = iphone;
+					xml.forEachElement(node as Element, (elem) => {
 						switch (elem.tagName) {
 							case 'orientations':
-								if (!iphone.orientations) {
-									iphone.orientations = {};
-								}
 								const dev = xml.getAttr(elem, 'device');
 								if (dev) {
 									if (!iphone.orientations[dev]) {
 										iphone.orientations[dev] = [];
 									}
 									xml.forEachElement(elem, (elem) => {
-										iphone.orientations[dev].push(xml.getValue(elem));
+										iphone.orientations[dev].push(xml.getValueString(elem));
 									});
 								}
 								break;
@@ -492,7 +477,7 @@ function toJS(obj, doc, targetPlatform) {
 										if (!iphone.backgroundModes) {
 											iphone.backgroundModes = [];
 										}
-										iphone.backgroundModes.push(xml.getValue(elem));
+										iphone.backgroundModes.push(xml.getValueString(elem));
 									}
 								});
 								break;
@@ -503,7 +488,7 @@ function toJS(obj, doc, targetPlatform) {
 										if (!iphone.requiredFeatures) {
 											iphone.requiredFeatures = [];
 										}
-										iphone.requiredFeatures.push(xml.getValue(elem));
+										iphone.requiredFeatures.push(xml.getValueString(elem));
 									}
 								});
 								break;
@@ -521,7 +506,7 @@ function toJS(obj, doc, targetPlatform) {
 											owner: false
 										};
 										xml.forEachElement(elem, (elem) => {
-											const v = xml.getValue(elem);
+											const v = xml.getValueString(elem);
 											type[elem.tagName] = elem.tagName === 'uti' ? v.split(',').map(s => s.trim()) : v;
 										});
 										iphone.types.push(type);
@@ -533,12 +518,13 @@ function toJS(obj, doc, targetPlatform) {
 					break;
 
 				case 'android':
-					const android = obj.android = {};
+					const android: TiappAndroid = {};
+					obj.android = android;
 					const formatUrl = (url) => {
 						return capitalize(url.replace(/^app:\/\//, '').replace(/\.js$/, '').replace(/\//g, '_')).replace(/[/ .$&@]/g, '_');
 					};
 
-					xml.forEachElement(node, (elem) => {
+					xml.forEachElement(node as Element, (elem) => {
 						switch (elem.tagName) {
 							case 'manifest':
 								// the <manifest> tag is an XML document and we're just gonna
@@ -548,23 +534,25 @@ function toJS(obj, doc, targetPlatform) {
 								break;
 
 							case 'abi':
-								android[elem.tagName] = xml.getValue(elem).split(',').map(s => s.trim());
+								android.abi = xml.getValueString(elem).split(',').map(s => s.trim());
 								break;
 
 							case 'tool-api-level':
-								android[elem.tagName] = xml.getValue(elem);
+								android.toolAPILevel = Number.parseFloat(xml.getValueString(elem)) || 0;
 								break;
 
 							case 'activities':
 							case 'services':
 								const type = elem.tagName;
-								const dest = android[type] = {};
+								const dest: Record<string, any> = {};
+								android[type] = dest;
 
 								xml.forEachElement(elem, (elem) => {
 									if ((type === 'activities' && elem.tagName === 'activity') || (type === 'services' && elem.tagName === 'service')) {
-										const url = xml.getAttr(elem, 'url') || xml.getValue(elem) || '';
+										const url = xml.getAttr(elem, 'url') || xml.getValueString(elem) || '';
 										if (url) {
-											const a = dest[url] = {};
+											const a: Record<string, any> = {};
+											dest[url] = a;
 											xml.forEachAttr(elem, (attr) => {
 												a[attr.name] = xml.parse(attr.value);
 											});
@@ -575,7 +563,7 @@ function toJS(obj, doc, targetPlatform) {
 											a['url'] = url;
 											xml.forEachElement(elem, (elem) => {
 												if (elem.tagName === 'intent-filter') {
-													let intentFilter = null;
+													let intentFilter: Record<string, any> | null = null;
 													xml.forEachElement(elem, (elem) => {
 														if (elem.tagName === 'action' || elem.tagName === 'category' || elem.tagName === 'data') {
 															if (!intentFilter) {
@@ -602,7 +590,7 @@ function toJS(obj, doc, targetPlatform) {
 														a['intent-filter'].push(intentFilter);
 													}
 												} else if (elem.tagName === 'meta-data') {
-													const obj = {};
+													const obj: Record<string, any> = {};
 													xml.forEachAttr(elem, (attr) => {
 														obj[attr.name.replace(/^android:/, '')] = xml.parse(attr.value);
 													});
@@ -623,16 +611,17 @@ function toJS(obj, doc, targetPlatform) {
 					break;
 
 				case 'modules':
-					const modules = obj.modules = [];
-					xml.forEachElement(node, (elem) => {
-						const opts = {
-							id: xml.getValue(elem),
-							platform: xml.getAttr(elem, 'platform')
+					const modules: TiappModules[] = [];
+					obj.modules = modules;
+					xml.forEachElement(node as Element, (elem) => {
+						const opts: TiappModules = {
+							id: xml.getValueString(elem),
+							platform: xml.getAttrString(elem, 'platform')
 						};
 						const version = elem.getAttribute('version');
-						const deployType = xml.getAttr(elem, 'deploy-type');
+						const deployType = xml.getAttrString(elem, 'deploy-type');
 						if (version) {
-							opts.version = version;
+							opts.version = Number.parseFloat(version) || 0;
 						}
 						if (deployType) {
 							opts.deployType = deployType;
@@ -641,29 +630,15 @@ function toJS(obj, doc, targetPlatform) {
 					});
 					break;
 
-				case 'plugins':
-					const plugins = obj.plugins = [];
-					xml.forEachElement(node, (elem) => {
-						const opts = {
-							id: xml.getValue(elem)
-						};
-						const version = elem.getAttribute('version');
-						if (version) {
-							opts.version = version;
-						}
-						plugins.push(opts);
-					});
-					break;
-
 				case 'version':
-					obj[node.tagName] = node.firstChild && node.firstChild.data.replace(/\n/g, '').trim() || '';
+					obj.version = xml.getValueString(node as Element).replace(/\n/g, '').trim();
 					break;
 
 				case 'id':
-					if ((targetPlatform && xml.getAttr(node, 'platform') === targetPlatform) || obj[node.tagName] === undefined) {
-						obj[node.tagName] = '' + xml.getValue(node);
-						if (typeof obj[node.tagName] === 'string') {
-							obj[node.tagName] = obj[node.tagName].replace(/\n/g, '');
+					if ((targetPlatform && xml.getAttrString(node as Element, 'platform') === targetPlatform) || obj[(node as Element).tagName] === undefined) {
+						obj[(node as Element).tagName] = xml.getValueString(node as Element);
+						if (typeof obj[(node as Element).tagName] === 'string') {
+							obj[(node as Element).tagName] = obj[(node as Element).tagName].replace(/\n/g, '');
 						}
 					}
 					break;
@@ -672,33 +647,14 @@ function toJS(obj, doc, targetPlatform) {
 				case 'guid':
 				case 'icon':
 					// need to strip out line returns which shouldn't be there in the first place
-					obj[node.tagName] = '' + xml.getValue(node);
-					if (typeof obj[node.tagName] === 'string') {
-						obj[node.tagName] = obj[node.tagName].replace(/\n/g, '');
+					obj[(node as Element).tagName] = xml.getValueString(node as Element);
+					if (typeof obj[(node as Element).tagName] === 'string') {
+						obj[(node as Element).tagName] = obj[(node as Element).tagName].replace(/\n/g, '');
 					}
 					break;
 
-				case 'webpack':
-					const webpack = obj.webpack = {};
-					xml.forEachElement(node, elem => {
-						switch (elem.tagName) {
-							case 'type': {
-								webpack[elem.tagName] = xml.getValue(elem);
-								break;
-							}
-							case 'transpile-dependencies': {
-								const transpileDependencies = webpack.transpileDependencies = [];
-								xml.forEachElement(elem, dep => {
-									transpileDependencies.push(xml.getValue(dep));
-								});
-								break;
-							}
-						}
-					});
-					break;
-
 				default:
-					obj[node.tagName] = xml.getValue(node);
+					obj[(node as Element).tagName] = xml.getValueString(node as Element);
 			}
 		}
 		node = node.nextSibling;
@@ -706,31 +662,35 @@ function toJS(obj, doc, targetPlatform) {
 }
 
 export class tiappxml {
-	constructor(filename, platform) {
+	platform?: string;
+
+	constructor(filename?: string, platform?: string) {
 		this.platform = platform;
 		if (filename) {
 			this.load(filename);
 		}
 	}
 
-	load(file) {
-		if (!fs.existsSync(file)) {
+	async load(file: string): Promise<this> {
+		if (!isFile(file)) {
 			throw new Error('tiapp.xml file does not exist');
 		}
-		toJS(this, (new DOMParser(defaultDOMParserArgs).parseFromString(fs.readFileSync(file).toString(), 'text/xml')).documentElement, this.platform);
+		const dom = new DOMParser(defaultDOMParserArgs)
+		const doc = dom.parseFromString(await readFile(file, 'utf8'), 'text/xml') as TiappDocument;
+		toJS(this, doc.documentElement, this.platform);
 		return this;
 	}
 
-	parse(str) {
+	parse(str: string): this {
 		toJS(this, (new DOMParser(defaultDOMParserArgs).parseFromString(str, 'text/xml')).documentElement, this.platform);
 		return this;
 	}
 
-	toString(fmt) {
+	toString(fmt?: string): string {
 		if (fmt === 'xml') {
-			const dom = new DOMParser(defaultDOMParserArgs).parseFromString('<ti:app xmlns:ti="http://ti.tidev.io"/>', 'text/xml');
+			const dom = new DOMParser(defaultDOMParserArgs).parseFromString('<ti:app xmlns:ti="http://ti.tidev.io"/>', 'text/xml') as TiappDocument;
 
-			dom.create = (tag, attrs, parent, callback) => {
+			dom.create = (tag: string, attrs: Record<string, any>, parent: Node, callback?: (node: Node) => void): Element => {
 				const node = dom.createElement(tag);
 				let i = 0;
 				let p = parent;
@@ -771,7 +731,7 @@ export class tiappxml {
 			dom.documentElement.appendChild(dom.createTextNode('\r\n'));
 
 			const xml = dom.documentElement.toString();
-			return '<?xml version="1.0" encoding="UTF-8"?>\n' + xml.replace(/uses-sdk xmlns:android="http:\/\/schemas\.android\.com\/apk\/res\/android"/, 'uses-sdk');
+			return `<?xml version="1.0" encoding="UTF-8"?>\n${xml.replace(/uses-sdk xmlns:android="http:\/\/schemas\.android\.com\/apk\/res\/android"/, 'uses-sdk')}`;
 		} else if (fmt === 'pretty-json') {
 			return JSON.stringify(this, null, '\t');
 		} else if (fmt === 'json') {
@@ -780,10 +740,10 @@ export class tiappxml {
 		return Object.prototype.toString.call(this);
 	}
 
-	save(file) {
+	async save(file: string): Promise<this> {
 		if (file) {
-			fs.mkdirSync(path.dirname(file), { recursive: true });
-			fs.writeFileSync(file, this.toString('xml'));
+			await mkdir(path.dirname(file), { recursive: true });
+			await writeFile(file, this.toString('xml'));
 		}
 		return this;
 	}

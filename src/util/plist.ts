@@ -1,29 +1,37 @@
 import { DOMParser } from '@xmldom/xmldom';
-import fs from 'node:fs';
 import path from 'node:path';
 import * as xml from './xml.js';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { isFile } from './is-file.js';
 
-/**
- * Creates a JavaScript type-friendly plist value.
- * @class
- * @classdesc An object to represent JavaScript type-friendly plist value.
- * @constructor
- * @param {String} type - The custom data type
- * @param {*} value - The value
- */
-function PlistType(type, value) {
-	this.className = 'PlistType';
-	this.type = type;
-	this.value = type === 'real' && Number.parseInt(value) === value ? value.toFixed(1) : value;
+interface PlistDocument extends XMLDocument {
+	create(tag: string, nodeValue: string | null, parent: Node): Element;
+}
+
+class PlistType {
+	className: string;
+	type: string;
+	value: any;
+
+	/**
+	 * Creates a JavaScript type-friendly plist value.
+	 * @param type - The custom data type
+	 * @param value - The value
+	 */
+	constructor(type: string, value: any) {
+		this.className = 'PlistType';
+		this.type = type;
+		this.value = type === 'real' && Number.parseInt(value) === value ? value.toFixed(1) : value;
+	}
 }
 
 /**
  * JSON stringify formatter that properly translates PlistType objects.
- * @param {String} _key - The object key
- * @param {PlistType|*} value - The value being stringify
- * @returns {*}
+ * @param _key - The object key (unused)
+ * @param value - The value being stringify
+ * @returns The value being stringified
  */
-function plistTypeFormatter(_key, value) {
+function plistTypeFormatter(_key: string, value: any) {
 	if (value && typeof value === 'object' && value.className === 'PlistType') {
 		return value.value;
 	}
@@ -32,12 +40,12 @@ function plistTypeFormatter(_key, value) {
 
 /**
  * Recursively converts a JSON object to XML.
- * @param {Object} dom - The destination XML DOM
- * @param {Object} parent - The parent object XML DOM node
- * @param {*} it - The variable to add to the XML DOM
- * @param {Number} [indent=0] - The depth in which to indent
+ * @param dom - The destination XML DOM
+ * @param parent - The parent object XML DOM node
+ * @param it - The variable to add to the XML DOM
+ * @param indent - The depth in which to indent
  */
-function toXml(dom, parent, it, indent) {
+function toXml(dom: PlistDocument, parent: Node, it: any, indent: number = 0) {
 	let i = indent || 0;
 	let p;
 	let q = parent;
@@ -87,30 +95,30 @@ function toXml(dom, parent, it, indent) {
 			break;
 
 		case '[object Number]':
-			dom.create(~~it === it ? 'integer' : 'real', it, parent);
+			dom.create(Number.parseInt(it) === it ? 'integer' : 'real', it, parent);
 			break;
 	}
 }
 
 /**
  * Recursively walks a XML node that represents a plist <dict> tag.
- * @param {Object} obj - The destination JSON object
- * @param {Object} node - The DOM node to walk
+ * @param obj - The destination JSON object
+ * @param node - The DOM node to walk
  */
-function walkDict(obj, node) {
+function walkDict(obj: any, node: Node) {
 	let key;
 	let next;
 
 	while (node) {
 		if (node.nodeType === xml.ELEMENT_NODE) {
-			if (node.tagName !== 'key') {
+			if ((node as Element).tagName !== 'key') {
 				throw new Error('Error parsing plist: Expected <key> entry');
 			}
 
-			key = (node.firstChild && node.firstChild.data || '').trim();
+			key = (node.firstChild && (node.firstChild as Text).data || '').trim();
 
-			next = node.nextSibling;
-			while (next && next.nodeType !== xml.ELEMENT_NODE) {
+			next = (node as Node).nextSibling;
+			while (next && (next as Node).nodeType !== xml.ELEMENT_NODE) {
 				next = next.nextSibling;
 			}
 
@@ -119,9 +127,9 @@ function walkDict(obj, node) {
 				return;
 			}
 
-			node = next;
+			node = next as Node;
 
-			if (next.tagName === 'key') {
+			if ((next as Element).tagName === 'key') {
 				obj[key] = null;
 				continue;
 			}
@@ -149,29 +157,29 @@ function walkDict(obj, node) {
 				node = next;
 			}
 		}
-		node = node.nextSibling;
+		node = node.nextSibling as Node;
 	}
 }
 
 /**
  * Recursively walks a XML node that represents a plist <array> tag.
- * @param {Array} arr - The destination JavaScript array
- * @param {Object} node - The DOM node to walk
+ * @param arr - The destination JavaScript array
+ * @param node - The DOM node to walk
  */
-function walkArray(arr, node) {
+function walkArray(arr: any[], node: Node) {
 	while (node) {
 		if (node.nodeType === xml.ELEMENT_NODE) {
-			switch (node.tagName) {
+			switch ((node as Element).tagName) {
 				case 'string':
-					arr.push('' + (node.firstChild && node.firstChild.data || '').trim());
+					arr.push('' + (node.firstChild?.textContent || '').trim());
 					break;
 
 				case 'integer':
-					arr.push(Number.parseInt(node.firstChild && node.firstChild.data) || 0);
+					arr.push(Number.parseInt(node.firstChild?.textContent || '') || 0);
 					break;
 
 				case 'real':
-					arr.push(Number.parseFloat(node.firstChild && node.firstChild.data) || 0.0);
+					arr.push(Number.parseFloat(node.firstChild?.textContent || '') || 0.0);
 					break;
 
 				case 'true':
@@ -184,41 +192,41 @@ function walkArray(arr, node) {
 
 				case 'array':
 					const a = [];
-					walkArray(a, node.firstChild);
+					walkArray(a, node.firstChild as Node);
 					arr.push(a);
 					break;
 
 				case 'date':
 					// note: plists do not support milliseconds
-					const d = (node.firstChild && node.firstChild.data || '').trim();
+					const d = (node.firstChild?.textContent || '').trim();
 					arr.push(d ? new Date(d) : null);
 					break;
 
 				case 'dict':
 					const obj = {};
-					walkDict(obj, node.firstChild);
+					walkDict(obj, node.firstChild as Node);
 					arr.push(obj);
 					break;
 
 				case 'data':
-					arr.push(new PlistType('data', (node.firstChild && node.firstChild.data || '').replace(/\s*/g, '')));
+					arr.push(new PlistType('data', (node.firstChild?.textContent || '').replace(/\s*/g, '')));
 			}
 		}
-		node = node.nextSibling;
+		node = node.nextSibling as Node;
 	}
 }
 
 /**
  * Converts an XML DOM to a JSON object.
- * @param {Object} obj - The destination JSON object
- * @param {Object} doc - The DOM node to walk
+ * @param obj - The destination JSON object
+ * @param doc - The DOM node to walk
  */
-function toJS(obj, doc) {
+function toJS(obj: any, doc: Element) {
 	let node = doc.firstChild;
 
 	// the first child should be a <dict> element
 	while (node) {
-		if (node.nodeType === xml.ELEMENT_NODE && node.tagName === 'dict') {
+		if (node.nodeType === xml.ELEMENT_NODE && (node as Element).tagName === 'dict') {
 			node = node.firstChild;
 			break;
 		}
@@ -230,15 +238,14 @@ function toJS(obj, doc) {
 	}
 }
 
-/**
- * Creates an empty plist object or loads and parses a plist file.
- * @class
- * @classdesc An object that represents a plist as a JavaScript object.
- * @constructor
- * @param {String} [filename] - A plist file to load
- */
-export class plist {
-	constructor(filename) {
+export class Plist {
+	filename?: string;
+
+	/**
+	 * Creates an empty plist object or loads and parses a plist file.
+	 * @param filename - A plist file to load
+	 */
+	constructor(filename?: string) {
 		this.filename = filename;
 
 		if (filename) {
@@ -248,24 +255,24 @@ export class plist {
 
 	/**
 	 * Loads and parses a plist file.
-	 * @param {String} file - A plist file to load
-	 * @returns {plist} The plist instance
-	 * @throws {Error} If plist file does not exist
+	 * @param file - A plist file to load
+	 * @returns The plist instance
+	 * @throws If plist file does not exist
 	 */
-	load(file) {
-		if (!fs.existsSync(file)) {
+	async load(file: string): Promise<this> {
+		if (!isFile(file)) {
 			throw new Error('plist file does not exist');
 		}
-		return this.parse(fs.readFileSync(file, 'utf8'));
+		return this.parse(await readFile(file, 'utf8'));
 	}
 
 	/**
 	 * Parses a plist from a string.
-	 * @param {String} str - The plist string
-	 * @returns {plist} The plist instance
-	 * @throws {Error} If plist is malformed XML
+	 * @param str - The plist string
+	 * @returns The plist instance
+	 * @throws If plist is malformed XML
 	 */
-	parse(str) {
+	parse(str: string): this {
 		const dom = new DOMParser({
 			errorHandler: (_level, err) => {
 				throw err;
@@ -279,13 +286,13 @@ export class plist {
 
 	/**
 	 * Serializes a plist instance to an XML document.
-	 * @param {Number} [indent=0] - The depth in which to indent
-	 * @returns {Object} A XML document object
+	 * @param indent - The depth in which to indent
+	 * @returns A XML document object
 	 */
-	toXml(indent) {
-		const dom = new DOMParser().parseFromString('<plist version="1.0"/>');
+	toXml(indent = 0): Element {
+		const dom = new DOMParser().parseFromString('<plist version="1.0"/>') as PlistDocument;
 
-		dom.create = (tag, nodeValue, parent) => {
+		dom.create = (tag: string, nodeValue: string | null, parent: Node) => {
 			const node = dom.createElement(tag);
 			let i = indent || 0;
 			let p = parent;
@@ -318,20 +325,20 @@ export class plist {
 
 	/**
 	 * Creates a custom plist data type.
-	 * @param {String} type - The custom data type
-	 * @param {*} value - The value
-	 * @returns {PlistType} The plist data value
+	 * @param type - The custom data type
+	 * @param value - The value
+	 * @returns The plist data value
 	 */
-	type(type, value) {
+	type(type: string, value: any): PlistType {
 		return new PlistType(type, value);
 	}
 
 	/**
 	 * Serializes a plist instance to a string.
-	 * @param {String} [fmt] - The format: undefined, 'xml', 'pretty-json', or 'json'
-	 * @returns {String} The serialized plist
+	 * @param fmt - The format: undefined, 'xml', 'pretty-json', or 'json'
+	 * @returns The serialized plist
 	 */
-	toString(fmt) {
+	toString(fmt?: string): string {
 		if (fmt === 'xml') {
 			return '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
 				+ this.toXml().toString().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
@@ -345,13 +352,13 @@ export class plist {
 
 	/**
 	 * Serializes a plist instance to XML, then writes it to the specified file.
-	 * @param {String} file - The plist file to be written
-	 * @returns {plist} The plist instance
+	 * @param file - The plist file to be written
+	 * @returns The plist instance
 	 */
-	save(file) {
+	async save(file: string): Promise<this> {
 		if (file) {
-			fs.mkdirsSync(path.dirname(file), { recursive: true });
-			fs.writeFileSync(file, this.toString('xml'));
+			await mkdir(path.dirname(file), { recursive: true });
+			await writeFile(file, this.toString('xml'));
 		}
 		return this;
 	}

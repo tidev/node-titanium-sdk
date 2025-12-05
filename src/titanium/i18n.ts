@@ -72,9 +72,9 @@ export async function load(projectDir: string, opts: LoadOptions = {}): Promise<
 
 				xml.forEachElement(dom.documentElement, (elem) => {
 					if (elem.nodeType === xml.ELEMENT_NODE && elem.tagName === 'string') {
-						const name = String(xml.getAttr(elem, 'name'));
+						const name = xml.getAttrString(elem, 'name');
 						if (name !== null) {
-							obj[name] = elem?.firstChild?.data || '';
+							obj[name] = xml.getValueString(elem);
 						}
 					}
 				});
