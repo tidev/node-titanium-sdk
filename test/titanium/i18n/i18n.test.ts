@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
-import * as i18n from '../../../src/titanium/i18n.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+import * as i18n from '../../../src/titanium/i18n.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

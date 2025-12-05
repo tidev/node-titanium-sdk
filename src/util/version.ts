@@ -47,7 +47,12 @@ export function compare(a: string | number, b: string | number): number {
  * @param {Boolean} [chopDash] - If true, chops off the dash and anything after it
  * @returns {String} The formatted version
  */
-export function format(ver: string | number, min?: number, max?: number, chopDash?: boolean): string {
+export function format(
+	ver: string | number,
+	min?: number,
+	max?: number,
+	chopDash?: boolean
+): string {
 	if (typeof ver !== 'string' && typeof ver !== 'number') {
 		throw new Error(`Invalid version "${ver}"`);
 	}
@@ -190,7 +195,10 @@ export function satisfies(ver: string, str: string, maybe?: boolean): boolean | 
 	ver = format(ver, 3, 3, true);
 
 	// if we get 1.x, we force it to 1.99999999 so that we should match
-	const replacedStr = str.replace(/(<=?\d+(\.\d+)*?)\.x/g, '$1.99999999').replace(/(>=?\d+(\.\d+)*?)\.x/g, '$1.0');
+	const replacedStr = str.replace(/(<=?\d+(\.\d+)*?)\.x/g, '$1.99999999').replace(
+		/(>=?\d+(\.\d+)*?)\.x/g,
+		'$1.0'
+	);
 
 	try {
 		if (replacedStr === '*' || eq(ver, replacedStr)) {
@@ -202,7 +210,8 @@ export function satisfies(ver: string, str: string, maybe?: boolean): boolean | 
 		// semver is picky with the '-' in comparisons and it just so happens when it
 		// parses versions in the range, it will add '-0' and cause '1.0.0' != '1.0.0-0',
 		// so we test our version with and without the '-9'
-		return range === '*' || semver.satisfies(ver, range) || (!ver.includes('-') && semver.satisfies(ver + '-0', range));
+		return range === '*' || semver.satisfies(ver, range)
+			|| (!ver.includes('-') && semver.satisfies(ver + '-0', range));
 	});
 
 	// if true or we don't care if it maybe matches, then return now
@@ -216,7 +225,10 @@ export function satisfies(ver: string, str: string, maybe?: boolean): boolean | 
 		const set = range.set[i];
 		for (let j = set.length - 1; j >= 0; j--) {
 			if (set[j].semver instanceof semver.SemVer) {
-				if ((set[j].operator === '<' || set[j].operator === '<=') && !semver.cmp(ver, set[j].operator, set[j].semver, set[j].loose)) {
+				if (
+					(set[j].operator === '<' || set[j].operator === '<=')
+					&& !semver.cmp(ver, set[j].operator, set[j].semver, set[j].loose)
+				) {
 					return 'maybe';
 				}
 				break;

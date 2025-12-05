@@ -40,7 +40,10 @@ export function forEachAttr(node: Element, fn: (attr: Attr) => void): void {
  * @param parseBoolean - Whether to parse the value as a boolean
  * @returns The parsed value
  */
-export function parse(value: string | null, parseBoolean?: boolean): string | number | boolean | null {
+export function parse(
+	value: string | null,
+	parseBoolean?: boolean
+): string | number | boolean | null {
 	if (value === null || value === 'null') {
 		return null;
 	}
@@ -56,7 +59,7 @@ export function parse(value: string | null, parseBoolean?: boolean): string | nu
 		return value;
 	}
 	return num;
-};
+}
 
 /**
  * Gets and parses an attribute of an XML node. If attribute does not exist, it
@@ -67,7 +70,8 @@ export function parse(value: string | null, parseBoolean?: boolean): string | nu
  * string if attribute does not exist
  */
 export function getAttr(node: Element, attr: string): string | number | null {
-	return node && (parse(node.getAttribute(attr), false) as string | number | null) || null;
+	return node && (parse(node.getAttribute(attr), false) as string | number | null)
+		|| null;
 }
 
 /**

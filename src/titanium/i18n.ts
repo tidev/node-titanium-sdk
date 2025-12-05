@@ -1,11 +1,11 @@
-import path from 'node:path';
-import { readdir, readFile } from 'node:fs/promises';
 import { DOMParser } from '@xmldom/xmldom';
-import * as xml from '../util/xml.js';
+import { readdir, readFile } from 'node:fs/promises';
+import path from 'node:path';
 import snooplogg from 'snooplogg';
 import { expand } from '../util/expand.js';
 import { isDir } from '../util/is-dir.js';
 import { isFile } from '../util/is-file.js';
+import * as xml from '../util/xml.js';
 
 const { debug } = snooplogg('titanium')('i18n');
 
@@ -36,7 +36,10 @@ const launchScreensCache: LaunchScreensCache = {};
  * @param opts - The options for the i18n data.
  * @returns The i18n data.
  */
-export async function load(projectDir: string, opts: LoadOptions = {}): Promise<I18NData> {
+export async function load(
+	projectDir: string,
+	opts: LoadOptions = {}
+): Promise<I18NData> {
 	const i18nDir = expand(projectDir, 'i18n');
 	const data: I18NData = {};
 	const ignoreDirs = opts?.ignoreDirs;
@@ -60,7 +63,9 @@ export async function load(projectDir: string, opts: LoadOptions = {}): Promise<
 
 		for (const name of await readdir(langDir)) {
 			const file = path.join(langDir, name);
-			if (name.endsWith('.xml') && (!ignoreFiles || !ignoreFiles.test(name)) && isFile(file)) {
+			if (
+				name.endsWith('.xml') && (!ignoreFiles || !ignoreFiles.test(name)) && isFile(file)
+			) {
 				debug(`Processing i18n file: ${lang}/${name}`);
 
 				const dest = name === 'app.xml' ? 'app' : 'strings';
@@ -68,7 +73,10 @@ export async function load(projectDir: string, opts: LoadOptions = {}): Promise<
 					strings[dest] = {};
 				}
 				const obj = strings[dest];
-				const dom = new DOMParser().parseFromString(await readFile(file, 'utf8'), 'text/xml');
+				const dom = new DOMParser().parseFromString(
+					await readFile(file, 'utf8'),
+					'text/xml'
+				);
 
 				xml.forEachElement(dom.documentElement, (elem) => {
 					if (elem.nodeType === xml.ELEMENT_NODE && elem.tagName === 'string') {
@@ -90,7 +98,8 @@ interface FindLaunchScreensOptions {
 	ignoreDirs?: RegExp;
 }
 
-const launchScreensRegex = /^(Default(-(Landscape|Portrait))?(-[0-9]+h)?(@[2-9]x)?)\.png$/;
+const launchScreensRegex =
+	/^(Default(-(Landscape|Portrait))?(-[0-9]+h)?(@[2-9]x)?)\.png$/;
 
 /**
  * Finds the launch screens in the i18n directory.
@@ -99,7 +108,10 @@ const launchScreensRegex = /^(Default(-(Landscape|Portrait))?(-[0-9]+h)?(@[2-9]x
  * @param opts - The options for the launch screens.
  * @returns The launch screens.
  */
-export async function findLaunchScreens(projectDir: string, opts: FindLaunchScreensOptions = {}): Promise<string[]> {
+export async function findLaunchScreens(
+	projectDir: string,
+	opts: FindLaunchScreensOptions = {}
+): Promise<string[]> {
 	if (!opts.bypassCache && launchScreensCache[projectDir]) {
 		return launchScreensCache[projectDir];
 	}

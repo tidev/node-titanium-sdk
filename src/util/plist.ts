@@ -1,8 +1,8 @@
 import { DOMParser } from '@xmldom/xmldom';
-import path from 'node:path';
-import * as xml from './xml.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
 import { isFile } from './is-file.js';
+import * as xml from './xml.js';
 
 interface PlistDocument extends XMLDocument {
 	create(tag: string, nodeValue: string | null, parent: Node): Element;
@@ -21,7 +21,9 @@ class PlistType {
 	constructor(type: string, value: any) {
 		this.className = 'PlistType';
 		this.type = type;
-		this.value = type === 'real' && Number.parseInt(value) === value ? value.toFixed(1) : value;
+		this.value = type === 'real' && Number.parseInt(value) === value
+			? value.toFixed(1)
+			: value;
 	}
 }
 
@@ -153,7 +155,10 @@ function walkDict(obj: any, node: Node) {
 			} else if (next.tagName === 'array') {
 				walkArray(obj[key] = [], next.firstChild);
 			} else if (next.tagName === 'data') {
-				obj[key] = new PlistType('data', (next.firstChild && next.firstChild.data || '').replace(/\s*/g, ''));
+				obj[key] = new PlistType(
+					'data',
+					(next.firstChild && next.firstChild.data || '').replace(/\s*/g, '')
+				);
 				node = next;
 			}
 		}
@@ -209,7 +214,12 @@ function walkArray(arr: any[], node: Node) {
 					break;
 
 				case 'data':
-					arr.push(new PlistType('data', (node.firstChild?.textContent || '').replace(/\s*/g, '')));
+					arr.push(
+						new PlistType(
+							'data',
+							(node.firstChild?.textContent || '').replace(/\s*/g, '')
+						)
+					);
 			}
 		}
 		node = node.nextSibling as Node;
@@ -276,7 +286,7 @@ export class Plist {
 		const dom = new DOMParser({
 			errorHandler: (_level, err) => {
 				throw err;
-			}
+			},
 		}).parseFromString(str, 'text/xml');
 
 		toJS(this, dom.documentElement);
@@ -290,7 +300,9 @@ export class Plist {
 	 * @returns A XML document object
 	 */
 	toXml(indent = 0): Element {
-		const dom = new DOMParser().parseFromString('<plist version="1.0"/>') as PlistDocument;
+		const dom = new DOMParser().parseFromString(
+			'<plist version="1.0"/>'
+		) as PlistDocument;
 
 		dom.create = (tag: string, nodeValue: string | null, parent: Node) => {
 			const node = dom.createElement(tag);

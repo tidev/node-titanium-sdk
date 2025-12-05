@@ -1,1 +1,3 @@
-var myGlobalMethod = function() { return this; };
+var myGlobalMethod = function() {
+	return this;
+};

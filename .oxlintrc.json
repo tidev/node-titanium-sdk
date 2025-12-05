@@ -7,6 +7,6 @@
   "ignorePatterns": [
     "coverage/**",
     "dist/**",
-	"test/resources/**"
+    "test/resources/**"
   ]
 }

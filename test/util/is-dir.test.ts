@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { isDir } from '../../src/util/is-dir.js';
-import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import { describe, expect, it } from 'vitest';
+import { isDir } from '../../src/util/is-dir.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -11,7 +11,7 @@ describe('isDir()', () => {
 		expect(isDir(__dirname)).toBe(true);
 	});
 
-	it('should return false if the path doesn\'t exist', () => {
+	it("should return false if the path doesn't exist", () => {
 		expect(isDir(join(__dirname, 'does_not_exist'))).toBe(false);
 	});
 

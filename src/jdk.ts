@@ -1,13 +1,13 @@
-import { config } from './config.js';
-import { expand } from './util/expand.js';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import { isDir } from './util/is-dir.js';
-import { isFile } from './util/is-file.js';
-import { realpath } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { realpath } from 'node:fs/promises';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 import snooplogg from 'snooplogg';
+import { config } from './config.js';
+import { expand } from './util/expand.js';
+import { isDir } from './util/is-dir.js';
+import { isFile } from './util/is-file.js';
 import { Issue } from './util/issue.js';
 
 const { error, log } = snooplogg('jdk');
@@ -29,18 +29,18 @@ export const libjvmLocations: Record<string, string[]> = {
 		'jre/lib/amd64/server/libjvm.so',
 		'jre/lib/i386/client/libjvm.so',
 		'jre/lib/i386/server/libjvm.so',
-		'lib/server/libjvm.so'
+		'lib/server/libjvm.so',
 	],
 	darwin: [
 		'jre/lib/server/libjvm.dylib',
 		'../Libraries/libjvm.dylib',
-		'lib/server/libjvm.dylib'
+		'lib/server/libjvm.dylib',
 	],
 	win32: [
 		'jre/bin/server/jvm.dll',
 		'jre/bin/client/jvm.dll',
-		'bin/server/jvm.dll'
-	]
+		'bin/server/jvm.dll',
+	],
 };
 
 const exe = process.platform === 'win32' ? '.exe' : '';
@@ -112,19 +112,22 @@ export class JDK {
 					return true;
 				}
 				return false;
-			}
-		));
+			})
+		);
 
 		if (!results.every(result => result)) {
 			throw new Issue(`Directory missing required program: ${path}`, {
 				id: 'JDK_MISSING_PROGRAMS',
 				type: 'warning',
-				details: `JDK (Java Development Kit) at ${path} missing required programs: ${Object.keys(executables).filter(cmd => !executables[cmd]).join(', ')}
-${process.env.JAVA_HOME
-	? 'Please verify your __JAVA_HOME__ environment variable is correctly set to the JDK install location.\n'
-		+ `__JAVA_HOME__ is currently set to "${process.env.JAVA_HOME}".`
-	: 'Please set the __JAVA_HOME__ environment variable to the JDK install location and not the JRE (Java Runtime Environment).'
-}
+				details: `JDK (Java Development Kit) at ${path} missing required programs: ${
+					Object.keys(executables).filter(cmd => !executables[cmd]).join(', ')
+				}
+${
+					process.env.JAVA_HOME
+						? 'Please verify your __JAVA_HOME__ environment variable is correctly set to the JDK install location.\n'
+							+ `__JAVA_HOME__ is currently set to "${process.env.JAVA_HOME}".`
+						: 'Please set the __JAVA_HOME__ environment variable to the JDK install location and not the JRE (Java Runtime Environment).'
+				}
 The __JAVA_HOME__ environment variable must point to the JDK and not the JRE (Java Runtime Environment).
 You may want to reinstall the JDK by downloading it from __https://www.oracle.com/java/technologies/downloads/__
 or __https://jdk.java.net/archive/__.`,
@@ -167,7 +170,7 @@ interface JDKs {
 let jdkCache: JDKs | null = null;
 
 export async function detect(options: {
-	bypassCache?: boolean,
+	bypassCache?: boolean;
 } = {}): Promise<JDKs> {
 	if (jdkCache !== null && !options.bypassCache) {
 		return jdkCache;
@@ -221,14 +224,16 @@ export async function detect(options: {
 	}
 
 	if (!jdks.length) {
-		issues.push(new Issue('No JDKs found', {
-			id: 'JDK_NOT_FOUND',
-			type: 'error',
-			details: `JDK (Java Development Kit) not installed.
+		issues.push(
+			new Issue('No JDKs found', {
+				id: 'JDK_NOT_FOUND',
+				type: 'error',
+				details: `JDK (Java Development Kit) not installed.
 If you already have installed the JDK, verify your __JAVA_HOME__ environment variable is correctly set.
 The JDK is required for Titanium and must be manually downloaded and installed from __https://www.oracle.com/java/technologies/downloads/__
 or  __https://jdk.java.net/archive/__.`,
-		}));
+			})
+		);
 	}
 
 	jdkCache = {
@@ -238,4 +243,3 @@ or  __https://jdk.java.net/archive/__.`,
 	};
 	return jdkCache;
 }
-

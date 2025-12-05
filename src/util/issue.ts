@@ -1,7 +1,7 @@
 export class Issue extends Error {
 	id: string;
 	type: 'error' | 'warning';
-    details: string;
+	details: string;
 
 	constructor(message: string, options: {
 		id: string;
@@ -11,6 +11,6 @@ export class Issue extends Error {
 		super(message);
 		this.id = options.id;
 		this.type = options.type;
-        this.details = options.details;
+		this.details = options.details;
 	}
 }

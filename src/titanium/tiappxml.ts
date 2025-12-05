@@ -1,14 +1,19 @@
 import { DOMParser, type Options } from '@xmldom/xmldom';
-import { capitalize } from '../util/capitalize.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import * as xml from '../util/xml.js';
-import * as version from '../util/version.js';
-import { Plist } from '../util/plist.js';
+import { capitalize } from '../util/capitalize.js';
 import { isFile } from '../util/is-file.js';
+import { Plist } from '../util/plist.js';
+import * as version from '../util/version.js';
+import * as xml from '../util/xml.js';
 
 interface TiappDocument extends XMLDocument {
-	create(tag: string, attrs: Record<string, any> | null, parent: Node, callback?: (node: Node) => void): Element;
+	create(
+		tag: string,
+		attrs: Record<string, any> | null,
+		parent: Node,
+		callback?: (node: Node) => void
+	): Element;
 }
 
 interface TiappIOS {
@@ -54,7 +59,7 @@ declare module '@xmldom/xmldom' {
 }
 
 const defaultDOMParserArgs: Options = {
-	errorHandler: () => {}
+	errorHandler: () => {},
 };
 
 function toXml(dom: TiappDocument, parent: Node, name: string, value: any) {
@@ -64,7 +69,7 @@ function toXml(dom: TiappDocument, parent: Node, name: string, value: any) {
 			dom.create('property', {
 				name: v,
 				type: value[v].type || 'string',
-				nodeValue: value[v].value
+				nodeValue: value[v].value,
 			}, parent);
 		}
 		return;
@@ -77,18 +82,24 @@ function toXml(dom: TiappDocument, parent: Node, name: string, value: any) {
 			for (const v of Object.keys(value)) {
 				dom.create('target', {
 					device: v,
-					nodeValue: value[v]
+					nodeValue: value[v],
 				}, node);
 			}
 			break;
 
 		case 'ios':
 			if (Object.prototype.hasOwnProperty.call(value, 'exclude-dir-from-asset-catalog')) {
-				dom.create('exclude-dir-from-asset-catalog', { nodeValue: !!value['exclude-dir-from-asset-catalog'] }, node);
+				dom.create('exclude-dir-from-asset-catalog', {
+					nodeValue: !!value['exclude-dir-from-asset-catalog'],
+				}, node);
 			}
 
-			if (Object.prototype.hasOwnProperty.call(value, 'enable-launch-screen-storyboard')) {
-				dom.create('enable-launch-screen-storyboard', { nodeValue: !!value['enable-launch-screen-storyboard'] }, node);
+			if (
+				Object.prototype.hasOwnProperty.call(value, 'enable-launch-screen-storyboard')
+			) {
+				dom.create('enable-launch-screen-storyboard', {
+					nodeValue: !!value['enable-launch-screen-storyboard'],
+				}, node);
 			}
 
 			if (Object.prototype.hasOwnProperty.call(value, 'enablecoverage')) {
@@ -100,11 +111,17 @@ function toXml(dom: TiappDocument, parent: Node, name: string, value: any) {
 			}
 
 			if (Object.prototype.hasOwnProperty.call(value, 'min-ios-ver')) {
-				dom.create('min-ios-ver', { nodeValue: version.format(value['min-ios-ver'], 2) }, node);
+				dom.create(
+					'min-ios-ver',
+					{ nodeValue: version.format(value['min-ios-ver'], 2) },
+					node
+				);
 			}
 
 			if (Object.prototype.hasOwnProperty.call(value, 'default-background-color')) {
-				dom.create('default-background-color', { nodeValue: value['default-background-color'] }, node);
+				dom.create('default-background-color', {
+					nodeValue: value['default-background-color'],
+				}, node);
 			}
 
 			if (Object.prototype.hasOwnProperty.call(value, 'team-id')) {
@@ -112,11 +129,19 @@ function toXml(dom: TiappDocument, parent: Node, name: string, value: any) {
 			}
 
 			if (Object.prototype.hasOwnProperty.call(value, 'use-jscore-framework')) {
-				dom.create('use-jscore-framework', { nodeValue: !!value['use-jscore-framework'] }, node);
+				dom.create(
+					'use-jscore-framework',
+					{ nodeValue: !!value['use-jscore-framework'] },
+					node
+				);
 			}
 
 			if (Object.prototype.hasOwnProperty.call(value, 'run-on-main-thread')) {
-				dom.create('run-on-main-thread', { nodeValue: !!value['run-on-main-thread'] }, node);
+				dom.create(
+					'run-on-main-thread',
+					{ nodeValue: !!value['run-on-main-thread'] },
+					node
+				);
 			}
 
 			if (Object.prototype.hasOwnProperty.call(value, 'use-autolayout')) {
@@ -124,7 +149,11 @@ function toXml(dom: TiappDocument, parent: Node, name: string, value: any) {
 			}
 
 			if (Object.prototype.hasOwnProperty.call(value, 'use-new-build-system')) {
-				dom.create('use-new-build-system', { nodeValue: !!value['use-new-build-system'] }, node);
+				dom.create(
+					'use-new-build-system',
+					{ nodeValue: !!value['use-new-build-system'] },
+					node
+				);
 			}
 
 			if (Object.prototype.hasOwnProperty.call(value, 'use-app-thinning')) {
@@ -176,11 +205,18 @@ function toXml(dom: TiappDocument, parent: Node, name: string, value: any) {
 			if (Array.isArray(value.extensions)) {
 				const extsNode = dom.create('extentions', null, node);
 				for (const ext of value.extensions) {
-					const extNode = dom.create('extention', { projectPath: ext.projectPath }, extsNode);
+					const extNode = dom.create(
+						'extention',
+						{ projectPath: ext.projectPath },
+						extsNode
+					);
 					if (Array.isArray(ext.targets)) {
 						for (const target of ext.targets) {
 							const targetNode = dom.create('target', { name: target.name }, extNode);
-							if (target.ppUUIDs && typeof target.ppUUIDs === 'object' && Object.keys(target.ppUUIDs).length) {
+							if (
+								target.ppUUIDs && typeof target.ppUUIDs === 'object'
+								&& Object.keys(target.ppUUIDs).length
+							) {
 								const ppUUIDsNode = dom.create('provisioning-profiles', null, targetNode);
 								for (const type of Object.keys(target.ppUUIDs)) {
 									dom.create(type, { nodeValue: target.ppUUIDs[type] }, ppUUIDsNode);
@@ -252,7 +288,9 @@ function toXml(dom: TiappDocument, parent: Node, name: string, value: any) {
 			}
 
 			if (Object.prototype.hasOwnProperty.call(value, 'abi')) {
-				dom.create('abi', { nodeValue: Array.isArray(value.abi) ? value.abi.join(',') : value.abi }, node);
+				dom.create('abi', {
+					nodeValue: Array.isArray(value.abi) ? value.abi.join(',') : value.abi,
+				}, node);
 			}
 
 			if (value.activities) {
@@ -291,7 +329,7 @@ function toXml(dom: TiappDocument, parent: Node, name: string, value: any) {
 						platform: mod.platform,
 						version: mod.version ? version.format(mod.version, 2) : null,
 						'deploy-type': mod.deployType || null,
-						nodeValue: mod.id
+						nodeValue: mod.id,
 					}, node);
 				}
 			}
@@ -321,10 +359,13 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 						}
 						obj.properties[name] = {
 							type: type,
-							value: type === 'bool' ? (typeof value === 'boolean' ? value : value === 'true')
-								: type === 'int' ? (typeof value === 'string' ? Number.parseInt(value) : value || 0)
-									: type === 'double' ? (typeof value === 'string' ? Number.parseFloat(value) : value || 0)
-										: '' + value
+							value: type === 'bool'
+								? (typeof value === 'boolean' ? value : value === 'true')
+								: type === 'int'
+								? (typeof value === 'string' ? Number.parseInt(value) : value || 0)
+								: type === 'double'
+								? (typeof value === 'string' ? Number.parseFloat(value) : value || 0)
+								: '' + value,
 						};
 					}
 					break;
@@ -402,9 +443,14 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 								const plist: Record<string, any> = {};
 								xml.forEachElement(elem, (elem) => {
 									if (elem.tagName === 'dict') {
-										const pl = new Plist().parse(`<plist version="1.0">${elem.toString()}</plist>`);
+										const pl = new Plist().parse(
+											`<plist version="1.0">${elem.toString()}</plist>`
+										);
 										for (const prop of Object.keys(pl)) {
-											if (!/^CFBundle(DisplayName|Executable|IconFile|Identifier|InfoDictionaryVersion|Name|PackageType|Signature)|LSRequiresIPhoneOS$/.test(prop)) {
+											if (
+												!/^CFBundle(DisplayName|Executable|IconFile|Identifier|InfoDictionaryVersion|Name|PackageType|Signature)|LSRequiresIPhoneOS$/
+													.test(prop)
+											) {
 												plist[prop] = pl[prop];
 											}
 										}
@@ -422,7 +468,7 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 
 									const ext: Record<string, any> = {
 										projectPath: elem.getAttribute('projectPath') || null,
-										targets: []
+										targets: [],
 									};
 									extensions.push(ext);
 
@@ -433,7 +479,7 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 
 										const target: Record<string, any> = {
 											name: elem.getAttribute('name'),
-											ppUUIDs: {}
+											ppUUIDs: {},
 										};
 										ext.targets.push(target);
 
@@ -503,11 +549,13 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 											name: '',
 											icon: '',
 											uti: [],
-											owner: false
+											owner: false,
 										};
 										xml.forEachElement(elem, (elem) => {
 											const v = xml.getValueString(elem);
-											type[elem.tagName] = elem.tagName === 'uti' ? v.split(',').map(s => s.trim()) : v;
+											type[elem.tagName] = elem.tagName === 'uti'
+												? v.split(',').map(s => s.trim())
+												: v;
 										});
 										iphone.types.push(type);
 									}
@@ -521,7 +569,9 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 					const android: TiappAndroid = {};
 					obj.android = android;
 					const formatUrl = (url) => {
-						return capitalize(url.replace(/^app:\/\//, '').replace(/\.js$/, '').replace(/\//g, '_')).replace(/[/ .$&@]/g, '_');
+						return capitalize(
+							url.replace(/^app:\/\//, '').replace(/\.js$/, '').replace(/\//g, '_')
+						).replace(/[/ .$&@]/g, '_');
 					};
 
 					xml.forEachElement(node as Element, (elem) => {
@@ -530,7 +580,10 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 								// the <manifest> tag is an XML document and we're just gonna
 								// defer the parsing to whoever wants its data
 								// Strip the 'android' XML namespace on the uses-sdk tag! It's already defined at <android> tag level!
-								android.manifest = elem.toString().replace(/ xmlns:android="http:\/\/schemas\.android\.com\/apk\/res\/android"/g, '');
+								android.manifest = elem.toString().replace(
+									/ xmlns:android="http:\/\/schemas\.android\.com\/apk\/res\/android"/g,
+									''
+								);
 								break;
 
 							case 'abi':
@@ -548,15 +601,20 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 								android[type] = dest;
 
 								xml.forEachElement(elem, (elem) => {
-									if ((type === 'activities' && elem.tagName === 'activity') || (type === 'services' && elem.tagName === 'service')) {
-										const url = xml.getAttr(elem, 'url') || xml.getValueString(elem) || '';
+									if (
+										(type === 'activities' && elem.tagName === 'activity')
+										|| (type === 'services' && elem.tagName === 'service')
+									) {
+										const url = xml.getAttr(elem, 'url') || xml.getValueString(elem)
+											|| '';
 										if (url) {
 											const a: Record<string, any> = {};
 											dest[url] = a;
 											xml.forEachAttr(elem, (attr) => {
 												a[attr.name] = xml.parse(attr.value);
 											});
-											a['classname'] = formatUrl(url) + (type === 'activities' ? 'Activity' : 'Service');
+											a['classname'] = formatUrl(url)
+												+ (type === 'activities' ? 'Activity' : 'Service');
 											if (type === 'services') {
 												a['type'] = xml.getAttr(elem, 'type') || 'standard';
 											}
@@ -565,7 +623,10 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 												if (elem.tagName === 'intent-filter') {
 													let intentFilter: Record<string, any> | null = null;
 													xml.forEachElement(elem, (elem) => {
-														if (elem.tagName === 'action' || elem.tagName === 'category' || elem.tagName === 'data') {
+														if (
+															elem.tagName === 'action' || elem.tagName === 'category'
+															|| elem.tagName === 'data'
+														) {
 															if (!intentFilter) {
 																intentFilter = {};
 															}
@@ -575,11 +636,15 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 															if (elem.tagName === 'data') {
 																const a = {};
 																xml.forEachAttr(elem, (attr) => {
-																	a[attr.name.replace(/^android:/, '')] = xml.parse(attr.value);
+																	a[attr.name.replace(/^android:/, '')] = xml.parse(
+																		attr.value
+																	);
 																});
 																intentFilter[elem.tagName].push(a);
 															} else {
-																intentFilter[elem.tagName].push(xml.getAttr(elem, 'android:name'));
+																intentFilter[elem.tagName].push(
+																	xml.getAttr(elem, 'android:name')
+																);
 															}
 														}
 													});
@@ -592,7 +657,9 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 												} else if (elem.tagName === 'meta-data') {
 													const obj: Record<string, any> = {};
 													xml.forEachAttr(elem, (attr) => {
-														obj[attr.name.replace(/^android:/, '')] = xml.parse(attr.value);
+														obj[attr.name.replace(/^android:/, '')] = xml.parse(
+															attr.value
+														);
 													});
 													if (obj.name) {
 														if (!a['meta-data']) {
@@ -616,7 +683,7 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 					xml.forEachElement(node as Element, (elem) => {
 						const opts: TiappModules = {
 							id: xml.getValueString(elem),
-							platform: xml.getAttrString(elem, 'platform')
+							platform: xml.getAttrString(elem, 'platform'),
 						};
 						const version = elem.getAttribute('version');
 						const deployType = xml.getAttrString(elem, 'deploy-type');
@@ -635,10 +702,17 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 					break;
 
 				case 'id':
-					if ((targetPlatform && xml.getAttrString(node as Element, 'platform') === targetPlatform) || obj[(node as Element).tagName] === undefined) {
+					if (
+						(targetPlatform
+							&& xml.getAttrString(node as Element, 'platform') === targetPlatform)
+						|| obj[(node as Element).tagName] === undefined
+					) {
 						obj[(node as Element).tagName] = xml.getValueString(node as Element);
 						if (typeof obj[(node as Element).tagName] === 'string') {
-							obj[(node as Element).tagName] = obj[(node as Element).tagName].replace(/\n/g, '');
+							obj[(node as Element).tagName] = obj[(node as Element).tagName].replace(
+								/\n/g,
+								''
+							);
 						}
 					}
 					break;
@@ -649,7 +723,10 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 					// need to strip out line returns which shouldn't be there in the first place
 					obj[(node as Element).tagName] = xml.getValueString(node as Element);
 					if (typeof obj[(node as Element).tagName] === 'string') {
-						obj[(node as Element).tagName] = obj[(node as Element).tagName].replace(/\n/g, '');
+						obj[(node as Element).tagName] = obj[(node as Element).tagName].replace(
+							/\n/g,
+							''
+						);
 					}
 					break;
 
@@ -675,22 +752,38 @@ export class tiappxml {
 		if (!isFile(file)) {
 			throw new Error('tiapp.xml file does not exist');
 		}
-		const dom = new DOMParser(defaultDOMParserArgs)
-		const doc = dom.parseFromString(await readFile(file, 'utf8'), 'text/xml') as TiappDocument;
+		const dom = new DOMParser(defaultDOMParserArgs);
+		const doc = dom.parseFromString(
+			await readFile(file, 'utf8'),
+			'text/xml'
+		) as TiappDocument;
 		toJS(this, doc.documentElement, this.platform);
 		return this;
 	}
 
 	parse(str: string): this {
-		toJS(this, (new DOMParser(defaultDOMParserArgs).parseFromString(str, 'text/xml')).documentElement, this.platform);
+		toJS(
+			this,
+			(new DOMParser(defaultDOMParserArgs).parseFromString(str, 'text/xml'))
+				.documentElement,
+			this.platform
+		);
 		return this;
 	}
 
 	toString(fmt?: string): string {
 		if (fmt === 'xml') {
-			const dom = new DOMParser(defaultDOMParserArgs).parseFromString('<ti:app xmlns:ti="http://ti.tidev.io"/>', 'text/xml') as TiappDocument;
+			const dom = new DOMParser(defaultDOMParserArgs).parseFromString(
+				'<ti:app xmlns:ti="http://ti.tidev.io"/>',
+				'text/xml'
+			) as TiappDocument;
 
-			dom.create = (tag: string, attrs: Record<string, any>, parent: Node, callback?: (node: Node) => void): Element => {
+			dom.create = (
+				tag: string,
+				attrs: Record<string, any>,
+				parent: Node,
+				callback?: (node: Node) => void
+			): Element => {
 				const node = dom.createElement(tag);
 				let i = 0;
 				let p = parent;
@@ -731,7 +824,12 @@ export class tiappxml {
 			dom.documentElement.appendChild(dom.createTextNode('\r\n'));
 
 			const xml = dom.documentElement.toString();
-			return `<?xml version="1.0" encoding="UTF-8"?>\n${xml.replace(/uses-sdk xmlns:android="http:\/\/schemas\.android\.com\/apk\/res\/android"/, 'uses-sdk')}`;
+			return `<?xml version="1.0" encoding="UTF-8"?>\n${
+				xml.replace(
+					/uses-sdk xmlns:android="http:\/\/schemas\.android\.com\/apk\/res\/android"/,
+					'uses-sdk'
+				)
+			}`;
 		} else if (fmt === 'pretty-json') {
 			return JSON.stringify(this, null, '\t');
 		} else if (fmt === 'json') {

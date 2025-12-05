@@ -1,66 +1,66 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import * as version from '../../src/util/version.js';
 
 describe('version', () => {
-    describe('compare()', () => {
-        it('should compare two versions', () => {
-            expect(version.compare('1.0.0', '2.0.0')).toBe(-1);
-            expect(version.compare('2.0.0', '1.0.0')).toBe(1);
-            expect(version.compare('1.0.0', '1.0.0')).toBe(0);
+	describe('compare()', () => {
+		it('should compare two versions', () => {
+			expect(version.compare('1.0.0', '2.0.0')).toBe(-1);
+			expect(version.compare('2.0.0', '1.0.0')).toBe(1);
+			expect(version.compare('1.0.0', '1.0.0')).toBe(0);
 
-            expect(version.compare('1.1.0', '1.2.0')).toBe(-1);
-            expect(version.compare('1.2.0', '1.1.0')).toBe(1);
-            expect(version.compare('1.1.0', '1.1.0')).toBe(0);
+			expect(version.compare('1.1.0', '1.2.0')).toBe(-1);
+			expect(version.compare('1.2.0', '1.1.0')).toBe(1);
+			expect(version.compare('1.1.0', '1.1.0')).toBe(0);
 
-            expect(version.compare('1.1.1', '1.1.2')).toBe(-1);
-            expect(version.compare('1.1.2', '1.1.1')).toBe(1);
-            expect(version.compare('1.1.1', '1.1.1')).toBe(0);
-        });
+			expect(version.compare('1.1.1', '1.1.2')).toBe(-1);
+			expect(version.compare('1.1.2', '1.1.1')).toBe(1);
+			expect(version.compare('1.1.1', '1.1.1')).toBe(0);
+		});
 
-        it('should compare two versions with tags', () => {
-            expect(version.compare('1.0.0-beta', '1.0.0')).toBe(1);
-            expect(version.compare('1.0.0', '1.0.0-beta')).toBe(-1);
-            expect(version.compare('1.0.0-beta', '1.0.0-beta')).toBe(0);
+		it('should compare two versions with tags', () => {
+			expect(version.compare('1.0.0-beta', '1.0.0')).toBe(1);
+			expect(version.compare('1.0.0', '1.0.0-beta')).toBe(-1);
+			expect(version.compare('1.0.0-beta', '1.0.0-beta')).toBe(0);
 
-            expect(version.compare('1.0.0-beta', '1.0.0-alpha')).toBe(1);
-            expect(version.compare('1.0.0-alpha', '1.0.0-beta')).toBe(-1);
-            expect(version.compare('1.0.0-beta', '1.0.0-beta')).toBe(0);
-            expect(version.compare('1.0.0-beta', '1.0.0-beta.1')).toBe(-1);
-            expect(version.compare('1.0.0-beta.1', '1.0.0-beta')).toBe(1);
-        });
+			expect(version.compare('1.0.0-beta', '1.0.0-alpha')).toBe(1);
+			expect(version.compare('1.0.0-alpha', '1.0.0-beta')).toBe(-1);
+			expect(version.compare('1.0.0-beta', '1.0.0-beta')).toBe(0);
+			expect(version.compare('1.0.0-beta', '1.0.0-beta.1')).toBe(-1);
+			expect(version.compare('1.0.0-beta.1', '1.0.0-beta')).toBe(1);
+		});
 
-        it('should compare two versions with different number of segments', () => {
-            expect(version.compare('1.0.0', '1.0')).toBe(0);
-            expect(version.compare('1.0', '1.0.0')).toBe(0);
-        });
+		it('should compare two versions with different number of segments', () => {
+			expect(version.compare('1.0.0', '1.0')).toBe(0);
+			expect(version.compare('1.0', '1.0.0')).toBe(0);
+		});
 
-        it('should compare two versions with different number of segments and tags', () => {
-            expect(version.compare('1.0.0-beta', '1.0')).toBe(1);
-            expect(version.compare('1.0', '1.0.0-beta')).toBe(-1);
-            expect(version.compare('1.0.0-beta', '1.0.0-beta')).toBe(0);
-        });
-        
-        it('should compare two versions with different number of segments and tags', () => {
-            expect(version.compare('1.0.0-beta', '1.0')).toBe(1);
-            expect(version.compare('1.0', '1.0.0-beta')).toBe(-1);
-            expect(version.compare('1.0.0-beta', '1.0.0-beta')).toBe(0);
-        });
+		it('should compare two versions with different number of segments and tags', () => {
+			expect(version.compare('1.0.0-beta', '1.0')).toBe(1);
+			expect(version.compare('1.0', '1.0.0-beta')).toBe(-1);
+			expect(version.compare('1.0.0-beta', '1.0.0-beta')).toBe(0);
+		});
 
-        it('should compare two numbers', () => {
-            expect(version.compare(1, 2)).toBe(-1);
-            expect(version.compare(2, 1)).toBe(1);
-            expect(version.compare(1, 1)).toBe(0);
+		it('should compare two versions with different number of segments and tags', () => {
+			expect(version.compare('1.0.0-beta', '1.0')).toBe(1);
+			expect(version.compare('1.0', '1.0.0-beta')).toBe(-1);
+			expect(version.compare('1.0.0-beta', '1.0.0-beta')).toBe(0);
+		});
 
-            expect(version.compare(1.2, 1.3)).toBe(-1);
-            expect(version.compare(1.3, 1.2)).toBe(1);
-            expect(version.compare(1.2, 1.2)).toBe(0);
-        });
+		it('should compare two numbers', () => {
+			expect(version.compare(1, 2)).toBe(-1);
+			expect(version.compare(2, 1)).toBe(1);
+			expect(version.compare(1, 1)).toBe(0);
 
-        it('should throw an error if the version is invalid', () => {
-            expect(() => version.compare('foo', 'bar'))
-                .toThrow('Invalid version format');
-        });
-    });
+			expect(version.compare(1.2, 1.3)).toBe(-1);
+			expect(version.compare(1.3, 1.2)).toBe(1);
+			expect(version.compare(1.2, 1.2)).toBe(0);
+		});
+
+		it('should throw an error if the version is invalid', () => {
+			expect(() => version.compare('foo', 'bar'))
+				.toThrow('Invalid version format');
+		});
+	});
 
 	describe('format()', () => {
 		it('format integer versions', () => {
@@ -147,28 +147,28 @@ describe('version', () => {
 			expect(version.format('1.2.3.4', 3, 3)).toBe('1.2.3');
 		});
 
-        it('should throw an error if the version is invalid', () => {
-            expect(() => version.format(undefined as any))
-                .toThrow('Invalid version "undefined"');
-            expect(() => version.format(null as any))
-                .toThrow('Invalid version "null"');
-        });
+		it('should throw an error if the version is invalid', () => {
+			expect(() => version.format(undefined as any))
+				.toThrow('Invalid version "undefined"');
+			expect(() => version.format(null as any))
+				.toThrow('Invalid version "null"');
+		});
 	});
 
-    describe('isValid()', () => {
-        it('positive tests', () => {
-            expect(version.isValid('1')).toBe(true);
-            expect(version.isValid('1.0')).toBe(true);
-            expect(version.isValid('1.0.0')).toBe(true);
-            expect(version.isValid('1.0.0.0')).toBe(true);
-        });
-       
-        it('negative tests', () => {
-            expect(version.isValid('a')).toBe(false);
-            expect(version.isValid(undefined as any)).toBe(false);
-            expect(version.isValid(null as any)).toBe(false);
-        });
-    });
+	describe('isValid()', () => {
+		it('positive tests', () => {
+			expect(version.isValid('1')).toBe(true);
+			expect(version.isValid('1.0')).toBe(true);
+			expect(version.isValid('1.0.0')).toBe(true);
+			expect(version.isValid('1.0.0.0')).toBe(true);
+		});
+
+		it('negative tests', () => {
+			expect(version.isValid('a')).toBe(false);
+			expect(version.isValid(undefined as any)).toBe(false);
+			expect(version.isValid(null as any)).toBe(false);
+		});
+	});
 
 	describe('eq()', () => {
 		it('positive tests', () => {
@@ -368,14 +368,14 @@ describe('version', () => {
 		});
 	});
 
-    describe('sort()', () => {
-        it('should sort versions', () => {
-            expect(version.sort(['1.0.2', '1.0.1', '1.0.0']))
-                .toEqual(['1.0.0', '1.0.1', '1.0.2']);
-            expect(version.sort(['1.0.2-beta', '1.0.1-beta', '1.0.0-beta']))
-                .toEqual(['1.0.0-beta', '1.0.1-beta', '1.0.2-beta']);
-            expect(version.sort(['1.0.2-beta', '1.0.1-beta', '1.0.0-beta']))
-                .toEqual(['1.0.0-beta', '1.0.1-beta', '1.0.2-beta']);
-        });
-    });
+	describe('sort()', () => {
+		it('should sort versions', () => {
+			expect(version.sort(['1.0.2', '1.0.1', '1.0.0']))
+				.toEqual(['1.0.0', '1.0.1', '1.0.2']);
+			expect(version.sort(['1.0.2-beta', '1.0.1-beta', '1.0.0-beta']))
+				.toEqual(['1.0.0-beta', '1.0.1-beta', '1.0.2-beta']);
+			expect(version.sort(['1.0.2-beta', '1.0.1-beta', '1.0.0-beta']))
+				.toEqual(['1.0.0-beta', '1.0.1-beta', '1.0.2-beta']);
+		});
+	});
 });

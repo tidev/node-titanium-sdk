@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { detect as detectAndroid, setAndroidPackageJson } from '../lib/android.js';
 
 function MockConfig() {
@@ -13,7 +13,7 @@ setAndroidPackageJson({
 		'android tools': '<=26.x',
 		'android ndk': '>=r11c <=r16c',
 		node: '>=4.0 <=8.x',
-		java: '>=1.8.x'
+		java: '>=1.8.x',
 	},
 });
 const config = new MockConfig();

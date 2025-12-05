@@ -1,12 +1,12 @@
-import { beforeAll, afterAll, describe, expect, it } from 'vitest';
-import { EmulatorManager } from '../lib/emulator.js';
-import { setAndroidPackageJson } from '../lib/android.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { ADB } from '../lib/adb.js';
 import { setTimeout as delay } from 'node:timers/promises';
+import { fileURLToPath } from 'node:url';
 import { rimraf } from 'rimraf';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { ADB } from '../lib/adb.js';
+import { setAndroidPackageJson } from '../lib/android.js';
+import { EmulatorManager } from '../lib/emulator.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,7 +18,7 @@ setAndroidPackageJson({
 		'android tools': '<=26.x',
 		'android ndk': '>=r11c <=r16c',
 		node: '>=4.0 <=8.x',
-		java: '>=1.8.x'
+		java: '>=1.8.x',
 	},
 });
 
@@ -44,17 +44,18 @@ describe('adb', () => {
 	});
 
 	// TODO: Start an emulator, make sure we get event?
-	it('#trackDevices()', () => new Promise((resolve, reject) => {
-		const connection = adb.trackDevices((err, devices) => {
-			connection.end();
-			if (err) {
-				return reject(err);
-			}
-			// console.log('trackDevicesCallback: ' + JSON.stringify(devices));
-			expect(devices).toBeInstanceOf(Array);
-			resolve();
-		});
-	}));
+	it('#trackDevices()', () =>
+		new Promise((resolve, reject) => {
+			const connection = adb.trackDevices((err, devices) => {
+				connection.end();
+				if (err) {
+					return reject(err);
+				}
+				// console.log('trackDevicesCallback: ' + JSON.stringify(devices));
+				expect(devices).toBeInstanceOf(Array);
+				resolve();
+			});
+		}));
 
 	describe('with an emulator running', () => {
 		let avd;
@@ -144,7 +145,9 @@ describe('adb', () => {
 			// data is a Buffer!
 			expect(data).toBeTruthy();
 			// normalize newlines, android uses \r\n
-			expect(data.toString().replace(/\r\n/g, '\n')).toEqual(fs.readFileSync(__filename).toString());
+			expect(data.toString().replace(/\r\n/g, '\n')).toEqual(
+				fs.readFileSync(__filename).toString()
+			);
 		});
 	}); // with running emulator
 

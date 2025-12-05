@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
-import * as i18n from '../lib/i18n.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+import * as i18n from '../lib/i18n.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -28,7 +28,7 @@ describe('i18n', () => {
 		expect(results).toBeInstanceOf(Array);
 		expect(results.length).toEqual(1);
 		expect(results).toEqual([
-			path.join(__dirname, 'i18n', 'en', 'Default-568h@2x.png')
+			path.join(__dirname, 'i18n', 'en', 'Default-568h@2x.png'),
 		]);
 	});
 });

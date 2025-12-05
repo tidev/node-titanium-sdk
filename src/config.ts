@@ -8,7 +8,7 @@ export const defaultConfig: Config = {
 				 * The number of milliseconds to wait before installing an app times out.
 				 * @type {Number}
 				 */
-				timeout: null
+				timeout: null,
 			},
 
 			/**
@@ -38,15 +38,15 @@ export const defaultConfig: Config = {
 				 * The number of milliseconds to wait before starting ADB times out.
 				 * @type {Number}
 				 */
-				timeout: null
-			}
+				timeout: null,
+			},
 		},
 		avd: {
 			/**
 			 * The path to where AVDs are stored.
 			 * @type {String}
 			 */
-			path: '~/.android/avd'
+			path: '~/.android/avd',
 		},
 		emulator: {
 			start: {
@@ -54,8 +54,8 @@ export const defaultConfig: Config = {
 				 * The number of milliseconds to wait before starting the Android emulator times out.
 				 * @type {Number}
 				 */
-				timeout: null
-			}
+				timeout: null,
+			},
 		},
 		ndk: {
 			/**
@@ -65,17 +65,17 @@ export const defaultConfig: Config = {
 			searchPaths: {
 				darwin: [
 					'~/Library/Android/sdk/ndk',
-					'~/Library/Android/sdk/ndk-bundle'
+					'~/Library/Android/sdk/ndk-bundle',
 				],
 				linux: [
 					'~/Android/sdk/ndk',
-					'~/Android/sdk/ndk-bundle'
+					'~/Android/sdk/ndk-bundle',
 				],
 				win32: [
 					'%LOCALAPPDATA%\\Android\\sdk\\ndk',
-					'%LOCALAPPDATA%\\Android\\sdk\\ndk-bundle'
-				]
-			}
+					'%LOCALAPPDATA%\\Android\\sdk\\ndk-bundle',
+				],
+			},
 		},
 		sdk: {
 			/**
@@ -85,17 +85,17 @@ export const defaultConfig: Config = {
 			searchPaths: {
 				darwin: [
 					'~/Library/Android/sdk',
-					'/usr/local/share'
+					'/usr/local/share',
 				],
 				linux: [
 					'~/Android/sdk',
-					'/usr/local/share'
+					'/usr/local/share',
 				],
 				win32: [
-					'%LOCALAPPDATA%\\Android\\sdk'
-				]
-			}
-		}
+					'%LOCALAPPDATA%\\Android\\sdk',
+				],
+			},
+		},
 	},
 
 	env: {
@@ -103,7 +103,7 @@ export const defaultConfig: Config = {
 		 * An override for the `PATH` environment variable.
 		 * @type {String}
 		 */
-		path: null
+		path: null,
 	},
 
 	ios: {
@@ -124,7 +124,7 @@ export const defaultConfig: Config = {
 			 * Path to the `xcode-select` executable.
 			 * @type {String}
 			 */
-			xcodeSelect: null
+			xcodeSelect: null,
 		},
 
 		keychainMetaFile: '~/Library/Preferences/com.apple.security.plist',
@@ -136,8 +136,8 @@ export const defaultConfig: Config = {
 			 */
 			searchPaths: [
 				'~/Library/Developer/Xcode/UserData/Provisioning Profiles',
-				'~/Library/MobileDevice/Provisioning Profiles'
-			]
+				'~/Library/MobileDevice/Provisioning Profiles',
+			],
 		},
 
 		simulator: {
@@ -157,7 +157,7 @@ export const defaultConfig: Config = {
 			 * The path to the directory containing the simulator runtimes.
 			 * @type {String}
 			 */
-			runtimesDir: '/Library/Developer/CoreSimulator/Profiles/Runtimes'
+			runtimesDir: '/Library/Developer/CoreSimulator/Profiles/Runtimes',
 		},
 
 		xcode: {
@@ -167,9 +167,9 @@ export const defaultConfig: Config = {
 			 */
 			searchPaths: [
 				'/Applications',
-				'~/Applications'
-			]
-		}
+				'~/Applications',
+			],
+		},
 	},
 
 	jdk: {
@@ -182,16 +182,16 @@ export const defaultConfig: Config = {
 		searchPaths: {
 			darwin: [
 				'/Library/Java/JavaVirtualMachines',
-				'/System/Library/Java/JavaVirtualMachines'
+				'/System/Library/Java/JavaVirtualMachines',
 			],
 			linux: [
-				'/usr/lib/jvm'
+				'/usr/lib/jvm',
 			],
 			win32: [
 				'%ProgramFiles%\\Java',
 				'%ProgramFiles(x86)%\\Java',
-				'~\\Java'
-			]
+				'~\\Java',
+			],
 		},
 
 		windows: {
@@ -202,9 +202,9 @@ export const defaultConfig: Config = {
 			registryKeys: [
 				'HKLM\\SOFTWARE\\JavaSoft\\Java Development Kit',
 				'HKLM\\SOFTWARE\\Wow6432Node\\JavaSoft\\Java Development Kit',
-				'HKLM\\SOFTWARE\\JavaSoft\\JDK'
-			]
-		}
+				'HKLM\\SOFTWARE\\JavaSoft\\JDK',
+			],
+		},
 	},
 
 	network: {
@@ -254,7 +254,7 @@ export const defaultConfig: Config = {
 		 * Whether to use strict SSL.
 		 * @type {Boolean}
 		 */
-		strictSSL: true
+		strictSSL: true,
 	},
 
 	titanium: {
@@ -266,60 +266,60 @@ export const defaultConfig: Config = {
 			searchPaths: {
 				darwin: [
 					'~/Library/Application Support/Titanium',
-					'/Library/Application Support/Titanium' // legacy
+					'/Library/Application Support/Titanium', // legacy
 				],
 				linux: [
-					'~/.titanium'
+					'~/.titanium',
 				],
 				win32: [
 					'%ProgramData%\\Titanium',
 					'%APPDATA%\\Titanium',
-					'%ALLUSERSPROFILE%\\Application Data\\Titanium'
-				]
-			}
+					'%ALLUSERSPROFILE%\\Application Data\\Titanium',
+				],
+			},
 		},
 
 		sdk: {
 			downloadURLs: {
-				branches:     'https://downloads.titaniumsdk.com/registry/branches.json',
+				branches: 'https://downloads.titaniumsdk.com/registry/branches.json',
 				branchBuilds: 'https://downloads.titaniumsdk.com/registry/${branch}.json',
 				releases: {
-					beta:     'https://downloads.titaniumsdk.com/registry/beta.json',
-					rc:       'https://downloads.titaniumsdk.com/registry/rc.json',
-					ga:       'https://downloads.titaniumsdk.com/registry/ga.json'
-				}
+					beta: 'https://downloads.titaniumsdk.com/registry/beta.json',
+					rc: 'https://downloads.titaniumsdk.com/registry/rc.json',
+					ga: 'https://downloads.titaniumsdk.com/registry/ga.json',
+				},
 			},
 
 			installPath: {
 				darwin: '~/Library/Application Support/Titanium',
 				linux: '~/.titanium',
-				win32: '%ProgramData%\\Titanium'
+				win32: '%ProgramData%\\Titanium',
 			},
 
 			/**
-			* A list of paths to search for Titanium SDKs.
-			* @type {String[]|Object}
-			*/
+			 * A list of paths to search for Titanium SDKs.
+			 * @type {String[]|Object}
+			 */
 			searchPaths: {
 				darwin: [
 					'~/Library/Application Support/Titanium',
-					'/Library/Application Support/Titanium' // legacy
+					'/Library/Application Support/Titanium', // legacy
 				],
 				linux: [
-					'~/.titanium'
+					'~/.titanium',
 				],
 				win32: [
 					'%ProgramData%\\Titanium',
 					'%APPDATA%\\Titanium',
-					'%ALLUSERSPROFILE%\\Application Data\\Titanium'
-				]
-			}
-		}
-	}
+					'%ALLUSERSPROFILE%\\Application Data\\Titanium',
+				],
+			},
+		},
+	},
 };
 
 export let config: Config = {
-	...defaultConfig
+	...defaultConfig,
 };
 
 export function resetConfig(): void {

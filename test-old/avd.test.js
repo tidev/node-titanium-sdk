@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { EmulatorManager } from '../lib/emulator.js';
 import { setAndroidPackageJson } from '../lib/android.js';
+import { EmulatorManager } from '../lib/emulator.js';
 
 function MockConfig() {
 	this.get = (_s, d) => d;
@@ -14,7 +14,7 @@ setAndroidPackageJson({
 		'android tools': '<=26.x',
 		'android ndk': '>=r11c <=r16c',
 		node: '>=4.0 <=8.x',
-		java: '>=1.8.x'
+		java: '>=1.8.x',
 	},
 });
 const config = new MockConfig();

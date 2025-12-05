@@ -5,13 +5,13 @@ export default defineConfig({
 		allowOnly: true,
 		coverage: {
 			include: ['src/**/*.ts'],
-			reporter: ['html', 'lcov', 'text']
+			reporter: ['html', 'lcov', 'text'],
 		},
 		environment: 'node',
 		globals: false,
 		include: ['test/**/*.test.ts'],
 		reporters: ['verbose'],
 		silent: false,
-		watch: false
-	}
+		watch: false,
+	},
 });

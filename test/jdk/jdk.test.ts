@@ -1,13 +1,13 @@
-import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest';
 import path from 'node:path';
-import { detect, JDK } from '../../src/jdk.js';
 import { fileURLToPath } from 'node:url';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { config, resetConfig } from '../../src/config.js';
+import { detect, JDK } from '../../src/jdk.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const exe = process.platform === 'win32' ? '.exe' : '';
 
-describe('JDK', function () {
+describe('JDK', function() {
 	let javaHome: string | undefined;
 
 	beforeAll(() => {
@@ -29,7 +29,7 @@ describe('JDK', function () {
 		}
 	});
 
-	describe('load()', () =>{
+	describe('load()', () => {
 		it('should throw error if dir is not a string', async () => {
 			await expect(JDK.load(undefined as any)).rejects
 				.toThrowError(new TypeError('Expected JDK path to be a valid string'));
@@ -58,10 +58,10 @@ describe('JDK', function () {
 
 			expect(jdk.build).to.equal(45);
 			expect(jdk.executables).to.deep.equal({
-				java:      path.join(dir, 'bin', `java${exe}`),
-				javac:     path.join(dir, 'bin', `javac${exe}`),
-				keytool:   path.join(dir, 'bin', `keytool${exe}`),
-				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`)
+				java: path.join(dir, 'bin', `java${exe}`),
+				javac: path.join(dir, 'bin', `javac${exe}`),
+				keytool: path.join(dir, 'bin', `keytool${exe}`),
+				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`),
 			});
 			expect(jdk.path).to.equal(dir);
 			expect(jdk.version).to.equal('1.6.0');
@@ -74,10 +74,10 @@ describe('JDK', function () {
 
 			expect(jdk.build).to.equal(80);
 			expect(jdk.executables).to.deep.equal({
-				java:      path.join(dir, 'bin', `java${exe}`),
-				javac:     path.join(dir, 'bin', `javac${exe}`),
-				keytool:   path.join(dir, 'bin', `keytool${exe}`),
-				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`)
+				java: path.join(dir, 'bin', `java${exe}`),
+				javac: path.join(dir, 'bin', `javac${exe}`),
+				keytool: path.join(dir, 'bin', `keytool${exe}`),
+				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`),
 			});
 			expect(jdk.path).to.equal(dir);
 			expect(jdk.version).to.equal('1.7.0');
@@ -90,30 +90,33 @@ describe('JDK', function () {
 
 			expect(jdk.build).to.equal(92);
 			expect(jdk.executables).to.deep.equal({
-				java:      path.join(dir, 'bin', `java${exe}`),
-				javac:     path.join(dir, 'bin', `javac${exe}`),
-				keytool:   path.join(dir, 'bin', `keytool${exe}`),
-				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`)
+				java: path.join(dir, 'bin', `java${exe}`),
+				javac: path.join(dir, 'bin', `javac${exe}`),
+				keytool: path.join(dir, 'bin', `keytool${exe}`),
+				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`),
 			});
 			expect(jdk.path).to.equal(dir);
 			expect(jdk.version).to.equal('1.8.0');
 		});
 
-		(process.platform === 'darwin' ? it : it.skip)('should detect JDK 1.8 with macOS pathing', async () => {
-			process.env.MOCK_STDERR = 'javac 1.8.0_92';
-			const dir = path.join(__dirname, 'mocks', 'mock-jdk-darwin');
-			const jdk = await JDK.load(dir);
+		(process.platform === 'darwin' ? it : it.skip)(
+			'should detect JDK 1.8 with macOS pathing',
+			async () => {
+				process.env.MOCK_STDERR = 'javac 1.8.0_92';
+				const dir = path.join(__dirname, 'mocks', 'mock-jdk-darwin');
+				const jdk = await JDK.load(dir);
 
-			expect(jdk.build).to.equal(92);
-			expect(jdk.executables).to.deep.equal({
-				java:      path.join(dir, 'Contents', 'Home', 'bin', `java${exe}`),
-				javac:     path.join(dir, 'Contents', 'Home', 'bin', `javac${exe}`),
-				keytool:   path.join(dir, 'Contents', 'Home', 'bin', `keytool${exe}`),
-				jarsigner: path.join(dir, 'Contents', 'Home', 'bin', `jarsigner${exe}`)
-			});
-			expect(jdk.path).to.equal(path.join(dir, 'Contents', 'Home'));
-			expect(jdk.version).to.equal('1.8.0');
-		});
+				expect(jdk.build).to.equal(92);
+				expect(jdk.executables).to.deep.equal({
+					java: path.join(dir, 'Contents', 'Home', 'bin', `java${exe}`),
+					javac: path.join(dir, 'Contents', 'Home', 'bin', `javac${exe}`),
+					keytool: path.join(dir, 'Contents', 'Home', 'bin', `keytool${exe}`),
+					jarsigner: path.join(dir, 'Contents', 'Home', 'bin', `jarsigner${exe}`),
+				});
+				expect(jdk.path).to.equal(path.join(dir, 'Contents', 'Home'));
+				expect(jdk.version).to.equal('1.8.0');
+			}
+		);
 
 		it('should detect JDK 9', async () => {
 			const dir = path.join(__dirname, 'mocks', 'mock-jdk');
@@ -122,30 +125,33 @@ describe('JDK', function () {
 
 			expect(jdk.build).to.equal(null);
 			expect(jdk.executables).to.deep.equal({
-				java:      path.join(dir, 'bin', `java${exe}`),
-				javac:     path.join(dir, 'bin', `javac${exe}`),
-				keytool:   path.join(dir, 'bin', `keytool${exe}`),
-				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`)
+				java: path.join(dir, 'bin', `java${exe}`),
+				javac: path.join(dir, 'bin', `javac${exe}`),
+				keytool: path.join(dir, 'bin', `keytool${exe}`),
+				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`),
 			});
 			expect(jdk.path).to.equal(dir);
 			expect(jdk.version).to.equal('9');
 		});
 
-		(process.platform === 'darwin' ? it : it.skip)('should detect JDK 9 with macOS pathing', async () => {
-			const dir = path.join(__dirname, 'mocks', 'mock-jdk-darwin');
-			process.env.MOCK_STDOUT = 'javac 9.0.1';
-			const jdk = await JDK.load(dir);
+		(process.platform === 'darwin' ? it : it.skip)(
+			'should detect JDK 9 with macOS pathing',
+			async () => {
+				const dir = path.join(__dirname, 'mocks', 'mock-jdk-darwin');
+				process.env.MOCK_STDOUT = 'javac 9.0.1';
+				const jdk = await JDK.load(dir);
 
-			expect(jdk.build).to.equal(11);
-			expect(jdk.executables).to.deep.equal({
-				java:      path.join(dir, 'Contents', 'Home', 'bin', `java${exe}`),
-				javac:     path.join(dir, 'Contents', 'Home', 'bin', `javac${exe}`),
-				keytool:   path.join(dir, 'Contents', 'Home', 'bin', `keytool${exe}`),
-				jarsigner: path.join(dir, 'Contents', 'Home', 'bin', `jarsigner${exe}`)
-			});
-			expect(jdk.path).to.equal(path.join(dir, 'Contents', 'Home'));
-			expect(jdk.version).to.equal('9.0.1');
-		});
+				expect(jdk.build).to.equal(11);
+				expect(jdk.executables).to.deep.equal({
+					java: path.join(dir, 'Contents', 'Home', 'bin', `java${exe}`),
+					javac: path.join(dir, 'Contents', 'Home', 'bin', `javac${exe}`),
+					keytool: path.join(dir, 'Contents', 'Home', 'bin', `keytool${exe}`),
+					jarsigner: path.join(dir, 'Contents', 'Home', 'bin', `jarsigner${exe}`),
+				});
+				expect(jdk.path).to.equal(path.join(dir, 'Contents', 'Home'));
+				expect(jdk.version).to.equal('9.0.1');
+			}
+		);
 
 		it('should detect JDK 20.0.1', async () => {
 			const dir = path.join(__dirname, 'mocks', 'mock-jdk');
@@ -154,10 +160,10 @@ describe('JDK', function () {
 
 			expect(jdk.build).to.equal(null);
 			expect(jdk.executables).to.deep.equal({
-				java:      path.join(dir, 'bin', `java${exe}`),
-				javac:     path.join(dir, 'bin', `javac${exe}`),
-				keytool:   path.join(dir, 'bin', `keytool${exe}`),
-				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`)
+				java: path.join(dir, 'bin', `java${exe}`),
+				javac: path.join(dir, 'bin', `javac${exe}`),
+				keytool: path.join(dir, 'bin', `keytool${exe}`),
+				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`),
 			});
 			expect(jdk.path).to.equal(dir);
 			expect(jdk.version).to.equal('20.0.1');
@@ -170,10 +176,10 @@ describe('JDK', function () {
 
 			expect(jdk.build).to.equal(null);
 			expect(jdk.executables).to.deep.equal({
-				java:      path.join(dir, 'bin', `java${exe}`),
-				javac:     path.join(dir, 'bin', `javac${exe}`),
-				keytool:   path.join(dir, 'bin', `keytool${exe}`),
-				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`)
+				java: path.join(dir, 'bin', `java${exe}`),
+				javac: path.join(dir, 'bin', `javac${exe}`),
+				keytool: path.join(dir, 'bin', `keytool${exe}`),
+				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`),
 			});
 			expect(jdk.path).to.equal(dir);
 			expect(jdk.version).to.equal('25');
@@ -198,10 +204,10 @@ describe('JDK', function () {
 				expect(jdk).toBeDefined();
 				expect(jdk!.build).toBeNull();
 				expect(jdk!.executables).toEqual({
-					java:      path.join(dir, 'bin', `java${exe}`),
-					javac:     path.join(dir, 'bin', `javac${exe}`),
-					keytool:   path.join(dir, 'bin', `keytool${exe}`),
-					jarsigner: path.join(dir, 'bin', `jarsigner${exe}`)
+					java: path.join(dir, 'bin', `java${exe}`),
+					javac: path.join(dir, 'bin', `javac${exe}`),
+					keytool: path.join(dir, 'bin', `keytool${exe}`),
+					jarsigner: path.join(dir, 'bin', `jarsigner${exe}`),
 				});
 				expect(jdk!.path).toBe(dir);
 				expect(jdk!.version).toBe('9');
@@ -237,7 +243,7 @@ describe('JDK', function () {
 		it('should return issues if no JDKs are found', async () => {
 			delete process.env.JAVA_HOME;
 			config.jdk.searchPaths = {
-				[process.platform]: ['does_not_exist']
+				[process.platform]: ['does_not_exist'],
 			};
 			const { jdks, issues } = await detect({ bypassCache: true });
 			expect(jdks).toEqual([]);
@@ -250,7 +256,7 @@ describe('JDK', function () {
 		it('should return issues if no JDKs are found', async () => {
 			delete process.env.JAVA_HOME;
 			config.jdk.searchPaths = {
-				[process.platform]: [path.join(__dirname, 'mocks', 'incomplete-jdk')]
+				[process.platform]: [path.join(__dirname, 'mocks', 'incomplete-jdk')],
 			};
 			const { jdks, issues } = await detect({ bypassCache: true });
 			expect(jdks).toEqual([]);

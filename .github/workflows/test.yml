@@ -4,8 +4,8 @@ on:
   pull_request:
   push:
     branches:
-    - main
-    - "[0-9]+_[0-9]+_X"
+      - main
+      - '[0-9]+_[0-9]+_X'
 
 concurrency:
   cancel-in-progress: true
@@ -20,7 +20,7 @@ jobs:
     runs-on: macos-latest # macos-13
     strategy:
       matrix:
-        node: [ '24' ]
+        node: ['24']
 
     steps:
       - uses: actions/checkout@v6
