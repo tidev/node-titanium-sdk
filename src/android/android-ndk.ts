@@ -112,8 +112,8 @@ export class AndroidNDK {
 			for (const filename of await readdir(path)) {
 				if (filename.toLowerCase() === 'release.txt') {
 					const release = (await readFile(join(path, filename), 'utf8')).split(/\r?\n/).shift()?.trim();
-					// release comes back in the format "r10e (64-bit)", so we need to extract a
-					// meaningful version number from that
+					// release comes back in the format "r10e (64-bit)", so we
+					// need to extract a meaningful version number from that
 					const m = release?.match(releaseRegExp);
 					if (m) {
 						name = m[1];
@@ -130,11 +130,11 @@ export class AndroidNDK {
 
 		log(`Found Android NDK: ${path} (version: ${version}, arch: ${arch})`);
 		return new AndroidNDK({
-			path,
-			name,
-			version,
 			arch,
-			executables
+			executables,
+			name,
+			path,
+			version,
 		});
 	}
 }
