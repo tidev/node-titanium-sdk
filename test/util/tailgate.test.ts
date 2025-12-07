@@ -7,8 +7,8 @@ describe('tailgate()', () => {
 		let count = 0;
 		const fn = () => tailgate('foo', () => ++count);
 		const results = await Promise.all([fn(), fn(), fn()]);
-		expect(count).to.equal(3);
-		expect(results).to.deep.equal([1, 2, 3]);
+		expect(count).toBe(3);
+		expect(results).toEqual([1, 2, 3]);
 	});
 
 	it('should queue up multiple async calls', async () => {
@@ -19,8 +19,8 @@ describe('tailgate()', () => {
 			return ++count;
 		});
 		const results = await Promise.all([fn(), fn(), fn()]);
-		expect(count).to.equal(1);
-		expect(results).to.deep.equal([1, 1, 1]);
+		expect(count).toBe(1);
+		expect(results).toEqual([1, 1, 1]);
 	});
 
 	it('should catch errors', async () => {
