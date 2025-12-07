@@ -11,52 +11,139 @@ concurrency:
   cancel-in-progress: true
   group: ${{ github.workflow }}-${{ github.ref }}
 
-env:
-  ANDROID_EMULATOR_WAIT_TIME_BEFORE_KILL: 2000 # Default is 20
-
 jobs:
-  build:
-    name: Test on Node.js ${{ matrix.node }}
-    runs-on: macos-latest # macos-13
-    strategy:
-      matrix:
-        node: ['24']
-
+  checks:
+    name: Check
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@v6
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v2
         with:
           version: latest
 
-      - name: Setup Node.js ${{ matrix.node }}
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Check
+        run: pnpm check
+
+  node-test:
+    name: Test on Node.js ${{ matrix.node }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
-          cache: 'pnpm'
 
       - name: Install dependencies
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Lint
-        run: pnpm lint
+      - name: Build
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: pnpm build
 
-      - name: Build and Test
-        uses: reactivecircus/android-emulator-runner@v2
+      - name: Run tests
+        run: pnpm coverage
+
+  bun-test:
+    name: Test on Bun
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
         with:
-          api-level: 29
-          target: playstore
-          script: pnpm coverage
-          emulator-options: -no-window -noaudio -no-boot-anim
-          disable-animations: true # defaulting to true, the commands sent to emulator to do this sometimes run too quickly after boot and cause "adb: device offline" failures
+          version: latest
 
-      - run: npm pack
-        name: Package
-        if: matrix.node == '24'
-
-      - uses: actions/upload-artifact@v4
-        if: matrix.node == '24'
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          name: node-titanium-sdk
-          path: node-titanium-sdk-*.tgz
+          bun-version: latest
+
+      - name: Install dependencies
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: pnpm build
+
+      - name: Run tests on Bun
+        run: pnpm test:bun
+
+  deno-test:
+    name: Test on Deno
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Install Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: latest
+
+      - name: Install dependencies
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: pnpm build
+
+      - name: Run tests on Deno
+        run: pnpm test:deno
+
