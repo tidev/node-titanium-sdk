@@ -141,7 +141,7 @@ describe('JDK', function() {
 				process.env.MOCK_STDOUT = 'javac 9.0.1';
 				const jdk = await JDK.load(dir);
 
-				expect(jdk.build).to.equal(11);
+				expect(jdk.build).to.equal(null);
 				expect(jdk.executables).to.deep.equal({
 					java: path.join(dir, 'Contents', 'Home', 'bin', `java${exe}`),
 					javac: path.join(dir, 'Contents', 'Home', 'bin', `javac${exe}`),
