@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { realpath } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -9,6 +10,7 @@ import { expand } from './util/expand.js';
 import { isDir } from './util/is-dir.js';
 import { isFile } from './util/is-file.js';
 import { Issue } from './util/issue.js';
+import { tailgate } from './util/tailgate.js';
 
 const { error, log } = snooplogg('jdk');
 
@@ -52,6 +54,9 @@ type JDKExecutables = {
 	jarsigner: string;
 };
 
+/**
+ * Detects and organizes JDK information.
+ */
 export class JDK {
 	build: number | null;
 	executables: JDKExecutables;
@@ -137,7 +142,7 @@ or __https://jdk.java.net/archive/__.`,
 		let output = '';
 		try {
 			const { stderr, stdout } = await execFileAsync(executables.javac, ['-version']);
-			output = stdout || stderr;
+			output = stderr || stdout || '';
 		} catch (error: any) {
 			// javac -version may exit with non-zero code but still provide output
 			output = error.stderr || '';
@@ -168,38 +173,87 @@ interface JDKs {
 }
 
 let jdkCache: JDKs | null = null;
+let jdkSearchPathsHash: string | null = null;
 
 export async function detect(options: {
 	bypassCache?: boolean;
+	javaHome?: string;
+	searchPaths?: string[];
 } = {}): Promise<JDKs> {
-	if (jdkCache !== null && !options.bypassCache) {
+	const { home, searchPaths } = getSearchPaths(options);
+	const searchPathsHash = createHash('sha256')
+		.update(searchPaths.toSorted().join()).digest('hex');
+
+	if (jdkCache !== null && !options.bypassCache && jdkSearchPathsHash === searchPathsHash) {
 		return jdkCache;
 	}
 
-	const searchPaths = new Set<string>();
-	const pending: Promise<JDK | null>[] = [];
+	return tailgate('jdk:detect', async () => {
+		const results = await Promise.allSettled(searchPaths.map(path => JDK.load(path)));
+		const jdks: JDK[] = [];
+		const issues: Issue[] = [];
 
-	let home = config.jdk?.javaHome || process.env.JAVA_HOME || null;
+		for (const result of results) {
+			if (result.status === 'fulfilled' && result.value) {
+				jdks.push(result.value);
+			} else if (result.status === 'rejected') {
+				error(result.reason.message);
+				if (result.reason instanceof Issue) {
+					issues.push(result.reason);
+				}
+			}
+		}
+
+		if (!jdks.length) {
+			issues.push(
+				new Issue('No JDKs found', {
+					id: 'JDK_NOT_FOUND',
+					type: 'error',
+					details: `JDK (Java Development Kit) not installed.
+If you already have installed the JDK, verify your __JAVA_HOME__ environment variable is correctly set.
+The JDK is required for Titanium and must be manually downloaded and installed from __https://www.oracle.com/java/technologies/downloads/__
+or  __https://jdk.java.net/arpathschive/__.`,
+				})
+			);
+		}
+
+		jdkCache = {
+			home,
+			jdks,
+			issues,
+		};
+		jdkSearchPathsHash = searchPathsHash;
+
+		return jdkCache;
+	});
+}
+
+function getSearchPaths(options: { javaHome?: string; searchPaths?: string[] }) {
+	const paths: string[] = [];
+	if (Array.isArray(options.searchPaths)) {
+		paths.push(...options.searchPaths);
+	}
+	const configPaths = config.jdk?.searchPaths;
+	if (Array.isArray(configPaths)) {
+		paths.push(...configPaths);
+	} else if (typeof configPaths === 'object' && configPaths?.[process.platform]) {
+		paths.push(...configPaths[process.platform]);
+	}
+
+	const searchPaths = new Set<string>();
+	if (paths) {
+		for (const path of paths) {
+			searchPaths.add(expand(path));
+		}
+	}
+
+	let home = options.javaHome ?? config.jdk?.javaHome ?? process.env.JAVA_HOME ?? null;
 	if (home && typeof home === 'string') {
 		home = expand(home);
 		if (existsSync(home)) {
 			searchPaths.add(home);
-			pending.push(JDK.load(home));
 		} else {
 			home = null;
-		}
-	}
-
-	if (config.jdk?.searchPaths) {
-		const paths = config.jdk.searchPaths[process.platform] || config.jdk.searchPaths;
-		if (Array.isArray(paths)) {
-			for (let path of paths) {
-				path = expand(path);
-				if (!searchPaths.has(path)) {
-					searchPaths.add(path);
-					pending.push(JDK.load(path));
-				}
-			}
 		}
 	}
 
@@ -208,38 +262,8 @@ export async function detect(options: {
 		// config.jdk.windows.registryKeys
 	}
 
-	const results = await Promise.allSettled(pending);
-	const jdks: JDK[] = [];
-	const issues: Issue[] = [];
-
-	for (const result of results) {
-		if (result.status === 'fulfilled' && result.value) {
-			jdks.push(result.value);
-		} else if (result.status === 'rejected') {
-			error(result.reason.message);
-			if (result.reason instanceof Issue) {
-				issues.push(result.reason);
-			}
-		}
-	}
-
-	if (!jdks.length) {
-		issues.push(
-			new Issue('No JDKs found', {
-				id: 'JDK_NOT_FOUND',
-				type: 'error',
-				details: `JDK (Java Development Kit) not installed.
-If you already have installed the JDK, verify your __JAVA_HOME__ environment variable is correctly set.
-The JDK is required for Titanium and must be manually downloaded and installed from __https://www.oracle.com/java/technologies/downloads/__
-or  __https://jdk.java.net/archive/__.`,
-			})
-		);
-	}
-
-	jdkCache = {
+	return {
 		home,
-		jdks,
-		issues,
+		searchPaths: Array.from(searchPaths),
 	};
-	return jdkCache;
 }

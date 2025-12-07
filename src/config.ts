@@ -185,6 +185,7 @@ export const defaultConfig: Config = {
 				'/System/Library/Java/JavaVirtualMachines',
 			],
 			linux: [
+				'/usr/lib/jvm/default',
 				'/usr/lib/jvm',
 			],
 			win32: [
