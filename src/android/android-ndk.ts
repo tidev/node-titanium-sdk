@@ -99,10 +99,11 @@ export class AndroidNDK {
 			if (version) {
 				const m = version.match(versionRegExp);
 				if (m) {
-					if (!m[2]) {
+					if (m[2] === undefined) {
 						version = `${m[1]}.0`;
+					} else if (Number.parseInt(m[2]) !== 0) {
+						name = `r${m[1]}${String.fromCharCode('a'.charCodeAt(0) + Number.parseInt(m[2]))}`;
 					}
-					name = `r${m[1]}${m[2] ? String.fromCharCode('a'.charCodeAt(0) + Number.parseInt(m[2])) : ''}`;
 				}
 			}
 		}
@@ -156,7 +157,7 @@ let ndkSearchPathsHash: string | null = null;
 export async function detect(options: {
 	bypassCache?: boolean;
 	searchPaths?: string[];
-}): Promise<NDKs> {
+} = {}): Promise<NDKs> {
 	const searchPaths = getSearchPaths(options);
 	const searchPathsHash = createHash('sha256')
 		.update(searchPaths.toSorted().join()).digest('hex');
@@ -202,7 +203,7 @@ export async function detect(options: {
 		if (!ndks.length) {
 			issues.push(new Issue('No Android NDKs found', {
 				id: 'ANDROID_NDK_NOT_FOUND',
-				type: 'error',
+				type: 'warning',
 				details: 'No Android NDKs found. Please install the Android NDK and try again.',
 			}));
 		}

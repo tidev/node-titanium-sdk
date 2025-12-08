@@ -242,9 +242,7 @@ describe('JDK', function() {
 
 		it('should return issues if no JDKs are found', async () => {
 			delete process.env.JAVA_HOME;
-			config.jdk.searchPaths = {
-				[process.platform]: ['does_not_exist'],
-			};
+			config.jdk.searchPaths[process.platform] = ['does_not_exist'];
 			const { jdks, issues } = await detect({ bypassCache: true });
 			expect(jdks).toEqual([]);
 			expect(issues).toBeInstanceOf(Array);
@@ -253,11 +251,11 @@ describe('JDK', function() {
 			expect(issues![0].type).toBe('error');
 		});
 
-		it('should return issues if no JDKs are found', async () => {
+		it('should return issues if no valid JDKs are found', async () => {
 			delete process.env.JAVA_HOME;
-			config.jdk.searchPaths = {
-				[process.platform]: [path.join(__dirname, 'mocks', 'incomplete-jdk')],
-			};
+			config.jdk.searchPaths[process.platform] = [
+				path.join(__dirname, 'mocks', 'incomplete-jdk'),
+			];
 			const { jdks, issues } = await detect({ bypassCache: true });
 			expect(jdks).toEqual([]);
 			expect(issues).toBeInstanceOf(Array);
