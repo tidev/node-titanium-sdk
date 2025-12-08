@@ -223,11 +223,9 @@ function getSearchPaths(options: { searchPaths?: string[] }) {
 	if (Array.isArray(options.searchPaths)) {
 		paths.push(...options.searchPaths);
 	}
-	const configPaths = config.android.ndk?.searchPaths;
+	const configPaths = config.android.ndk.searchPaths[process.platform];
 	if (Array.isArray(configPaths)) {
 		paths.push(...configPaths);
-	} else if (typeof configPaths === 'object' && configPaths?.[process.platform]) {
-		paths.push(...configPaths[process.platform]);
 	}
 
 	const searchPaths = new Set<string>();

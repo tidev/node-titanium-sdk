@@ -139,8 +139,13 @@ describe('Android NDK', () => {
 	describe('detect()', () => {
 		it('should find Android NDKs', async () => {
 			const dir = path.join(__dirname, 'mocks', 'ndk', process.platform, 'r29');
-			config.android.ndk.searchPaths[process.platform] = [dir];
-			const { ndks } = await detect({ bypassCache: true });
+			config.android.ndk.searchPaths[process.platform] = [];
+			const { ndks } = await detect({
+				bypassCache: true,
+				searchPaths: [
+					dir,
+				],
+			});
 			expect(ndks).toHaveLength(1);
 			expect(ndks[0]).toEqual({
 				arch: '64-bit',
