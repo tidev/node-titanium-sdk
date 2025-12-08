@@ -1,0 +1,26 @@
+#!/bin/bash
+
+out="${MOCK_STDOUT}"
+err="${MOCK_STDERR}"
+exitCode="${MOCK_EXITCODE}"
+
+code=0
+if [ -n "$exitCode" ]; then
+    # Validate that exitCode is a valid integer
+    if [ "$exitCode" -eq "$exitCode" ] 2>/dev/null && [ "$exitCode" -ge -2147483648 ] && [ "$exitCode" -le 2147483647 ]; then
+        code=$exitCode
+    fi
+fi
+
+if [ -n "$out" ]; then
+    echo "$out"
+fi
+if [ -n "$err" ]; then
+    echo "$err"
+fi
+if [ -z "$out" ] && [ -z "$err" ]; then
+    echo "This is a mock executable"
+    echo "Set MOCK_STDOUT, MOCK_STDERR, and MOCK_EXITCODE to simulate executables"
+fi
+
+exit $code

@@ -245,26 +245,57 @@ describe('JDK', function() {
 			config.jdk.searchPaths[process.platform] = ['does_not_exist'];
 			const { jdks, issues } = await detect({ bypassCache: true });
 			expect(jdks).toEqual([]);
-			expect(issues).toBeInstanceOf(Array);
-			expect(issues!.length).toBe(1);
-			expect(issues![0].id).toBe('JDK_NOT_FOUND');
-			expect(issues![0].type).toBe('error');
+			expect(issues.length).toBe(1);
+			expect(issues[0].id).toBe('JDK_NOT_FOUND');
+			expect(issues[0].type).toBe('error');
 		});
 
 		it('should return issues if no valid JDKs are found', async () => {
 			delete process.env.JAVA_HOME;
-			config.jdk.searchPaths[process.platform] = [
-				path.join(__dirname, 'mocks', 'incomplete-jdk'),
-			];
-			const { jdks, issues } = await detect({ bypassCache: true });
+			config.jdk.searchPaths[process.platform] = [];
+			const { jdks, issues } = await detect({
+				bypassCache: true,
+				searchPaths: [
+					path.join(__dirname, 'mocks', 'incomplete-jdk'),
+				]
+			});
 			expect(jdks).toEqual([]);
-			expect(issues).toBeInstanceOf(Array);
-			expect(issues!.length).toBe(2);
-			const sortedIssues = issues!.sort((a, b) => a.id.localeCompare(b.id));
+			expect(issues.length).toBe(2);
+			const sortedIssues = issues.sort((a, b) => a.id.localeCompare(b.id));
 			expect(sortedIssues[0].id).toBe('JDK_MISSING_PROGRAMS');
 			expect(sortedIssues[0].type).toBe('warning');
 			expect(sortedIssues[1].id).toBe('JDK_NOT_FOUND');
 			expect(sortedIssues[1].type).toBe('error');
+		});
+
+		it('should return issues if JDK path contains ampersand', async () => {
+			const dir = path.join(__dirname, 'mocks', 'mock-jdk-&ampersand');
+			config.jdk.searchPaths[process.platform] = [dir];
+			process.env.MOCK_STDOUT = 'javac 25';
+			delete process.env.JAVA_HOME;
+			const { jdks, issues } = await detect({ bypassCache: true });
+
+			expect(jdks).toHaveLength(1);
+			const jdk = jdks[0];
+			expect(jdk).toBeDefined();
+
+			expect(jdk.build).toBe(null);
+			expect(jdk.executables).toEqual({
+				java: path.join(dir, 'bin', `java${exe}`),
+				javac: path.join(dir, 'bin', `javac${exe}`),
+				keytool: path.join(dir, 'bin', `keytool${exe}`),
+				jarsigner: path.join(dir, 'bin', `jarsigner${exe}`),
+			});
+			expect(jdk.path).toBe(dir);
+			expect(jdk.version).toBe('25');
+
+			if (process.platform === 'win32') {
+				expect(issues.length).toBe(1);
+				expect(issues[0].id).toBe('JDK_PATH_CONTAINS_AMPERSAND');
+				expect(issues[0].type).toBe('warning');
+			} else {
+				expect(issues).toEqual([]);
+			}
 		});
 	});
 });

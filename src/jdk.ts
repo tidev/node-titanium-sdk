@@ -204,6 +204,18 @@ export async function detect(options: {
 			}
 		}
 
+		if (process.platform === 'win32') {
+			for (const jdk of jdks) {
+				if (jdk.path.includes('&')) {
+					issues.push(new Issue(`JDK path contains ampersand: ${jdk.path}`, {
+						id: 'JDK_PATH_CONTAINS_AMPERSAND',
+						type: 'warning',
+						details: 'The JDK path contains an ampersand (&) and may cause issues.',
+					}));
+				}
+			}
+		}
+
 		if (!jdks.length) {
 			issues.push(
 				new Issue('No JDKs found', {
@@ -233,11 +245,9 @@ function getSearchPaths(options: { javaHome?: string; searchPaths?: string[] }) 
 	if (Array.isArray(options.searchPaths)) {
 		paths.push(...options.searchPaths);
 	}
-	const configPaths = config.jdk?.searchPaths;
+	const configPaths = config.jdk.searchPaths[process.platform];
 	if (Array.isArray(configPaths)) {
 		paths.push(...configPaths);
-	} else if (typeof configPaths === 'object' && configPaths?.[process.platform]) {
-		paths.push(...configPaths[process.platform]);
 	}
 
 	const searchPaths = new Set<string>();
@@ -247,7 +257,7 @@ function getSearchPaths(options: { javaHome?: string; searchPaths?: string[] }) 
 		}
 	}
 
-	let home = options.javaHome ?? config.jdk?.javaHome ?? process.env.JAVA_HOME ?? null;
+	let home = options.javaHome ?? config.jdk.javaHome ?? process.env.JAVA_HOME ?? null;
 	if (home && typeof home === 'string') {
 		home = expand(home);
 		if (existsSync(home)) {

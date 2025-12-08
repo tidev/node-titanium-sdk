@@ -166,24 +166,21 @@ describe('Android NDK', () => {
 			config.android.ndk.searchPaths[process.platform] = ['does_not_exist'];
 			const { ndks, issues } = await detect({ bypassCache: true });
 			expect(ndks).toEqual([]);
-			expect(issues).toBeInstanceOf(Array);
-			expect(issues!.length).toBe(1);
-			expect(issues![0].id).toBe('ANDROID_NDK_NOT_FOUND');
-			expect(issues![0].type).toBe('warning');
+			expect(issues.length).toBe(1);
+			expect(issues[0].id).toBe('ANDROID_NDK_NOT_FOUND');
+			expect(issues[0].type).toBe('warning');
 		});
 
 		it('should return issues if no valid Android NDKs are found', async () => {
 			delete process.env.JAVA_HOME;
-			config.android.ndk.searchPaths = {
-				[process.platform]: [path.join(__dirname, 'mocks', 'ndk', process.platform, 'no-ndk-build')],
-			};
+			config.android.ndk.searchPaths[process.platform] = [
+				path.join(__dirname, 'mocks', 'ndk', process.platform, 'no-ndk-build'),
+			];
 			const { ndks, issues } = await detect({ bypassCache: true });
 			expect(ndks).toEqual([]);
-			expect(issues).toBeInstanceOf(Array);
-			expect(issues!.length).toBe(1);
-			const sortedIssues = issues!.sort((a, b) => a.id.localeCompare(b.id));
-			expect(sortedIssues[0].id).toBe('ANDROID_NDK_NOT_FOUND');
-			expect(sortedIssues[0].type).toBe('warning');
+			expect(issues.length).toBe(1);
+			expect(issues[0].id).toBe('ANDROID_NDK_NOT_FOUND');
+			expect(issues[0].type).toBe('warning');
 		});
 	});
 });
