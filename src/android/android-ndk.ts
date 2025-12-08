@@ -171,20 +171,18 @@ export async function detect(options: {
 			try {
 				return await AndroidNDK.load(path);
 			} catch (e) {
-				if (e instanceof Issue) {
-					// Not an NDK, check subdirectories
-					if (isDir(path)) {
-						for (const name of await readdir(path)) {
-							try {
-								return await AndroidNDK.load(join(path, name));
-							} catch {
-								// Not an NDK, check subdirectories
-							}
+				// Not an NDK, check subdirectories
+				if (isDir(path)) {
+					for (const name of await readdir(path)) {
+						try {
+							return await AndroidNDK.load(join(path, name));
+						} catch {
+							// Not an NDK, check subdirectories
 						}
 					}
 				}
+				throw e;
 			}
-			return null;
 		}));
 		const ndks: AndroidNDK[] = [];
 		const issues: Issue[] = [];
@@ -194,9 +192,6 @@ export async function detect(options: {
 				ndks.push(result.value);
 			} else if (result.status === 'rejected') {
 				error(result.reason.message);
-				if (result.reason instanceof Issue) {
-					issues.push(result.reason);
-				}
 			}
 		}
 
