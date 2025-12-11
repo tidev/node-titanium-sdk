@@ -11,6 +11,7 @@ import { isDir } from './util/is-dir.js';
 import { isFile } from './util/is-file.js';
 import { Issue } from './util/issue.js';
 import { tailgate } from './util/tailgate.js';
+import which from 'which';
 
 const { error, log } = snooplogg('jdk');
 
@@ -180,7 +181,7 @@ export async function detect(options: {
 	javaHome?: string;
 	searchPaths?: string[];
 } = {}): Promise<JDKs> {
-	const { home, searchPaths } = getSearchPaths(options);
+	const { home, searchPaths } = await getSearchPaths(options);
 	const searchPathsHash = createHash('sha256')
 		.update(searchPaths.toSorted().join()).digest('hex');
 
@@ -240,7 +241,7 @@ or  __https://jdk.java.net/arpathschive/__.`,
 	});
 }
 
-function getSearchPaths(options: { javaHome?: string; searchPaths?: string[] }) {
+async function getSearchPaths(options: { javaHome?: string; searchPaths?: string[] }) {
 	const paths: string[] = [];
 	if (Array.isArray(options.searchPaths)) {
 		paths.push(...options.searchPaths);
@@ -270,6 +271,11 @@ function getSearchPaths(options: { javaHome?: string; searchPaths?: string[] }) 
 	if (process.platform === 'win32') {
 		// TODO: check the Windows Registry
 		// config.jdk.windows.registryKeys
+	}
+
+	const javacPath = await which(`javac${exe}`, { nothrow: true });
+	if (javacPath) {
+		searchPaths.add(expand(javacPath, '..'));
 	}
 
 	return {

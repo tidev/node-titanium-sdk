@@ -9,6 +9,7 @@ import snooplogg from 'snooplogg';
 import { Issue } from '../util/issue.js';
 import { readdir, readFile } from 'node:fs/promises';
 import { readPropertiesFile } from './util/read-properties-file.js';
+import which from 'which';
 
 const { error, log } = snooplogg('android:ndk');
 
@@ -158,7 +159,7 @@ export async function detect(options: {
 	bypassCache?: boolean;
 	searchPaths?: string[];
 } = {}): Promise<NDKs> {
-	const searchPaths = getSearchPaths(options);
+	const searchPaths = await getSearchPaths(options);
 	const searchPathsHash = createHash('sha256')
 		.update(searchPaths.toSorted().join()).digest('hex');
 
@@ -213,7 +214,7 @@ export async function detect(options: {
 	});
 }
 
-function getSearchPaths(options: { searchPaths?: string[] }) {
+async function getSearchPaths(options: { searchPaths?: string[] }) {
 	const paths: string[] = [];
 	if (Array.isArray(options.searchPaths)) {
 		paths.push(...options.searchPaths);
@@ -228,6 +229,11 @@ function getSearchPaths(options: { searchPaths?: string[] }) {
 		for (const path of paths) {
 			searchPaths.add(expand(path));
 		}
+	}
+
+	const ndkBuildPath = await which(`ndk-build${cmd}`, { nothrow: true });
+	if (ndkBuildPath) {
+		searchPaths.add(expand(ndkBuildPath, '..', '..'));
 	}
 
 	return Array.from(searchPaths);
