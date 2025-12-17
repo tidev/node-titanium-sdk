@@ -98,11 +98,6 @@ export class JDK {
 			}
 		}
 
-		const libjvms = libjvmLocations[process.platform];
-		if (!libjvms || !libjvms.some(p => isFile(join(path, p)))) {
-			throw new Error(`Directory missing JVM library: ${path}`);
-		}
-
 		const executables: JDKExecutables = {
 			java: '',
 			javac: '',
@@ -110,35 +105,16 @@ export class JDK {
 			jarsigner: '',
 		};
 
-		const results = await Promise.all(
+		await Promise.all(
 			Object.keys(executables).map(async cmd => {
 				const p = join(path, 'bin', `${cmd}${exe}`);
 				if (isFile(p)) {
 					executables[cmd] = await realpath(p);
-					return true;
+				} else {
+					throw new Error(`Directory missing required program: ${path}`);
 				}
-				return false;
 			})
 		);
-
-		if (!results.every(result => result)) {
-			throw new Issue(`Directory missing required program: ${path}`, {
-				id: 'JDK_MISSING_PROGRAMS',
-				type: 'warning',
-				details: `JDK (Java Development Kit) at ${path} missing required programs: ${
-					Object.keys(executables).filter(cmd => !executables[cmd]).join(', ')
-				}
-${
-					process.env.JAVA_HOME
-						? 'Please verify your __JAVA_HOME__ environment variable is correctly set to the JDK install location.\n'
-							+ `__JAVA_HOME__ is currently set to "${process.env.JAVA_HOME}".`
-						: 'Please set the __JAVA_HOME__ environment variable to the JDK install location and not the JRE (Java Runtime Environment).'
-				}
-The __JAVA_HOME__ environment variable must point to the JDK and not the JRE (Java Runtime Environment).
-You may want to reinstall the JDK by downloading it from __https://www.oracle.com/java/technologies/downloads/__
-or __https://jdk.java.net/archive/__.`,
-			});
-		}
 
 		let output = '';
 		try {

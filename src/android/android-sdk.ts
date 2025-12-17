@@ -8,6 +8,7 @@ import { join, relative } from 'node:path';
 import { readPropertiesFile } from './util/read-properties-file.js';
 import { isFile } from '../util/is-file.js';
 import { readdir } from 'node:fs/promises';
+import { Issue } from '../util/issue.js';
 
 const { error, log } = snooplogg('android:sdk');
 
@@ -87,7 +88,7 @@ export class AndroidSDK {
 			throw new TypeError('Expected Android SDK path to be a valid string');
 		}
 		if (!isDir(path)) {
-			throw new Error('Android SDK path does not exist: ${path}');
+			throw new Error(`Android SDK path does not exist: ${path}`);
 		}
 
 		const executables = {
@@ -95,6 +96,11 @@ export class AndroidSDK {
 			android:    join(path, 'tools', `android${bat}`),
 			emulator:   join(path, 'tools', `emulator${exe}`),
 		};
+		for (const [key, value] of Object.entries(executables)) {
+			if (!isFile(value)) {
+				executables[key] = '';
+			}
+		}
 
 		const buildTools: Record<string, string> = {};
 		for (const ver of await readdir(join(path, 'build-tools'))) {

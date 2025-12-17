@@ -1,10 +1,10 @@
-import path from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { config, resetConfig } from '../../src/config.js';
 import { detect, AndroidSDK } from '../../src/android/android-sdk.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const cmd = process.platform === 'win32' ? '.cmd' : '';
 
 describe('Android SDK', () => {
@@ -19,22 +19,21 @@ describe('Android SDK', () => {
 			await expect(AndroidSDK.load(''))
 				.rejects.toThrowError(new TypeError('Expected Android SDK path to be a valid string'));
 		});
+
+		it('should error if directory does not exist', async () => {
+			await expect(AndroidSDK.load(join(__dirname, 'doesnotexist')))
+				.rejects.toThrowError(new Error(`Android SDK path does not exist: ${join(__dirname, 'doesnotexist')}`));
+		});
 	});
 });
 
 /*
 describe('SDK', () => {
-	it('should error if directory does not exist', () => {
-		expect(() => {
-			new androidlib.sdk.SDK(path.join(__dirname, 'doesnotexist'));
-		}).to.throw(Error, 'Directory does not exist');
-	});
+		it('should error if "tools" directory is missing', async () => {
+			await expect(AndroidSDK.load(resolve('./test/mocks/empty')))
+				.rejects.toThrowError(new Error('Android SDK pathDirectory does not contain a "tools" directory'));
+		});
 
-	it('should error if "tools" directory is missing', () => {
-		expect(() => {
-			new androidlib.sdk.SDK(path.resolve('./test/mocks/empty'));
-		}).to.throw(Error, 'Directory does not contain a "tools" directory');
-	});
 
 	it('should error if "tools/source.properties" directory is bad', () => {
 		expect(() => {

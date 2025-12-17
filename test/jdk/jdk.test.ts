@@ -41,11 +41,6 @@ describe('JDK', function() {
 			await expect(JDK.load('doesnotexist')).rejects.toThrow('JDK path does not exist');
 		});
 
-		it('should error if dir is missing the JVM library', async () => {
-			await expect(JDK.load(path.join(__dirname, 'mocks', 'empty'))).rejects
-				.toThrow('Directory missing JVM library');
-		});
-
 		it('should error if dir is missing essential jdk tools', async () => {
 			await expect(JDK.load(path.join(__dirname, 'mocks', 'incomplete-jdk'))).rejects
 				.toThrow('Directory missing required program');
@@ -260,12 +255,9 @@ describe('JDK', function() {
 				]
 			});
 			expect(jdks).toEqual([]);
-			expect(issues.length).toBe(2);
-			const sortedIssues = issues.sort((a, b) => a.id.localeCompare(b.id));
-			expect(sortedIssues[0].id).toBe('JDK_MISSING_PROGRAMS');
-			expect(sortedIssues[0].type).toBe('warning');
-			expect(sortedIssues[1].id).toBe('JDK_NOT_FOUND');
-			expect(sortedIssues[1].type).toBe('error');
+			expect(issues.length).toBe(1);
+			expect(issues[0].id).toBe('JDK_NOT_FOUND');
+			expect(issues[0].type).toBe('error');
 		});
 
 		it('should return issues if JDK path contains ampersand', async () => {
