@@ -14,26 +14,16 @@ describe('Android SDK', () => {
 		it('should error if directory is invalid', async () => {
 			await expect(AndroidSDK.load(undefined as any))
 				.rejects.toThrowError(new TypeError('Expected Android SDK path to be a valid string'));
+			await expect(AndroidSDK.load(123 as any))
+				.rejects.toThrowError(new TypeError('Expected Android SDK path to be a valid string'));
+			await expect(AndroidSDK.load(''))
+				.rejects.toThrowError(new TypeError('Expected Android SDK path to be a valid string'));
 		});
 	});
 });
 
 /*
 describe('SDK', () => {
-	it('should error if directory is invalid', () => {
-		expect(() => {
-			new androidlib.sdk.SDK();
-		}).to.throw(TypeError, 'Expected directory to be a valid string');
-
-		expect(() => {
-			new androidlib.sdk.SDK(123);
-		}).to.throw(TypeError, 'Expected directory to be a valid string');
-
-		expect(() => {
-			new androidlib.sdk.SDK('');
-		}).to.throw(TypeError, 'Expected directory to be a valid string');
-	});
-
 	it('should error if directory does not exist', () => {
 		expect(() => {
 			new androidlib.sdk.SDK(path.join(__dirname, 'doesnotexist'));

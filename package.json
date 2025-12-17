@@ -37,8 +37,8 @@
   },
   "devDependencies": {
     "@rollup/plugin-replace": "6.0.3",
-    "@types/node": "25.0.2",
-    "@vitest/coverage-v8": "4.0.15",
+    "@types/node": "25.0.3",
+    "@vitest/coverage-v8": "4.0.16",
     "babel-plugin-tester": "12.0.0",
     "dprint": "0.50.2",
     "lefthook": "2.0.12",
@@ -47,7 +47,7 @@
     "semver": "7.7.3",
     "tsdown": "0.18.0",
     "typescript": "5.9.3",
-    "vitest": "4.0.15"
+    "vitest": "4.0.16"
   },
   "homepage": "https://github.com/tidev/node-titanium-sdk",
   "bugs": "https://github.com/tidev/node-titanium-sdk/issues",
