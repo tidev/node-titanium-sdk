@@ -1,4 +1,4 @@
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { config, resetConfig } from '../../src/config.js';
@@ -24,22 +24,21 @@ describe('Android SDK', () => {
 			await expect(AndroidSDK.load(join(__dirname, 'doesnotexist')))
 				.rejects.toThrowError(new Error(`Android SDK path does not exist: ${join(__dirname, 'doesnotexist')}`));
 		});
+
+		it('should error if missing adb', async () => {
+			await expect(AndroidSDK.load(join(__dirname, 'mocks', 'empty')))
+				.rejects.toThrowError(new Error('Invalid Android SDK: required executable "adb" does not exist'));
+		});
+
+		it('should error if "tools/source.properties" is bad', async () => {
+			await expect(AndroidSDK.load(join(__dirname, 'mocks', process.platform, 'bad-tools-source-props')))
+				.rejects.toThrowError(new Error('Directory contains bad "tools/source.properties" file'));
+		});
 	});
 });
 
 /*
 describe('SDK', () => {
-		it('should error if "tools" directory is missing', async () => {
-			await expect(AndroidSDK.load(resolve('./test/mocks/empty')))
-				.rejects.toThrowError(new Error('Android SDK pathDirectory does not contain a "tools" directory'));
-		});
-
-
-	it('should error if "tools/source.properties" directory is bad', () => {
-		expect(() => {
-			new androidlib.sdk.SDK(path.resolve('./test/mocks/sdk/all/bad-tools-source-props'));
-		}).to.throw(Error, 'Directory contains bad "tools/source.properties" file');
-	});
 
 	it('should error if "tools/source.properties" directory is invalid', () => {
 		expect(() => {

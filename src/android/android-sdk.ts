@@ -98,7 +98,7 @@ export class AndroidSDK {
 		};
 		for (const [key, value] of Object.entries(executables)) {
 			if (!isFile(value)) {
-				executables[key] = '';
+				throw new Error(`Invalid Android SDK: required executable "${key}" does not exist`);
 			}
 		}
 
