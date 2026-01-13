@@ -40,6 +40,7 @@
     "@types/node": "25.0.7",
     "@vitest/coverage-v8": "4.0.17",
     "babel-plugin-tester": "12.0.0",
+    "cross-env": "10.1.0",
     "dprint": "0.51.1",
     "lefthook": "2.0.14",
     "oxlint": "1.39.0",
@@ -62,9 +63,9 @@
     "format": "dprint fmt",
     "lint": "oxlint",
     "prepublishOnly": "pnpm run build",
-    "test": "vitest",
-    "test:bun": "bun --bun test --config=bunfig.toml",
-    "test:deno": "deno run --allow-all --sloppy-imports ./node_modules/vitest/vitest.mjs",
+    "test": "cross-env CI=1 vitest",
+    "test:bun": "cross-env CI=1 bun --bun --config=bunfig.toml ./node_modules/vitest/vitest.mjs --reporter=verbose",
+    "test:deno": "cross-env CI=1 deno run --allow-all --sloppy-imports ./node_modules/vitest/vitest.mjs",
     "type-check": "tsc --noEmit"
   }
 }

@@ -39,7 +39,7 @@ describe('Android SDK', () => {
 		it('should detect minimal sdk', async () => {
 			const path = join(__dirname, 'mocks', 'sdk', testPlatform, 'minimal');
 			const sdk = await AndroidSDK.load(path);
-			expect(sdk.addons).to.deep.equal([]);
+			expect(sdk.addons).to.have.length(0);
 			expect(sdk.executables).to.deep.equal({
 				adb: join(path, 'platform-tools', `adb${exe}`),
 				emulator: join(path, 'emulator', `emulator${exe}`),
@@ -55,7 +55,7 @@ describe('Android SDK', () => {
 		it('should detect sdk with platforms and system images', async () => {
 			const path = join(__dirname, 'mocks', 'sdk', testPlatform, 'with-platforms-and-system-images');
 			const sdk = await AndroidSDK.load(path);
-			expect(sdk.addons).to.deep.equal([]);
+			expect(sdk.addons).to.have.length(0);
 			expect(sdk.executables).to.deep.equal({
 				adb: join(path, 'platform-tools', `adb${exe}`),
 				emulator: join(path, 'emulator', `emulator${exe}`),
