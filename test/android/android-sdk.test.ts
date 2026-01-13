@@ -3,10 +3,10 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { config, resetConfig } from '../../src/config.js';
 import { detect, AndroidSDK } from '../../src/android/android-sdk.js';
-import { Issue } from '../../src/util/issue.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const exe = process.platform === 'win32' ? '.exe' : '';
+const testPlatform = process.platform === 'win32' ? 'win32' : 'posix';
 
 describe('Android SDK', () => {
 	afterEach(() => resetConfig());
@@ -27,17 +27,17 @@ describe('Android SDK', () => {
 		});
 
 		it('should error if missing adb executable', async () => {
-			await expect(AndroidSDK.load(join(__dirname, 'mocks', 'sdk', process.platform, 'missing-adb')))
+			await expect(AndroidSDK.load(join(__dirname, 'mocks', 'sdk', testPlatform, 'missing-adb')))
 				.rejects.toThrowError(new Error('Invalid Android SDK: missing required executable "adb"'));
 		});
 
 		it('should error if missing emulator executable', async () => {
-			await expect(AndroidSDK.load(join(__dirname, 'mocks', 'sdk', process.platform, 'missing-emulator')))
+			await expect(AndroidSDK.load(join(__dirname, 'mocks', 'sdk', testPlatform, 'missing-emulator')))
 				.rejects.toThrowError(new Error('Invalid Android SDK: missing required executable "emulator"'));
 		});
 
 		it('should detect minimal sdk', async () => {
-			const path = join(__dirname, 'mocks', 'sdk', process.platform, 'minimal');
+			const path = join(__dirname, 'mocks', 'sdk', testPlatform, 'minimal');
 			const sdk = await AndroidSDK.load(path);
 			expect(sdk.addons).to.deep.equal([]);
 			expect(sdk.executables).to.deep.equal({
@@ -53,7 +53,7 @@ describe('Android SDK', () => {
 		});
 
 		it('should detect sdk with platforms and system images', async () => {
-			const path = join(__dirname, 'mocks', 'sdk', process.platform, 'with-platforms-and-system-images');
+			const path = join(__dirname, 'mocks', 'sdk', testPlatform, 'with-platforms-and-system-images');
 			const sdk = await AndroidSDK.load(path);
 			expect(sdk.addons).to.deep.equal([]);
 			expect(sdk.executables).to.deep.equal({
@@ -92,8 +92,8 @@ describe('Android SDK', () => {
 
 	describe('detect()', () => {
 		it('should find Android SDKs', async () => {
-			const path = join(__dirname, 'mocks', 'sdk', process.platform, 'with-platforms-and-system-images');
-			config.android.sdk.searchPaths[process.platform] = [];
+			const path = join(__dirname, 'mocks', 'sdk', testPlatform, 'with-platforms-and-system-images');
+			config.android.sdk.searchPaths[testPlatform] = [];
 			const { sdks } = await detect({
 				bypassCache: true,
 				searchPaths: [path],
@@ -137,15 +137,15 @@ describe('Android SDK', () => {
 		});
 
 		it('should cache Android SDKs', async () => {
-			const dir = join(__dirname, 'mocks', 'sdk', process.platform, 'r29');
-			config.android.sdk.searchPaths[process.platform] = [dir];
+			const dir = join(__dirname, 'mocks', 'sdk', testPlatform, 'r29');
+			config.android.sdk.searchPaths[testPlatform] = [dir];
 			const results1 = await detect({ bypassCache: true });
 			const results2 = await detect();
 			expect(results1).toBe(results2);
 		});
 
 		it('should return issues if no Android SDKs are found', async () => {
-			config.android.sdk.searchPaths[process.platform] = ['does_not_exist'];
+			config.android.sdk.searchPaths[testPlatform] = ['does_not_exist'];
 			const { sdks, issues } = await detect({ bypassCache: true });
 			expect(sdks).toEqual([]);
 			expect(issues.length).toBe(1);
