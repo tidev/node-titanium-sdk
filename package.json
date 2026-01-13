@@ -24,10 +24,10 @@
     "dist"
   ],
   "dependencies": {
-    "@babel/core": "7.28.5",
-    "@babel/parser": "7.28.5",
+    "@babel/core": "7.28.6",
+    "@babel/parser": "7.28.6",
     "@babel/plugin-transform-property-literals": "7.27.1",
-    "@babel/preset-env": "7.28.5",
+    "@babel/preset-env": "7.28.6",
     "@xmldom/xmldom": "0.8.11",
     "babel-plugin-transform-titanium": "0.1.1",
     "babel-preset-minify": "0.5.2",
@@ -37,17 +37,17 @@
   },
   "devDependencies": {
     "@rollup/plugin-replace": "6.0.3",
-    "@types/node": "25.0.3",
-    "@vitest/coverage-v8": "4.0.16",
+    "@types/node": "25.0.7",
+    "@vitest/coverage-v8": "4.0.17",
     "babel-plugin-tester": "12.0.0",
     "dprint": "0.51.1",
-    "lefthook": "2.0.13",
-    "oxlint": "1.36.0",
+    "lefthook": "2.0.14",
+    "oxlint": "1.39.0",
     "rimraf": "6.1.2",
     "semver": "7.7.3",
-    "tsdown": "0.18.3",
+    "tsdown": "0.19.0",
     "typescript": "5.9.3",
-    "vitest": "4.0.16"
+    "vitest": "4.0.17"
   },
   "homepage": "https://github.com/tidev/node-titanium-sdk",
   "bugs": "https://github.com/tidev/node-titanium-sdk/issues",
