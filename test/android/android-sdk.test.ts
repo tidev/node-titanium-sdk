@@ -3,9 +3,10 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { config, resetConfig } from '../../src/config.js';
 import { detect, AndroidSDK } from '../../src/android/android-sdk.js';
+import { Issue } from '../../src/util/issue.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const cmd = process.platform === 'win32' ? '.cmd' : '';
+const exe = process.platform === 'win32' ? '.exe' : '';
 
 describe('Android SDK', () => {
 	afterEach(() => resetConfig());
@@ -25,624 +26,131 @@ describe('Android SDK', () => {
 				.rejects.toThrowError(new Error(`Android SDK path does not exist: ${join(__dirname, 'doesnotexist')}`));
 		});
 
-		it('should error if missing adb', async () => {
-			await expect(AndroidSDK.load(join(__dirname, 'mocks', 'empty')))
-				.rejects.toThrowError(new Error('Invalid Android SDK: required executable "adb" does not exist'));
+		it('should error if missing adb executable', async () => {
+			await expect(AndroidSDK.load(join(__dirname, 'mocks', 'sdk', process.platform, 'missing-adb')))
+				.rejects.toThrowError(new Error('Invalid Android SDK: missing required executable "adb"'));
 		});
 
-		it('should error if "tools/source.properties" is bad', async () => {
-			await expect(AndroidSDK.load(join(__dirname, 'mocks', process.platform, 'bad-tools-source-props')))
-				.rejects.toThrowError(new Error('Directory contains bad "tools/source.properties" file'));
+		it('should error if missing emulator executable', async () => {
+			await expect(AndroidSDK.load(join(__dirname, 'mocks', 'sdk', process.platform, 'missing-emulator')))
+				.rejects.toThrowError(new Error('Invalid Android SDK: missing required executable "emulator"'));
 		});
-	});
-});
 
-/*
-describe('SDK', () => {
+		it('should detect minimal sdk', async () => {
+			const path = join(__dirname, 'mocks', 'sdk', process.platform, 'minimal');
+			const sdk = await AndroidSDK.load(path);
+			expect(sdk.addons).to.deep.equal([]);
+			expect(sdk.executables).to.deep.equal({
+				adb: join(path, 'platform-tools', `adb${exe}`),
+				emulator: join(path, 'emulator', `emulator${exe}`),
+			});
+			expect(sdk.path).to.equal(path);
+			expect(sdk.platforms).to.deep.equal([]);
+			expect(sdk.systemImages).to.deep.equal({});
 
-	it('should error if "tools/source.properties" directory is invalid', () => {
-		expect(() => {
-			new androidlib.sdk.SDK(path.resolve('./test/mocks/sdk/all/invalid-tools-source-props'));
-		}).to.throw(Error, 'Directory contains invalid "tools/source.properties" (missing Pkg.Revision)');
-	});
-
-	it('should error if "emulator" is missing', () => {
-		expect(() => {
-			new androidlib.sdk.SDK(path.resolve('./test/mocks/sdk/all/missing-emulator'));
-		}).to.throw(Error, 'Directory missing "emulator" executable');
-	});
-
-	it('should detect vanilla sdk', () => {
-		const dir = path.resolve(`./test/mocks/sdk/${process.platform}/vanilla`);
-		const results = new androidlib.sdk.SDK(dir);
-
-		expect(results).to.deep.equal({
-			addons: [],
-			buildTools: [],
-			path: dir,
-			platforms: [],
-			platformTools: {
-				executables: {},
-				path: null,
-				version: null
-			},
-			systemImages: {},
-			tools: {
-				executables: {
-					android: path.join(dir, 'tools', `android${bat}`),
-					emulator: path.join(dir, 'tools', `emulator${exe}`),
-					sdkmanager: path.join(dir, 'tools', 'bin', `sdkmanager${bat}`)
-				},
-				path: path.join(dir, 'tools'),
-				version: '24.4.1'
-			}
+			expect(sdk.issues).to.have.length(1);
+			expect(sdk.issues[0].id).to.equal('ANDROID_SDK_NO_PLATFORMS');
 		});
-	});
 
-	it('should detect vanilla sdk with some missing tools', () => {
-		const dir = path.resolve(`./test/mocks/sdk/${process.platform}/missing-tools`);
-		const results = new androidlib.sdk.SDK(dir);
-
-		expect(results).to.deep.equal({
-			addons: [],
-			buildTools: [],
-			path: dir,
-			platforms: [],
-			platformTools: {
-				executables: {},
-				path: null,
-				version: null
-			},
-			systemImages: {},
-			tools: {
-				executables: {
-					android: null,
-					emulator: path.join(dir, 'tools', `emulator${exe}`),
-					sdkmanager: null
-				},
-				path: path.join(dir, 'tools'),
-				version: '24.4.1'
-			}
-		});
-	});
-
-	it('should detect sdk with build tools', () => {
-		const dir = path.resolve(`./test/mocks/sdk/${process.platform}/with-build-tools`);
-		const results = new androidlib.sdk.SDK(dir);
-
-		expect(results).to.deep.equal({
-			addons: [],
-			buildTools: [
+		it('should detect sdk with platforms and system images', async () => {
+			const path = join(__dirname, 'mocks', 'sdk', process.platform, 'with-platforms-and-system-images');
+			const sdk = await AndroidSDK.load(path);
+			expect(sdk.addons).to.deep.equal([]);
+			expect(sdk.executables).to.deep.equal({
+				adb: join(path, 'platform-tools', `adb${exe}`),
+				emulator: join(path, 'emulator', `emulator${exe}`),
+			});
+			expect(sdk.path).to.equal(path);
+			expect(sdk.platforms).to.deep.equal([
 				{
-					dx: path.join(dir, 'build-tools', '23.0.3', 'lib', 'dx.jar'),
-					executables: {
-						aapt: path.join(dir, 'build-tools', '23.0.3', `aapt${exe}`),
-						aapt2: path.join(dir, 'build-tools', '23.0.3', `aapt2${exe}`),
-						aidl: path.join(dir, 'build-tools', '23.0.3', `aidl${exe}`),
-						zipalign: path.join(dir, 'build-tools', '23.0.3', `zipalign${exe}`)
-					},
-					path: path.join(dir, 'build-tools', '23.0.3'),
-					version: '23.0.3'
-				}
-			],
-			path: dir,
-			platforms: [],
-			platformTools: {
-				executables: {},
-				path: null,
-				version: null
-			},
-			systemImages: {},
-			tools: {
-				executables: {
-					android: path.join(dir, 'tools', `android${bat}`),
-					emulator: path.join(dir, 'tools', `emulator${exe}`),
-					sdkmanager: path.join(dir, 'tools', 'bin', `sdkmanager${bat}`)
-				},
-				path: path.join(dir, 'tools'),
-				version: '24.4.1'
-			}
-		});
-	});
-
-	it('should detect sdk with platform tools', () => {
-		const dir = path.resolve(`./test/mocks/sdk/${process.platform}/with-platform-tools`);
-		const results = new androidlib.sdk.SDK(dir);
-
-		expect(results).to.deep.equal({
-			addons: [],
-			buildTools: [],
-			path: dir,
-			platforms: [],
-			platformTools: {
-				executables: {
-					adb: path.join(dir, 'platform-tools', `adb${exe}`)
-				},
-				path: path.join(dir, 'platform-tools'),
-				version: '23.1'
-			},
-			systemImages: {},
-			tools: {
-				executables: {
-					android: path.join(dir, 'tools', `android${bat}`),
-					emulator: path.join(dir, 'tools', `emulator${exe}`),
-					sdkmanager: path.join(dir, 'tools', 'bin', `sdkmanager${bat}`)
-				},
-				path: path.join(dir, 'tools'),
-				version: '24.4.1'
-			}
-		});
-	});
-
-	it('should detect sdk with system images', () => {
-		const dir = path.resolve(`./test/mocks/sdk/${process.platform}/with-system-images`);
-		const results = new androidlib.sdk.SDK(dir);
-
-		expect(results).to.deep.equal({
-			addons: [],
-			buildTools: [],
-			path: dir,
-			platforms: [],
-			platformTools: {
-				executables: {},
-				path: null,
-				version: null
-			},
-			systemImages: {
-				'android-23/android-tv/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [],
-					type: 'android-tv'
-				},
-				'android-23/android-tv/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [],
-					type: 'android-tv'
-				},
-				'android-23/android-wear/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [
-						'AndroidWearRound',
-						'AndroidWearRound360x360',
-						'AndroidWearRound400x400',
-						'AndroidWearRound480x480',
-						'AndroidWearRoundChin320x290',
-						'AndroidWearRoundChin360x325',
-						'AndroidWearRoundChin360x326',
-						'AndroidWearRoundChin360x330',
-						'AndroidWearSquare',
-						'AndroidWearSquare320x320'
-					],
-					type: 'android-wear'
-				},
-				'android-23/android-wear/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [
-						'AndroidWearRound',
-						'AndroidWearRound360x360',
-						'AndroidWearRound400x400',
-						'AndroidWearRound480x480',
-						'AndroidWearRoundChin320x290',
-						'AndroidWearRoundChin360x325',
-						'AndroidWearRoundChin360x326',
-						'AndroidWearRoundChin360x330',
-						'AndroidWearSquare',
-						'AndroidWearSquare320x320'
-					],
-					type: 'android-wear'
-				},
-				'android-23/default/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [],
-					type: 'default'
-				},
-				'android-23/default/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [],
-					type: 'default'
-				},
-				'android-23/default/x86_64': {
-					abi: 'x86_64',
-					sdk: 'android-23',
-					skins: [],
-					type: 'default'
-				},
-				'android-23/google_apis/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [],
-					type: 'google_apis'
-				},
-				'android-23/google_apis/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [],
-					type: 'google_apis'
-				},
-				'android-23/google_apis/x86_64': {
-					abi: 'x86_64',
-					sdk: 'android-23',
-					skins: [],
-					type: 'google_apis'
-				}
-			},
-			tools: {
-				executables: {
-					android: path.join(dir, 'tools', `android${bat}`),
-					emulator: path.join(dir, 'tools', `emulator${exe}`),
-					sdkmanager: path.join(dir, 'tools', 'bin', `sdkmanager${bat}`)
-				},
-				path: path.join(dir, 'tools'),
-				version: '24.4.1'
-			}
-		});
-	});
-
-	it('should detect sdk with system images and platforms', () => {
-		const dir = path.resolve(`./test/mocks/sdk/${process.platform}/with-platforms`);
-		const results = new androidlib.sdk.SDK(dir);
-
-		expect(results).to.deep.equal({
-			addons: [],
-			buildTools: [],
-			path: dir,
-			platforms: [
-				{
-					sdk:         'android-23',
-					name:        'Android 6.0',
-					apiLevel:    23,
-					codename:    null,
-					revision:    3,
-					path:        path.join(dir, 'platforms', 'android-23'),
-					version:     '6.0',
-					abis: {
-						'android-tv': [ 'armeabi-v7a', 'x86' ],
-						'android-wear': [ 'armeabi-v7a', 'x86' ],
-						default: [ 'armeabi-v7a', 'x86', 'x86_64' ],
-						google_apis: [ 'armeabi-v7a', 'x86', 'x86_64' ]
-					},
-					skins: [
-						'HVGA',
-						'QVGA',
-						'WQVGA400',
-						'WQVGA432',
-						'WSVGA',
-						'WVGA800',
-						'WVGA854',
-						'WXGA720',
-						'WXGA800',
-						'WXGA800-7in',
-						'AndroidWearRound',
-						'AndroidWearRound360x360',
-						'AndroidWearRound400x400',
-						'AndroidWearRound480x480',
-						'AndroidWearRoundChin320x290',
-						'AndroidWearRoundChin360x325',
-						'AndroidWearRoundChin360x326',
-						'AndroidWearRoundChin360x330',
-						'AndroidWearSquare',
-						'AndroidWearSquare320x320'
-					],
-					defaultSkin: 'WVGA800',
-					minToolsRev: 22,
-					androidJar:  path.join(dir, 'platforms', 'android-23', 'android.jar'),
-					aidl:        path.join(dir, 'platforms', 'android-23', 'framework.aidl')
-				},
-				{
-					sdk:         'android-N',
-					name:        'Android N (Preview)',
-					apiLevel:    23,
-					codename:    'N',
-					revision:    2,
-					path:        path.join(dir, 'platforms', 'android-N'),
-					version:     'N',
-					abis:        {},
-					skins:       [ 'HVGA', 'QVGA', 'WQVGA400', 'WQVGA432', 'WSVGA', 'WVGA800', 'WVGA854', 'WXGA720', 'WXGA800', 'WXGA800-7in' ],
-					defaultSkin: 'WVGA800',
-					minToolsRev: 22,
-					androidJar:  path.join(dir, 'platforms', 'android-N', 'android.jar'),
-					aidl:        path.join(dir, 'platforms', 'android-N', 'framework.aidl')
-				}
-			],
-			platformTools: {
-				executables: {},
-				path: null,
-				version: null
-			},
-			systemImages: {
-				'android-23/android-tv/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [],
-					type: 'android-tv'
-				},
-				'android-23/android-tv/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [],
-					type: 'android-tv'
-				},
-				'android-23/android-wear/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [
-						'AndroidWearRound',
-						'AndroidWearRound360x360',
-						'AndroidWearRound400x400',
-						'AndroidWearRound480x480',
-						'AndroidWearRoundChin320x290',
-						'AndroidWearRoundChin360x325',
-						'AndroidWearRoundChin360x326',
-						'AndroidWearRoundChin360x330',
-						'AndroidWearSquare',
-						'AndroidWearSquare320x320'
-					],
-					type: 'android-wear'
-				},
-				'android-23/android-wear/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [
-						'AndroidWearRound',
-						'AndroidWearRound360x360',
-						'AndroidWearRound400x400',
-						'AndroidWearRound480x480',
-						'AndroidWearRoundChin320x290',
-						'AndroidWearRoundChin360x325',
-						'AndroidWearRoundChin360x326',
-						'AndroidWearRoundChin360x330',
-						'AndroidWearSquare',
-						'AndroidWearSquare320x320'
-					],
-					type: 'android-wear'
-				},
-				'android-23/default/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [],
-					type: 'default'
-				},
-				'android-23/default/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [],
-					type: 'default'
-				},
-				'android-23/default/x86_64': {
-					abi: 'x86_64',
-					sdk: 'android-23',
-					skins: [],
-					type: 'default'
-				},
-				'android-23/google_apis/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [],
-					type: 'google_apis'
-				},
-				'android-23/google_apis/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [],
-					type: 'google_apis'
-				},
-				'android-23/google_apis/x86_64': {
-					abi: 'x86_64',
-					sdk: 'android-23',
-					skins: [],
-					type: 'google_apis'
-				}
-			},
-			tools: {
-				executables: {
-					android: path.join(dir, 'tools', `android${bat}`),
-					emulator: path.join(dir, 'tools', `emulator${exe}`),
-					sdkmanager: path.join(dir, 'tools', 'bin', `sdkmanager${bat}`)
-				},
-				path: path.join(dir, 'tools'),
-				version: '24.4.1'
-			}
-		});
-	});
-
-	it('should detect sdk with system images, platforms, and addons', () => {
-		const dir = path.resolve(`./test/mocks/sdk/${process.platform}/with-addons`);
-		const results = new androidlib.sdk.SDK(dir);
-
-		expect(results).to.deep.equal({
-			addons: [
-				{
-					sdk:      'Google Inc.:Google APIs:23',
-					name:     'Google APIs',
-					apiLevel: 23,
-					revision: 1,
+					abis: {},
+					androidJar: null,
+					apiLevel: 36,
 					codename: null,
-					path:     path.join(dir, 'add-ons', 'addon-google_apis-google-23'),
-					abis: {
-						'android-tv':   [ 'armeabi-v7a', 'x86' ],
-						'android-wear': [ 'armeabi-v7a', 'x86' ],
-						default:        [ 'armeabi-v7a', 'x86', 'x86_64' ],
-						google_apis:    [ 'armeabi-v7a', 'x86', 'x86_64' ]
-					},
-					skins: [ 'HVGA', 'QVGA', 'WQVGA400', 'WQVGA432', 'WSVGA', 'WVGA800', 'WVGA854', 'WXGA720', 'WXGA800', 'WXGA800-7in', 'AndroidWearRound', 'AndroidWearRound360x360', 'AndroidWearRound400x400', 'AndroidWearRound480x480', 'AndroidWearRoundChin320x290', 'AndroidWearRoundChin360x325', 'AndroidWearRoundChin360x326', 'AndroidWearRoundChin360x330', 'AndroidWearSquare', 'AndroidWearSquare320x320' ],
 					defaultSkin: 'WVGA800',
 					minToolsRev: 22,
-					androidJar:  path.join(dir, 'platforms', 'android-23', 'android.jar'),
-					aidl:        path.join(dir, 'platforms', 'android-23', 'framework.aidl'),
-					basedOn: {
-						apiLevel: 23,
-						version: '6.0'
-					},
-					description: 'Android + Google APIs',
-					vendor: 'Google Inc.',
-					version: '6.0'
+					name: 'Android 16',
+					path: join(path, 'platforms', 'android-36'),
+					revision: 1,
+					sdk: 'android-36',
+					skins: ['WVGA800'],
+					version: '16'
 				}
-			],
-			buildTools: [],
-			path: dir,
-			platforms: [
-				{
-					sdk:         'android-23',
-					name:        'Android 6.0',
-					apiLevel:    23,
-					codename:    null,
-					revision:    3,
-					path:        path.join(dir, 'platforms', 'android-23'),
-					version:     '6.0',
-					abis: {
-						'android-tv':   [ 'armeabi-v7a', 'x86' ],
-						'android-wear': [ 'armeabi-v7a', 'x86' ],
-						default:        [ 'armeabi-v7a', 'x86', 'x86_64' ],
-						google_apis:    [ 'armeabi-v7a', 'x86', 'x86_64' ]
-					},
-					skins: [
-						'HVGA',
-						'QVGA',
-						'WQVGA400',
-						'WQVGA432',
-						'WSVGA',
-						'WVGA800',
-						'WVGA854',
-						'WXGA720',
-						'WXGA800',
-						'WXGA800-7in',
-						'AndroidWearRound',
-						'AndroidWearRound360x360',
-						'AndroidWearRound400x400',
-						'AndroidWearRound480x480',
-						'AndroidWearRoundChin320x290',
-						'AndroidWearRoundChin360x325',
-						'AndroidWearRoundChin360x326',
-						'AndroidWearRoundChin360x330',
-						'AndroidWearSquare',
-						'AndroidWearSquare320x320'
-					],
-					defaultSkin: 'WVGA800',
-					minToolsRev: 22,
-					androidJar:  path.join(dir, 'platforms', 'android-23', 'android.jar'),
-					aidl:        path.join(dir, 'platforms', 'android-23', 'framework.aidl')
-				},
-				{
-					sdk:         'android-N',
-					name:        'Android N (Preview)',
-					apiLevel:    23,
-					codename:    'N',
-					revision:    2,
-					path:        path.join(dir, 'platforms', 'android-N'),
-					version:     'N',
-					abis:        {},
-					skins:       [ 'HVGA', 'QVGA', 'WQVGA400', 'WQVGA432', 'WSVGA', 'WVGA800', 'WVGA854', 'WXGA720', 'WXGA800', 'WXGA800-7in' ],
-					defaultSkin: 'WVGA800',
-					minToolsRev: 22,
-					androidJar:  path.join(dir, 'platforms', 'android-N', 'android.jar'),
-					aidl:        path.join(dir, 'platforms', 'android-N', 'framework.aidl')
-				}
-			],
-			platformTools: {
-				executables: {},
-				path: null,
-				version: null
-			},
-			systemImages: {
-				'android-23/android-tv/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [],
-					type: 'android-tv'
-				},
-				'android-23/android-tv/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [],
-					type: 'android-tv'
-				},
-				'android-23/android-wear/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [
-						'AndroidWearRound',
-						'AndroidWearRound360x360',
-						'AndroidWearRound400x400',
-						'AndroidWearRound480x480',
-						'AndroidWearRoundChin320x290',
-						'AndroidWearRoundChin360x325',
-						'AndroidWearRoundChin360x326',
-						'AndroidWearRoundChin360x330',
-						'AndroidWearSquare',
-						'AndroidWearSquare320x320'
-					],
-					type: 'android-wear'
-				},
-				'android-23/android-wear/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [
-						'AndroidWearRound',
-						'AndroidWearRound360x360',
-						'AndroidWearRound400x400',
-						'AndroidWearRound480x480',
-						'AndroidWearRoundChin320x290',
-						'AndroidWearRoundChin360x325',
-						'AndroidWearRoundChin360x326',
-						'AndroidWearRoundChin360x330',
-						'AndroidWearSquare',
-						'AndroidWearSquare320x320'
-					],
-					type: 'android-wear'
-				},
-				'android-23/default/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [],
-					type: 'default'
-				},
-				'android-23/default/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [],
-					type: 'default'
-				},
-				'android-23/default/x86_64': {
+			]);
+			expect(sdk.systemImages).to.deep.equal({
+				'android-36.1/example/x86_64': {
 					abi: 'x86_64',
-					sdk: 'android-23',
+					sdk: 'android-36.1',
 					skins: [],
-					type: 'default'
-				},
-				'android-23/google_apis/armeabi-v7a': {
-					abi: 'armeabi-v7a',
-					sdk: 'android-23',
-					skins: [],
-					type: 'google_apis'
-				},
-				'android-23/google_apis/x86': {
-					abi: 'x86',
-					sdk: 'android-23',
-					skins: [],
-					type: 'google_apis'
-				},
-				'android-23/google_apis/x86_64': {
-					abi: 'x86_64',
-					sdk: 'android-23',
-					skins: [],
-					type: 'google_apis'
+					type: 'example'
 				}
-			},
-			tools: {
-				executables: {
-					android: path.join(dir, 'tools', `android${bat}`),
-					emulator: path.join(dir, 'tools', `emulator${exe}`),
-					sdkmanager: path.join(dir, 'tools', 'bin', `sdkmanager${bat}`)
-				},
-				path: path.join(dir, 'tools'),
-				version: '24.4.1'
-			}
+			});
+
+			expect(sdk.issues).to.have.length(0);
+		});
+	});
+
+	describe('detect()', () => {
+		it('should find Android SDKs', async () => {
+			const path = join(__dirname, 'mocks', 'sdk', process.platform, 'with-platforms-and-system-images');
+			config.android.sdk.searchPaths[process.platform] = [];
+			const { sdks } = await detect({
+				bypassCache: true,
+				searchPaths: [path],
+			});
+			expect(sdks).toHaveLength(1);
+			expect(sdks).toEqual([
+				{
+					addons: [],
+					executables: {
+						adb: join(path, 'platform-tools', `adb${exe}`),
+						emulator: join(path, 'emulator', `emulator${exe}`),
+					},
+					issues: [],
+					path,
+					platforms: [
+						{
+							abis: {},
+							androidJar: null,
+							apiLevel: 36,
+							codename: null,
+							defaultSkin: 'WVGA800',
+							minToolsRev: 22,
+							name: 'Android 16',
+							path: join(path, 'platforms', 'android-36'),
+							revision: 1,
+							sdk: 'android-36',
+							skins: ['WVGA800'],
+							version: '16'
+						}
+					],
+					systemImages: {
+						'android-36.1/example/x86_64': {
+							abi: 'x86_64',
+							sdk: 'android-36.1',
+							skins: [],
+							type: 'example'
+						}
+					}
+				}
+			]);
+		});
+
+		it('should cache Android SDKs', async () => {
+			const dir = join(__dirname, 'mocks', 'sdk', process.platform, 'r29');
+			config.android.sdk.searchPaths[process.platform] = [dir];
+			const results1 = await detect({ bypassCache: true });
+			const results2 = await detect();
+			expect(results1).toBe(results2);
+		});
+
+		it('should return issues if no Android SDKs are found', async () => {
+			config.android.sdk.searchPaths[process.platform] = ['does_not_exist'];
+			const { sdks, issues } = await detect({ bypassCache: true });
+			expect(sdks).toEqual([]);
+			expect(issues.length).toBe(1);
+			expect(issues[0].id).toBe('ANDROID_SDK_NOT_FOUND');
+			expect(issues[0].type).toBe('warning');
 		});
 	});
 });
-*/

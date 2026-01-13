@@ -12,12 +12,10 @@ import { Issue } from '../util/issue.js';
 
 const { error, log } = snooplogg('android:sdk');
 
-const bat = process.platform === 'win32' ? '.bat' : '';
 const exe = process.platform === 'win32' ? '.exe' : '';
 
 type AndroidSDKExecutables = {
 	adb: string;
-	android: string;
 	emulator: string;
 };
 
@@ -63,20 +61,20 @@ type Addon = {
 
 type AndroidSDKOptions = {
 	addons: Addon[];
-	buildTools: Record<string, string>;
 	executables: AndroidSDKExecutables;
+	issues: Issue[];
 	path: string;
+	platforms: Platform[];
 	systemImages: Record<string, SystemImage>;
-	version: string;
 };
 
 export class AndroidSDK {
 	addons!: Addon[];
-	buildTools!: Record<string, string>;
 	executables!: AndroidSDKExecutables;
+	issues!: Issue[];
 	path!: string;
+	platforms!: Platform[];
 	systemImages!: Record<string, SystemImage>;
-	version!: string;
 
 	constructor(options: AndroidSDKOptions) {
 		Object.assign(this, options);
@@ -93,81 +91,72 @@ export class AndroidSDK {
 
 		const executables = {
 			adb:        join(path, 'platform-tools', `adb${exe}`),
-			android:    join(path, 'tools', `android${bat}`),
-			emulator:   join(path, 'tools', `emulator${exe}`),
+			emulator:   join(path, 'emulator', `emulator${exe}`),
 		};
 		for (const [key, value] of Object.entries(executables)) {
 			if (!isFile(value)) {
-				throw new Error(`Invalid Android SDK: required executable "${key}" does not exist`);
+				throw new Error(`Invalid Android SDK: missing required executable "${key}"`);
 			}
 		}
 
-		const buildTools: Record<string, string> = {};
-		for (const ver of await readdir(join(path, 'build-tools'))) {
-			const dir = join(path, 'build-tools', ver);
-			if (isFile(join(dir, 'source.properties'))) {
-				buildTools[ver] = dir;
-			}
-		}
+		const issues: Issue[] = [];
 
-		const systemImages = await AndroidSDK.detectSystemImages(path);
-		const platforms = await AndroidSDK.detectPlatforms(path, systemImages);
+		const systemImages = await AndroidSDK.detectSystemImages(path, issues);
+		const platforms = await AndroidSDK.detectPlatforms(path, systemImages, issues);
 		const addons = await AndroidSDK.detectAddons(path, platforms);
 
 		return new AndroidSDK({
 			addons,
-			buildTools,
 			executables,
+			issues,
 			path,
-			systemImages,
-			version: ''
+			platforms,
+			systemImages
 		});
 	}
 
-	static async detectSystemImages(path: string): Promise<Record<string, SystemImage>> {
+	static async detectSystemImages(path: string, issues: Issue[]): Promise<Record<string, SystemImage>> {
 		const systemImages: Record<string, SystemImage> = {};
 		const systemImagesDir = join(path, 'system-images');
 
-		if (!isDir(systemImagesDir)) {
-			return systemImages;
-		}
-
-		for (const platform of await readdir(systemImagesDir)) {
-			const platformDir = join(systemImagesDir, platform);
-			if (!isDir(platformDir)) {
-				continue;
-			}
-
-			for (const tag of await readdir(platformDir)) {
-				const tagDir = join(platformDir, tag);
-				if (!isDir(tagDir)) {
+		if (isDir(systemImagesDir)) {
+			for (const platform of await readdir(systemImagesDir)) {
+				const platformDir = join(systemImagesDir, platform);
+				if (!isDir(platformDir)) {
 					continue;
 				}
 
-				for (const abi of await readdir(tagDir)) {
-					const abiDir = join(tagDir, abi);
-					if (!isDir(abiDir)) {
+				for (const tag of await readdir(platformDir)) {
+					const tagDir = join(platformDir, tag);
+					if (!isDir(tagDir)) {
 						continue;
 					}
 
-					const props = await readPropertiesFile(join(abiDir, 'source.properties'));
-					if (props?.['AndroidVersion.ApiLevel'] && props['SystemImage.TagId'] && props['SystemImage.Abi']) {
-						const imageDir = relative(systemImagesDir, abiDir).replace(/\\/g, '/');
-						const skinsDir = join(abiDir, 'skins');
-						const skins: string[] = [];
-						if (isDir(skinsDir)) {
-							for (const name of await readdir(skinsDir)) {
-								if (isFile(join(skinsDir, name, 'hardware.ini'))) {
-									skins.push(name);
+					for (const abi of await readdir(tagDir)) {
+						const abiDir = join(tagDir, abi);
+						if (!isDir(abiDir)) {
+							continue;
+						}
+
+						const props = await readPropertiesFile(join(abiDir, 'source.properties'));
+						if (props?.['AndroidVersion.ApiLevel'] && props['SystemImage.TagId'] && props['SystemImage.Abi']) {
+							const imageDir = relative(systemImagesDir, abiDir).replace(/\\/g, '/');
+							const skinsDir = join(abiDir, 'skins');
+							const skins: string[] = [];
+							if (isDir(skinsDir)) {
+								for (const name of await readdir(skinsDir)) {
+									if (isFile(join(skinsDir, name, 'hardware.ini'))) {
+										skins.push(name);
+									}
 								}
 							}
+							systemImages[imageDir] = {
+								abi: props['SystemImage.Abi'],
+								sdk: `android-${props['AndroidVersion.CodeName'] || props['AndroidVersion.ApiLevel']}`,
+								skins,
+								type: props['SystemImage.TagId']
+							};
 						}
-						systemImages[imageDir] = {
-							abi: props['SystemImage.Abi'],
-							sdk: `android-${props['AndroidVersion.CodeName'] || props['AndroidVersion.ApiLevel']}`,
-							skins,
-							type: props['SystemImage.TagId']
-						};
 					}
 				}
 			}
@@ -176,85 +165,93 @@ export class AndroidSDK {
 		return systemImages;
 	}
 
-	static async detectPlatforms(path: string, systemImages: Record<string, SystemImage>): Promise<Platform[]> {
+	static async detectPlatforms(path: string, systemImages: Record<string, SystemImage>, issues: Issue[]): Promise<Platform[]> {
 		const platforms: Platform[] = [];
 		const platformsDir = join(path, 'platforms');
-		if (!isDir(platformsDir)) {
-			return platforms;
-		}
 
-		for (const name of await readdir(platformsDir)) {
-			const dir = join(platformsDir, name);
-			if (!isFile(join(dir, 'build.prop'))) {
-				continue;
-			}
-
-			const sourceProps = await readPropertiesFile(join(dir, 'source.properties'));
-			if (!sourceProps) {
-				continue;
-			}
-
-			const apiLevel = sourceProps['AndroidVersion.ApiLevel']
-				? Number.parseInt(sourceProps['AndroidVersion.ApiLevel'])
-				: null;
-			if (!apiLevel) {
-				continue;
-			}
-
-			// read in the sdk properties, if exists
-			const sdkProps = await readPropertiesFile(join(dir, 'sdk.properties'));
-
-			// detect the available skins
-			const skinsDir = join(dir, 'skins');
-			const skins: string[] = [];
-			if (isDir(skinsDir)) {
-				for (const name of await readdir(skinsDir)) {
-					if (isFile(join(skinsDir, name, 'hardware.ini'))) {
-						skins.push(name);
-					}
+		if (isDir(platformsDir)) {
+			for (const name of await readdir(platformsDir)) {
+				const dir = join(platformsDir, name);
+				if (!isFile(join(dir, 'build.prop'))) {
+					continue;
 				}
-			}
-			let defaultSkin: string | null = sdkProps?.['sdk.skin.default'] ?? 'WVGA800';
-			if (defaultSkin && skins.includes(defaultSkin) && !skins.includes('WVGA800')) {
-				defaultSkin = skins[skins.length - 1] || null;
-			}
 
-			const apiName = sourceProps?.['AndroidVersion.CodeName'] || apiLevel;
-			const sdk = `android-${apiName}`;
+				const sourceProps = await readPropertiesFile(join(dir, 'source.properties'));
+				if (!sourceProps) {
+					continue;
+				}
 
-			const abis: Record<string, string[]> = {};
-			for (const image of Object.values(systemImages)) {
-				if (image.sdk === sdk) {
-					if (!abis[image.type]) {
-						abis[image.type] = [];
-					}
-					if (!abis[image.type].includes(image.abi)) {
-						abis[image.type].push(image.abi);
-					}
-					for (const skin of image.skins) {
-						if (!skins.includes(skin)) {
-							skins.push(skin);
+				const apiLevel = sourceProps['AndroidVersion.ApiLevel']
+					? Number.parseInt(sourceProps['AndroidVersion.ApiLevel'])
+					: null;
+				if (!apiLevel) {
+					continue;
+				}
+
+				// read in the sdk properties, if exists
+				const sdkProps = await readPropertiesFile(join(dir, 'sdk.properties'));
+
+				// detect the available skins
+				const skinsDir = join(dir, 'skins');
+				const skins: string[] = [];
+				if (isDir(skinsDir)) {
+					for (const name of await readdir(skinsDir)) {
+						if (isFile(join(skinsDir, name, 'hardware.ini'))) {
+							skins.push(name);
 						}
 					}
 				}
+				let defaultSkin: string | null = sdkProps?.['sdk.skin.default'] ?? 'WVGA800';
+				if (defaultSkin && skins.includes(defaultSkin) && !skins.includes('WVGA800')) {
+					defaultSkin = skins[skins.length - 1] || null;
+				}
+
+				const apiName = sourceProps?.['AndroidVersion.CodeName'] || apiLevel;
+				const sdk = `android-${apiName}`;
+
+				const abis: Record<string, string[]> = {};
+				for (const image of Object.values(systemImages)) {
+					if (image.sdk === sdk) {
+						if (!abis[image.type]) {
+							abis[image.type] = [];
+						}
+						if (!abis[image.type].includes(image.abi)) {
+							abis[image.type].push(image.abi);
+						}
+						for (const skin of image.skins) {
+							if (!skins.includes(skin)) {
+								skins.push(skin);
+							}
+						}
+					}
+				}
+
+				const androidJarFile = join(dir, 'android.jar');
+
+				platforms.push({
+					abis:        abis,
+					androidJar:  isFile(androidJarFile) ? androidJarFile : null,
+					apiLevel,
+					codename:    sourceProps['AndroidVersion.CodeName'] || null,
+					defaultSkin,
+					minToolsRev: sourceProps['Platform.MinToolsRev'] ? Number.parseInt(sourceProps['Platform.MinToolsRev']) : null,
+					name:        `Android ${sourceProps['Platform.Version']}${sourceProps['AndroidVersion.CodeName'] ? ' (Preview)' : ''}`,
+					path:        dir,
+					revision:    sourceProps['Layoutlib.Revision'] ? Number.parseInt(sourceProps['Layoutlib.Revision']) : null,
+					sdk,
+					skins,
+					version:     sourceProps['Platform.Version']
+				});
 			}
+		}
 
-			const androidJarFile = join(dir, 'android.jar');
-
-			platforms.push({
-				abis:        abis,
-				androidJar:  isFile(androidJarFile) ? androidJarFile : null,
-				apiLevel,
-				codename:    sourceProps['AndroidVersion.CodeName'] || null,
-				defaultSkin,
-				minToolsRev: sourceProps['Platform.MinToolsRev'] ? Number.parseInt(sourceProps['Platform.MinToolsRev']) : null,
-				name:        `Android ${sourceProps['Platform.Version']}${sourceProps['AndroidVersion.CodeName'] ? ' (Preview)' : ''}`,
-				path:        dir,
-				revision:    sourceProps['Layoutlib.Revision'] ? Number.parseInt(sourceProps['Layoutlib.Revision']) : null,
-				sdk,
-				skins,
-				version:     sourceProps['Platform.Version']
-			});
+		if (Object.keys(platforms).length === 0) {
+			issues.push(new Issue('No platforms found', {
+				id: 'ANDROID_SDK_NO_PLATFORMS',
+				type: 'error',
+				details: 'Unable to find any platforms.'
+			}));
+			return [];
 		}
 
 		return platforms.sort(sortPackages);
@@ -264,7 +261,7 @@ export class AndroidSDK {
 		const addons: Addon[] = [];
 		const addonsDir = join(path, 'add-ons');
 		if (!isDir(addonsDir)) {
-			return addons;
+			return [];
 		}
 
 		for (const name of await readdir(addonsDir)) {
@@ -312,13 +309,18 @@ export class AndroidSDK {
 	}
 }
 
-let sdkCache: AndroidSDK[] | null = null;
+interface SDKs {
+	sdks: AndroidSDK[];
+	issues: Issue[];
+}
+
+let sdkCache: SDKs | null = null;
 let sdkSearchPathsHash: string | null = null;
 
 export async function detect(options: {
 	bypassCache?: boolean;
 	searchPaths?: string[];
-} = {}): Promise<AndroidSDK[]> {
+} = {}): Promise<SDKs> {
 	const searchPaths = await getSearchPaths(options);
 	const searchPathsHash = createHash('sha256')
 		.update(searchPaths.toSorted().join()).digest('hex');
@@ -327,8 +329,50 @@ export async function detect(options: {
 		return sdkCache;
 	}
 
-	return tailgate('android:ndk:detect', async () => {
-		return [];
+	return tailgate('android:sdk:detect', async () => {
+		const results = await Promise.allSettled(searchPaths.map(async path => {
+			try {
+				return await AndroidSDK.load(path);
+			} catch (e) {
+				// Not an SDK, check subdirectories
+				if (isDir(path)) {
+					for (const name of await readdir(path)) {
+						try {
+							return await AndroidSDK.load(join(path, name));
+						} catch {
+							// Not an SDK
+						}
+					}
+				}
+				throw e;
+			}
+		}));
+		const sdks: AndroidSDK[] = [];
+		const issues: Issue[] = [];
+
+		for (const result of results) {
+			if (result.status === 'fulfilled' && result.value) {
+				sdks.push(result.value);
+			} else if (result.status === 'rejected') {
+				error(result.reason.message);
+			}
+		}
+
+		if (!sdks.length) {
+			issues.push(new Issue('No Android SDKs found', {
+				id: 'ANDROID_SDK_NOT_FOUND',
+				type: 'warning',
+				details: 'No Android SDKs found. Please install the Android SDK and try again.',
+			}));
+		}
+
+		sdkCache = {
+			sdks,
+			issues,
+		};
+		sdkSearchPathsHash = searchPathsHash;
+
+		return sdkCache;
 	});
 }
 

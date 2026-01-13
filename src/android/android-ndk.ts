@@ -178,7 +178,7 @@ export async function detect(options: {
 						try {
 							return await AndroidNDK.load(join(path, name));
 						} catch {
-							// Not an NDK, check subdirectories
+							// Not an NDK
 						}
 					}
 				}
