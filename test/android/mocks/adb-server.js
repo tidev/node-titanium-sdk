@@ -60,7 +60,7 @@ class MockAdbServer {
 				}
 			});
 
-			socket.on('close', data => {
+			socket.on('close', _data => {
 				log(`CLOSED: ${socket.remoteAddress}:${socket.remotePort}`);
 				clearTimeout(timer);
 			});

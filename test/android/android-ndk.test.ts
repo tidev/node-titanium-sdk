@@ -33,7 +33,7 @@ describe('Android NDK', () => {
 		it('should error if directory is missing the "platforms" directory', async () => {
 			await expect(AndroidNDK.load(join(__dirname, 'mocks', 'ndk', 'all', 'no-platforms-dir')))
 				.rejects.toThrowError(new Error('Directory does not contain the "platforms" directory'));
-		});', '
+		});
 
 		it('should error if directory is missing the "ndk-build" executable', async () => {
 			await expect(AndroidNDK.load(join(__dirname, 'mocks', 'ndk', 'all', 'no-ndk-build')))

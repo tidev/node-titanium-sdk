@@ -101,7 +101,7 @@ export class AndroidSDK {
 
 		const issues: Issue[] = [];
 
-		const systemImages = await AndroidSDK.detectSystemImages(path, issues);
+		const systemImages = await AndroidSDK.detectSystemImages(path);
 		const platforms = await AndroidSDK.detectPlatforms(path, systemImages, issues);
 		const addons = await AndroidSDK.detectAddons(path, platforms);
 
@@ -115,7 +115,7 @@ export class AndroidSDK {
 		});
 	}
 
-	static async detectSystemImages(path: string, issues: Issue[]): Promise<Record<string, SystemImage>> {
+	static async detectSystemImages(path: string): Promise<Record<string, SystemImage>> {
 		const systemImages: Record<string, SystemImage> = {};
 		const systemImagesDir = join(path, 'system-images');
 

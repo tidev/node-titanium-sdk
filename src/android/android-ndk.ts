@@ -219,6 +219,7 @@ async function getSearchPaths(options: { searchPaths?: string[] }) {
 	if (Array.isArray(options.searchPaths)) {
 		paths.push(...options.searchPaths);
 	}
+
 	const configPaths = config.android.ndk.searchPaths[process.platform];
 	if (Array.isArray(configPaths)) {
 		paths.push(...configPaths);
