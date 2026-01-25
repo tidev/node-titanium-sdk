@@ -46,6 +46,7 @@
     "@xmldom/xmldom": "0.8.11",
     "babel-plugin-transform-titanium": "0.1.1",
     "babel-preset-minify": "0.5.2",
+    "semver": "7.7.3",
     "snooplogg": "6.1.1",
     "stream-splitter": "0.3.2",
     "undici": "7.19.1",
@@ -61,7 +62,6 @@
     "lefthook": "2.0.15",
     "oxlint": "1.41.0",
     "rimraf": "6.1.2",
-    "semver": "7.7.3",
     "tsdown": "0.20.1",
     "typescript": "5.9.3",
     "vitest": "4.0.18"

@@ -29,6 +29,9 @@ importers:
       babel-preset-minify:
         specifier: 0.5.2
         version: 0.5.2
+      semver:
+        specifier: 7.7.3
+        version: 7.7.3
       snooplogg:
         specifier: 6.1.1
         version: 6.1.1
@@ -69,9 +72,6 @@ importers:
       rimraf:
         specifier: 6.1.2
         version: 6.1.2
-      semver:
-        specifier: 7.7.3
-        version: 7.7.3
       tsdown:
         specifier: 0.20.1
         version: 0.20.1(typescript@5.9.3)
