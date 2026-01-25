@@ -33,22 +33,26 @@ const releaseRegExp = /^(r(\d+)([A-Za-z])?)(?:\s+\(([^)]+)\))?$/;
  */
 const versionRegExp = /^(\d+)(?:\.(\d+))?/;
 
-/**
- * Detects and organizes Android NDK information.
- */
-export class AndroidNDK {
+type AndroidNDKOptions = {
 	arch: string;
 	executables: Record<string, string>;
 	name: string;
 	path: string;
 	version: string | null;
+};
 
-	private constructor({ path, name, version, arch, executables }: { path: string, name: string, version: string | null, arch: string, executables: Record<string, string> }) {
-		this.arch = arch;
-		this.executables = executables;
-		this.name = name;
-		this.path = path;
-		this.version = version;
+/**
+ * Detects and organizes Android NDK information.
+ */
+export class AndroidNDK {
+	arch!: string;
+	executables!: Record<string, string>;
+	name!: string;
+	path!: string;
+	version!: string | null;
+
+	private constructor(options: AndroidNDKOptions) {
+		Object.assign(this, options);
 	}
 
 	static async load(path: string): Promise<AndroidNDK> {
@@ -155,7 +159,7 @@ let ndkSearchPathsHash: string | null = null;
  * @param {Boolean} [force=false] - When `true`, bypasses cache and forces redetection.
  * @returns {Promise<Array.<NDK>>}
  */
-export async function detect(options: {
+export async function detectAndroidNDKs(options: {
 	bypassCache?: boolean;
 	searchPaths?: string[];
 } = {}): Promise<NDKs> {
@@ -215,19 +219,16 @@ export async function detect(options: {
 }
 
 async function getSearchPaths(options: { searchPaths?: string[] }) {
-	const paths: string[] = [];
-	if (Array.isArray(options.searchPaths)) {
-		paths.push(...options.searchPaths);
+	const searchPaths = new Set<string>();
+	if (Array.isArray(options?.searchPaths)) {
+		for (const path of options.searchPaths) {
+			searchPaths.add(expand(path));
+		}
 	}
 
 	const configPaths = config.android.ndk.searchPaths[process.platform];
 	if (Array.isArray(configPaths)) {
-		paths.push(...configPaths);
-	}
-
-	const searchPaths = new Set<string>();
-	if (paths) {
-		for (const path of paths) {
+		for (const path of configPaths) {
 			searchPaths.add(expand(path));
 		}
 	}

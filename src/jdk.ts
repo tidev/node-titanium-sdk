@@ -152,7 +152,7 @@ interface JDKs {
 let jdkCache: JDKs | null = null;
 let jdkSearchPathsHash: string | null = null;
 
-export async function detect(options: {
+export async function detectJDKs(options: {
 	bypassCache?: boolean;
 	javaHome?: string;
 	searchPaths?: string[];
@@ -218,18 +218,16 @@ or  __https://jdk.java.net/arpathschive/__.`,
 }
 
 async function getSearchPaths(options: { javaHome?: string; searchPaths?: string[] }) {
-	const paths: string[] = [];
-	if (Array.isArray(options.searchPaths)) {
-		paths.push(...options.searchPaths);
-	}
-	const configPaths = config.jdk.searchPaths[process.platform];
-	if (Array.isArray(configPaths)) {
-		paths.push(...configPaths);
+	const searchPaths = new Set<string>();
+	if (Array.isArray(options?.searchPaths)) {
+		for (const path of options.searchPaths) {
+			searchPaths.add(expand(path));
+		}
 	}
 
-	const searchPaths = new Set<string>();
-	if (paths) {
-		for (const path of paths) {
+	const configPaths = config.jdk.searchPaths[process.platform];
+	if (Array.isArray(configPaths)) {
+		for (const path of configPaths) {
 			searchPaths.add(expand(path));
 		}
 	}

@@ -317,7 +317,7 @@ interface SDKs {
 let sdkCache: SDKs | null = null;
 let sdkSearchPathsHash: string | null = null;
 
-export async function detect(options: {
+export async function detectAndroidSDKs(options: {
 	bypassCache?: boolean;
 	searchPaths?: string[];
 } = {}): Promise<SDKs> {
@@ -377,18 +377,16 @@ export async function detect(options: {
 }
 
 async function getSearchPaths(options: { searchPaths?: string[] }) {
-	const paths: string[] = [];
-	if (Array.isArray(options.searchPaths)) {
-		paths.push(...options.searchPaths);
-	}
-	const configPaths = config.android.ndk.searchPaths[process.platform];
-	if (Array.isArray(configPaths)) {
-		paths.push(...configPaths);
+	const searchPaths = new Set<string>();
+	if (Array.isArray(options?.searchPaths)) {
+		for (const path of options.searchPaths) {
+			searchPaths.add(expand(path));
+		}
 	}
 
-	const searchPaths = new Set<string>();
-	if (paths) {
-		for (const path of paths) {
+	const configPaths = config.android.sdk.searchPaths[process.platform];
+	if (Array.isArray(configPaths)) {
+		for (const path of configPaths) {
 			searchPaths.add(expand(path));
 		}
 	}

@@ -1,3 +1,3 @@
-export { defaultConfig } from './config.js';
-export * as i18n from './titanium/i18n.js';
+export { config, defaultConfig } from './config.js';
+export * as request from './util/request.js';
 export * as version from './util/version.js';

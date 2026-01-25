@@ -10,6 +10,21 @@
       "types": "./dist/index.d.js",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
+    },
+    "./android": {
+      "types": "./dist/android.d.js",
+      "import": "./dist/android.mjs",
+      "require": "./dist/android.cjs"
+    },
+    "./jdk": {
+      "types": "./dist/jdk.d.js",
+      "import": "./dist/jdk.mjs",
+      "require": "./dist/jdk.cjs"
+    },
+    "./titanium": {
+      "types": "./dist/titanium.d.js",
+      "import": "./dist/titanium.mjs",
+      "require": "./dist/titanium.cjs"
     }
   },
   "license": "Apache-2.0",
@@ -33,6 +48,7 @@
     "babel-preset-minify": "0.5.2",
     "snooplogg": "6.1.1",
     "stream-splitter": "0.3.2",
+    "undici": "7.19.1",
     "which": "6.0.0"
   },
   "devDependencies": {

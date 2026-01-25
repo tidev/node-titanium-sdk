@@ -9,7 +9,12 @@ const config: UserConfig = defineConfig({
 		'msgpackr',
 		'ordered-binary',
 	],
-	entry: './src/index.ts',
+	entry: {
+		'index': './src/index.ts',
+		'android': './src/android/index.ts',
+		'jdk': './src/jdk.ts',
+		'titanium': './src/titanium/index.ts',
+	},
 	format: ['es', 'cjs'],
 	minify: !process.env.SKIP_MINIFY,
 	platform: 'node',

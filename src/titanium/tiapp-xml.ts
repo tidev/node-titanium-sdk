@@ -738,14 +738,11 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 	}
 }
 
-export class tiappxml {
+export class TiappXML {
 	platform?: string;
 
-	constructor(filename?: string, platform?: string) {
+	constructor(platform?: string) {
 		this.platform = platform;
-		if (filename) {
-			this.load(filename);
-		}
 	}
 
 	async load(file: string): Promise<this> {
@@ -847,4 +844,4 @@ export class tiappxml {
 	}
 }
 
-export default tiappxml;
+export default TiappXML;

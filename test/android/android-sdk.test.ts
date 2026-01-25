@@ -2,7 +2,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { config, resetConfig } from '../../src/config.js';
-import { detect, AndroidSDK } from '../../src/android/android-sdk.js';
+import { detectAndroidSDKs, AndroidSDK } from '../../src/android/android-sdk.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const exe = process.platform === 'win32' ? '.exe' : '';
@@ -94,7 +94,7 @@ describe('Android SDK', () => {
 		it('should find Android SDKs', async () => {
 			const path = join(__dirname, 'mocks', 'sdk', testPlatform, 'with-platforms-and-system-images');
 			config.android.sdk.searchPaths[testPlatform] = [];
-			const { sdks } = await detect({
+			const { sdks } = await detectAndroidSDKs({
 				bypassCache: true,
 				searchPaths: [path],
 			});
@@ -139,14 +139,14 @@ describe('Android SDK', () => {
 		it('should cache Android SDKs', async () => {
 			const dir = join(__dirname, 'mocks', 'sdk', testPlatform, 'r29');
 			config.android.sdk.searchPaths[testPlatform] = [dir];
-			const results1 = await detect({ bypassCache: true });
-			const results2 = await detect();
+			const results1 = await detectAndroidSDKs({ bypassCache: true });
+			const results2 = await detectAndroidSDKs();
 			expect(results1).toBe(results2);
 		});
 
 		it('should return issues if no Android SDKs are found', async () => {
 			config.android.sdk.searchPaths[testPlatform] = ['does_not_exist'];
-			const { sdks, issues } = await detect({ bypassCache: true });
+			const { sdks, issues } = await detectAndroidSDKs({ bypassCache: true });
 			expect(sdks).toEqual([]);
 			expect(issues.length).toBe(1);
 			expect(issues[0].id).toBe('ANDROID_SDK_NOT_FOUND');

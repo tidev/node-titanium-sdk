@@ -2,7 +2,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { config, resetConfig } from '../../src/config.js';
-import { detect, AndroidNDK } from '../../src/android/android-ndk.js';
+import { detectAndroidNDKs, AndroidNDK } from '../../src/android/android-ndk.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const cmd = process.platform === 'win32' ? '.cmd' : '';
@@ -140,7 +140,7 @@ describe('Android NDK', () => {
 		it('should find Android NDKs', async () => {
 			const dir = join(__dirname, 'mocks', 'ndk', process.platform, 'r29');
 			config.android.ndk.searchPaths[process.platform] = [];
-			const { ndks } = await detect({
+			const { ndks } = await detectAndroidNDKs({
 				bypassCache: true,
 				searchPaths: [
 					dir,
@@ -162,14 +162,14 @@ describe('Android NDK', () => {
 		it('should cache Android NDKs', async () => {
 			const dir = join(__dirname, 'mocks', 'ndk', process.platform, 'r29');
 			config.android.ndk.searchPaths[process.platform] = [dir];
-			const results1 = await detect({ bypassCache: true });
-			const results2 = await detect();
+			const results1 = await detectAndroidNDKs({ bypassCache: true });
+			const results2 = await detectAndroidNDKs();
 			expect(results1).toBe(results2);
 		});
 
 		it('should return issues if no Android NDKs are found', async () => {
 			config.android.ndk.searchPaths[process.platform] = ['does_not_exist'];
-			const { ndks, issues } = await detect({ bypassCache: true });
+			const { ndks, issues } = await detectAndroidNDKs({ bypassCache: true });
 			expect(ndks).toEqual([]);
 			expect(issues.length).toBe(1);
 			expect(issues[0].id).toBe('ANDROID_NDK_NOT_FOUND');
@@ -181,7 +181,7 @@ describe('Android NDK', () => {
 			config.android.ndk.searchPaths[process.platform] = [
 				join(__dirname, 'mocks', 'ndk', process.platform, 'no-ndk-build'),
 			];
-			const { ndks, issues } = await detect({ bypassCache: true });
+			const { ndks, issues } = await detectAndroidNDKs({ bypassCache: true });
 			expect(ndks).toEqual([]);
 			expect(issues.length).toBe(1);
 			expect(issues[0].id).toBe('ANDROID_NDK_NOT_FOUND');

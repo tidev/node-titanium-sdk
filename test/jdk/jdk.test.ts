@@ -2,7 +2,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { config, resetConfig } from '../../src/config.js';
-import { detect, JDK } from '../../src/jdk.js';
+import { detectJDKs, JDK } from '../../src/jdk.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const exe = process.platform === 'win32' ? '.exe' : '';
@@ -186,13 +186,13 @@ describe('JDK', function() {
 		});
 	});
 
-	describe('detect()', () => {
+	describe('detectJDKs()', () => {
 		it('should find JDKs', async () => {
 			try {
 				const dir = path.join(__dirname, 'mocks', 'mock-jdk');
 				process.env.MOCK_STDOUT = 'javac 9';
 				process.env.JAVA_HOME = dir;
-				const { home, jdks } = await detect({ bypassCache: true });
+				const { home, jdks } = await detectJDKs({ bypassCache: true });
 				expect(home).toBe(dir);
 
 				const jdk = jdks.find(jdk => jdk.path === dir);
@@ -216,8 +216,8 @@ describe('JDK', function() {
 				const dir = path.join(__dirname, 'mocks', 'mock-jdk');
 				process.env.MOCK_STDOUT = 'javac 9';
 				process.env.JAVA_HOME = dir;
-				const results1 = await detect({ bypassCache: true });
-				const results2 = await detect();
+				const results1 = await detectJDKs({ bypassCache: true });
+				const results2 = await detectJDKs();
 				expect(results1).toBe(results2);
 			} finally {
 				delete process.env.JAVA_HOME;
@@ -228,7 +228,7 @@ describe('JDK', function() {
 			try {
 				process.env.MOCK_STDOUT = 'javac 9';
 				process.env.JAVA_HOME = 'does_not_exist';
-				const { home } = await detect({ bypassCache: true });
+				const { home } = await detectJDKs({ bypassCache: true });
 				expect(home).toBeNull();
 			} finally {
 				delete process.env.JAVA_HOME;
@@ -238,7 +238,7 @@ describe('JDK', function() {
 		it('should return issues if no JDKs are found', async () => {
 			delete process.env.JAVA_HOME;
 			config.jdk.searchPaths[process.platform] = ['does_not_exist'];
-			const { jdks, issues } = await detect({ bypassCache: true });
+			const { jdks, issues } = await detectJDKs({ bypassCache: true });
 			expect(jdks).toEqual([]);
 			expect(issues.length).toBe(1);
 			expect(issues[0].id).toBe('JDK_NOT_FOUND');
@@ -248,7 +248,7 @@ describe('JDK', function() {
 		it('should return issues if no valid JDKs are found', async () => {
 			delete process.env.JAVA_HOME;
 			config.jdk.searchPaths[process.platform] = [];
-			const { jdks, issues } = await detect({
+			const { jdks, issues } = await detectJDKs({
 				bypassCache: true,
 				searchPaths: [
 					path.join(__dirname, 'mocks', 'incomplete-jdk'),
@@ -265,7 +265,7 @@ describe('JDK', function() {
 			config.jdk.searchPaths[process.platform] = [dir];
 			process.env.MOCK_STDOUT = 'javac 25';
 			delete process.env.JAVA_HOME;
-			const { jdks, issues } = await detect({ bypassCache: true });
+			const { jdks, issues } = await detectJDKs({ bypassCache: true });
 
 			expect(jdks).toHaveLength(1);
 			const jdk = jdks[0];
