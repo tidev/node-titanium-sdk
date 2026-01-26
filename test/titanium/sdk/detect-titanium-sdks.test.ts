@@ -1,11 +1,10 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { config, resetConfig } from '../../../src/config.js';
-import { detectTitaniumSDKs } from '../../../src/titanium/titanium-sdk.js';
+import { detectTitaniumSDKs } from '../../../src/titanium/detect-titanium-sdks.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const exe = process.platform === 'win32' ? '.exe' : '';
 
 describe('Titanium SDK', function() {
 	afterEach(() => resetConfig());
