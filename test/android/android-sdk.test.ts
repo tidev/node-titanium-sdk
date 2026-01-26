@@ -93,12 +93,11 @@ describe('Android SDK', () => {
 	describe('detect()', () => {
 		it('should find Android SDKs', async () => {
 			const path = join(__dirname, 'mocks', 'sdk', testPlatform, 'with-platforms-and-system-images');
-			config.android.sdk.searchPaths[testPlatform] = [];
+			config.android.sdk.searchPaths[process.platform] = [];
 			const { sdks } = await detectAndroidSDKs({
 				bypassCache: true,
 				searchPaths: [path],
 			});
-			expect(sdks).toHaveLength(1);
 			expect(sdks).toEqual([
 				{
 					addons: [],
