@@ -6,6 +6,7 @@ const config: UserConfig = defineConfig({
 		'android/index': './src/android/index.ts',
 		'jdk': './src/jdk.ts',
 		'titanium/index': './src/titanium/index.ts',
+		'util/index': './src/util/index.ts',
 	},
 	format: ['es', 'cjs'],
 	platform: 'node',

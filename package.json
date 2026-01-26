@@ -25,6 +25,11 @@
       "types": "./dist/titanium/index.d.js",
       "import": "./dist/titanium/index.mjs",
       "require": "./dist/titanium/index.cjs"
+    },
+    "./util": {
+      "types": "./dist/util/index.d.js",
+      "import": "./dist/util/index.mjs",
+      "require": "./dist/util/index.cjs"
     }
   },
   "license": "Apache-2.0",

@@ -61,6 +61,9 @@ class TitaniumSDK {
 }
 
 interface TiSDKs {
+	installPath: string;
+	latest: string | null;
+	sdkPaths: string[];
 	sdks: TitaniumSDK[];
 	issues: Issue[];
 }
@@ -116,6 +119,9 @@ export async function detectTitaniumSDKs(options: {
 		}
 
 		tisdkCache = {
+			installPath: config.titanium.sdk.installPath[process.platform],
+			latest: sdks.find(s => /.GA$/.test(s.name))?.name || sdks[0]?.name || null,
+			sdkPaths: searchPaths,
 			sdks,
 			issues,
 		};
