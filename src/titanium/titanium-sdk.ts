@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
-import { config } from '../config';
-import { expand } from '../util/expand';
-import { tailgate } from '../util/tailgate';
-import { Issue } from '../util/issue';
-import { isDir } from '../util/is-dir';
+import { config } from '../config.js';
+import { expand } from '../util/expand.js';
+import { tailgate } from '../util/tailgate.js';
+import { Issue } from '../util/issue.js';
+import { isDir } from '../util/is-dir.js';
 import { readdir, readFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
-import { request } from '../util/request';
+import { request } from '../util/request.js';
 
 const os = process.platform === 'darwin' ? 'osx' : process.platform;
 
