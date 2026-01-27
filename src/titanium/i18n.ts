@@ -46,15 +46,15 @@ export async function load(
 	const ignoreFiles = opts?.ignoreFiles;
 
 	if (!isDir(i18nDir)) {
-		debug('i18n directory not found in %s', projectDir);
+		debug(`i18n directory not found in ${projectDir}`);
 		return data;
 	}
 
-	debug('Compiling localization files in %s', i18nDir);
+	debug(`Compiling localization files in ${i18nDir}`);
 
 	for (const lang of await readdir(i18nDir)) {
 		const langDir = path.join(i18nDir, lang);
-		if (!isDir(langDir) || (!ignoreDirs || !ignoreDirs.test(lang))) {
+		if (!isDir(langDir) || (ignoreDirs && !ignoreDirs.test(lang))) {
 			continue;
 		}
 
