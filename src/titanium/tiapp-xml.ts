@@ -1,5 +1,5 @@
 import { DOMParser, type Options } from '@xmldom/xmldom';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFileSync, writeFile } from 'node:fs';
 import path from 'node:path';
 import { capitalize } from '../util/capitalize.js';
 import { isFile } from '../util/is-file.js';
@@ -745,13 +745,13 @@ export class TiappXML {
 		this.platform = platform;
 	}
 
-	async load(file: string): Promise<this> {
+	load(file: string): this {
 		if (!isFile(file)) {
 			throw new Error('tiapp.xml file does not exist');
 		}
 		const dom = new DOMParser(defaultDOMParserArgs);
 		const doc = dom.parseFromString(
-			await readFile(file, 'utf8'),
+			readFileSync(file, 'utf8'),
 			'text/xml'
 		) as TiappDocument;
 		toJS(this, doc.documentElement, this.platform);
