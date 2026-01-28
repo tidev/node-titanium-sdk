@@ -739,10 +739,7 @@ function toJS(obj: any, doc: Element, targetPlatform?: string) {
 }
 
 export class TiappXML {
-	platform?: string;
-
-	constructor(platform?: string) {
-		this.platform = platform;
+	constructor() {
 	}
 
 	load(file: string): this {
@@ -754,7 +751,7 @@ export class TiappXML {
 			readFileSync(file, 'utf8'),
 			'text/xml'
 		) as TiappDocument;
-		toJS(this, doc.documentElement, this.platform);
+		toJS(this, doc.documentElement);
 		return this;
 	}
 
@@ -763,7 +760,6 @@ export class TiappXML {
 			this,
 			(new DOMParser(defaultDOMParserArgs).parseFromString(str, 'text/xml'))
 				.documentElement,
-			this.platform
 		);
 		return this;
 	}
