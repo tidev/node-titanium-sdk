@@ -1,0 +1,238 @@
+import { z } from 'zod';
+
+/**
+ * Coerce values to strings for XML text content
+ */
+const StringSchema = z.union([z.string(), z.number()]).transform((val) => String(val));
+const OptionalStringSchema = z.union([z.string(), z.number()]).transform((val) => String(val)).optional();
+
+/**
+ * Boolean schema that accepts boolean or string 'true'/'false'
+ */
+const BooleanSchema = z.union([
+	z.boolean(),
+	z.literal('true'),
+	z.literal('false'),
+	z.string(),
+]).transform((val) => {
+	if (typeof val === 'boolean') return val;
+	if (val === 'true') return true;
+	if (val === 'false') return false;
+	return Boolean(val);
+});
+
+/**
+ * Number schema that accepts numbers or numeric strings
+ */
+const NumberSchema = z.union([z.number(), z.string()]).transform((val) => {
+	if (typeof val === 'number') return val;
+	return Number.parseFloat(val);
+});
+
+/**
+ * Property value schema for <property> tags
+ */
+export const PropertyValueSchema = z.object({
+	type: z.enum(['string', 'bool', 'int', 'double']).default('string'),
+	value: z.any(),
+});
+
+/**
+ * Properties schema - record of property name to property value
+ */
+export const PropertiesSchema = z.record(PropertyValueSchema).optional();
+
+/**
+ * Module schema for <module> elements
+ */
+export const ModuleSchema = z.object({
+	id: z.string(),
+	platform: z.string().optional(),
+	version: z.union([z.string(), z.number()]).optional(),
+	deployType: z.string().optional(),
+});
+
+/**
+ * Modules schema - array of modules
+ */
+export const ModulesSchema = z.array(ModuleSchema).optional();
+
+/**
+ * Deployment target schema
+ */
+export const DeploymentTargetsSchema = z.record(z.union([z.boolean(), z.string()])).optional();
+
+/**
+ * iOS capabilities schema
+ */
+export const IOSCapabilitiesSchema = z.object({
+	appGroups: z.array(z.string()).optional(),
+}).optional();
+
+/**
+ * iOS extension target schema
+ */
+const IOSExtensionTargetSchema = z.object({
+	name: z.string(),
+	ppUUIDs: z.record(z.string()).optional(),
+});
+
+/**
+ * iOS extension schema
+ */
+const IOSExtensionSchema = z.object({
+	projectPath: z.string(),
+	targets: z.array(IOSExtensionTargetSchema).optional(),
+});
+
+/**
+ * iOS configuration schema
+ */
+export const IOSSchema = z.object({
+	excludeDirFromAssetCatalog: BooleanSchema.optional(),
+	enableLaunchScreenStoryboard: BooleanSchema.optional(),
+	enablecoverage: BooleanSchema.optional(),
+	enablemdfind: BooleanSchema.optional(),
+	minIosVer: NumberSchema.optional(),
+	defaultBackgroundColor: OptionalStringSchema,
+	teamId: OptionalStringSchema,
+	useJscoreFramework: BooleanSchema.optional(),
+	runOnMainThread: BooleanSchema.optional(),
+	useAutolayout: BooleanSchema.optional(),
+	useNewBuildSystem: BooleanSchema.optional(),
+	useAppThinning: BooleanSchema.optional(),
+	logServerPort: z.union([z.number(), z.string()]).optional(),
+	capabilities: IOSCapabilitiesSchema,
+	entitlements: z.record(z.any()).optional(),
+	plist: z.record(z.any()).optional(),
+	extensions: z.array(IOSExtensionSchema).optional(),
+}).optional();
+
+/**
+ * iPhone orientations schema
+ */
+const IPhoneOrientationsSchema = z.record(z.array(z.string()));
+
+/**
+ * iPhone type schema
+ */
+const IPhoneTypeSchema = z.object({
+	name: z.string(),
+	icon: z.string(),
+	uti: z.array(z.string()),
+	owner: z.boolean(),
+});
+
+/**
+ * iPhone configuration schema
+ */
+export const IPhoneSchema = z.object({
+	orientations: IPhoneOrientationsSchema,
+	backgroundModes: z.array(z.string()).optional(),
+	requiredFeatures: z.array(z.string()).optional(),
+	types: z.array(IPhoneTypeSchema).optional(),
+}).optional();
+
+/**
+ * Android activity/service schema
+ */
+const AndroidActivityServiceSchema = z.record(z.any());
+
+/**
+ * Android configuration schema
+ */
+export const AndroidSchema = z.object({
+	manifest: OptionalStringSchema,
+	toolAPILevel: NumberSchema.optional(),
+	abi: z.union([z.array(z.string()), z.string()]).optional(),
+	activities: AndroidActivityServiceSchema.optional(),
+	services: AndroidActivityServiceSchema.optional(),
+}).optional();
+
+/**
+ * Plugin schema
+ */
+const PluginSchema = z.object({
+	id: z.string(),
+	version: z.union([z.string(), z.number()]).optional(),
+});
+
+/**
+ * Plugins schema
+ */
+const PluginsSchema = z.array(PluginSchema).optional();
+
+/**
+ * Code processor schema
+ */
+const CodeProcessorSchema = z.object({
+	enabled: BooleanSchema.optional(),
+	plugins: z.array(z.string()).optional(),
+	options: z.record(z.any()).optional(),
+}).optional();
+
+/**
+ * Webpack configuration schema
+ */
+const WebpackSchema = z.object({
+	type: z.string().optional(),
+	transpileDependencies: z.array(z.string()).optional(),
+}).optional();
+
+/**
+ * Platform-specific ID schema
+ */
+const PlatformIdSchema = z.union([
+	z.string(),
+	z.object({
+		default: z.string().optional(),
+		android: z.string().optional(),
+		ios: z.string().optional(),
+		iphone: z.string().optional(),
+		ipad: z.string().optional(),
+		mobileweb: z.string().optional(),
+		windows: z.string().optional(),
+	}),
+]);
+
+/**
+ * Main Tiapp schema
+ */
+export const TiappSchema = z.object({
+	id: PlatformIdSchema.optional(),
+	name: OptionalStringSchema,
+	version: OptionalStringSchema,
+	publisher: OptionalStringSchema,
+	url: OptionalStringSchema,
+	description: OptionalStringSchema,
+	copyright: OptionalStringSchema,
+	icon: OptionalStringSchema,
+	fullscreen: BooleanSchema.optional(),
+	navbarHidden: BooleanSchema.optional(),
+	analytics: BooleanSchema.optional(),
+	guid: OptionalStringSchema,
+	persistentWifi: BooleanSchema.optional(),
+	prerenderedIcon: BooleanSchema.optional(),
+	statusbarStyle: OptionalStringSchema,
+	statusbarHidden: BooleanSchema.optional(),
+	sdkVersion: OptionalStringSchema,
+	properties: PropertiesSchema,
+	deploymentTargets: DeploymentTargetsSchema,
+	modules: ModulesSchema,
+	plugins: PluginsSchema,
+	ios: IOSSchema,
+	iphone: IPhoneSchema,
+	android: AndroidSchema,
+	codeProcessor: CodeProcessorSchema,
+	webpack: WebpackSchema,
+}).partial();
+
+/**
+ * Infer TypeScript types from schemas
+ */
+export type PropertyValue = z.infer<typeof PropertyValueSchema>;
+export type Module = z.infer<typeof ModuleSchema>;
+export type IOSConfig = z.infer<typeof IOSSchema>;
+export type IPhoneConfig = z.infer<typeof IPhoneSchema>;
+export type AndroidConfig = z.infer<typeof AndroidSchema>;
+export type Tiapp = z.infer<typeof TiappSchema>;

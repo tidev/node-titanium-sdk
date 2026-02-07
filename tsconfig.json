@@ -7,7 +7,7 @@
     "esModuleInterop": false,
     "forceConsistentCasingInFileNames": true,
     "inlineSources": false,
-    "isolatedDeclarations": true,
+    "isolatedDeclarations": false,
     "isolatedModules": true,
     "lib": ["esnext"],
     "module": "esnext",
