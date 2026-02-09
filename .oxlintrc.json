@@ -7,6 +7,9 @@
   "ignorePatterns": [
     "coverage/**",
     "dist/**",
-    "test/resources/**"
+    "lib/**",
+    "test/resources/**",
+    "test/**/mocks/**",
+    "test-old/**"
   ]
 }

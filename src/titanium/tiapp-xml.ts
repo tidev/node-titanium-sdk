@@ -4,11 +4,8 @@ import path from 'node:path';
 import { isFile } from '../util/is-file.js';
 import * as xml from '../util/xml.js';
 import {
-	collectAllElements,
 	createRootProxy,
-	findElement,
 	toCamelCase,
-	toXmlTag,
 } from './tiapp-proxy.js';
 import { TiappSchema, type Tiapp } from './tiapp-schema.js';
 
@@ -29,9 +26,8 @@ export interface TiappXMLMethods {
 	load(file: string): TiappXMLProxy;
 	parse(content: string): TiappXMLProxy;
 	save(file: string): TiappXMLProxy;
-	toXML(): string;
 	toJSON(): Record<string, any>;
-	toString(format?: 'xml' | 'json' | 'pretty-json'): string;
+	toString(): string;
 }
 
 /**
@@ -150,7 +146,7 @@ class TiappXMLImpl {
 					// Regular property (no platform variants)
 					try {
 						result[camelKey] = this.proxy[camelKey];
-					} catch (e) {
+					} catch {
 						// Fallback to string value if proxy access fails
 						result[camelKey] = xml.getValueString(elem);
 					}

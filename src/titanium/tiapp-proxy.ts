@@ -195,7 +195,7 @@ export function collectAllElements(doc: Document): string[] {
 export function createPlatformProxy(
 	doc: Document,
 	tagName: string,
-	instance: any,
+	_instance: any,
 ): any {
 	const handler = {
 		get(_target: any, platform: string) {
@@ -241,7 +241,7 @@ export function createArrayProxy(
 	doc: Document,
 	containerTag: string,
 	itemTag: string,
-	instance: any,
+	_instance: any,
 ): any[] {
 	const getModules = (): any[] => {
 		const modules: any[] = [];
@@ -375,7 +375,9 @@ export function createArrayProxy(
 			if (prop === 'splice') {
 				return (start: number, deleteCount?: number, ...items: any[]) => {
 					const current = getModules();
-					const deleted = current.splice(start, deleteCount, ...items);
+					const deleted = deleteCount !== undefined
+						? current.splice(start, deleteCount, ...items)
+						: current.splice(start);
 					syncToDOM(current);
 					return deleted;
 				};
@@ -416,7 +418,7 @@ export function createRecordProxy(
 	doc: Document,
 	containerTag: string,
 	itemTag: string,
-	instance: any,
+	_instance: any,
 ): any {
 	const handler = {
 		get(_target: any, propName: string | symbol) {
@@ -537,7 +539,7 @@ export function createNestedObjectProxy(
 	doc: Document,
 	parentTag: string,
 	childTag: string,
-	instance: any,
+	_instance: any,
 ): any {
 	const handler = {
 		get(_target: any, prop: string | symbol) {
@@ -559,7 +561,7 @@ export function createNestedObjectProxy(
 			return undefined;
 		},
 
-		set(_target: any, prop: string | symbol, value: any) {
+		set(_target: any, prop: string | symbol, _value: any) {
 			if (typeof prop === 'symbol') return false;
 
 			// This would require reconstructing the plist dict structure
@@ -578,7 +580,7 @@ export function createRootProxy(instance: any, schema?: ZodSchema): any {
 	const handler: ProxyHandler<any> = {
 		get(target: any, prop: string | symbol) {
 			// Return methods directly
-			if (prop === 'save' || prop === 'toString' || prop === 'parse' || prop === 'load' || prop === 'toJSON' || prop === 'toXML') {
+			if (prop === 'save' || prop === 'toString' || prop === 'parse' || prop === 'load' || prop === 'toJSON') {
 				return target[prop].bind(target);
 			}
 
@@ -602,28 +604,15 @@ export function createRootProxy(instance: any, schema?: ZodSchema): any {
 				return createArrayProxy(doc, 'modules', 'module', instance);
 			}
 
-			// Check if there are platform-specific variants
-			const elements = findElements(doc, xmlTag);
-			const hasPlatformVariants = elements.some((e) => e.getAttribute('platform'));
+		// Check if there are platform-specific variants
+		const elements = findElements(doc, xmlTag);
+		const hasPlatformVariants = elements.some((e) => e.getAttribute('platform'));
 
-			if (hasPlatformVariants) {
-				// Return a value that can be accessed as string or object
-				const defaultElem = findElement(doc, xmlTag);
-				const value = defaultElem ? parseValue(defaultElem) : undefined;
-
-				// Create a platform proxy
-				const platformProxy = createPlatformProxy(doc, xmlTag, instance);
-
-				// Make it callable to return the default value
-				return new Proxy(platformProxy, {
-					get(target, p) {
-						if (p === 'default' || p === 'valueOf' || p === 'toString') {
-							return () => value;
-						}
-						return target[p];
-					},
-				});
-			}
+		if (hasPlatformVariants) {
+			// Return the default value (non-platform-specific element)
+			const defaultElem = findElement(doc, xmlTag);
+			return defaultElem ? parseValue(defaultElem) : undefined;
+		}
 
 			// Find element
 			const elem = findElement(doc, xmlTag);
@@ -662,10 +651,13 @@ export function createRootProxy(instance: any, schema?: ZodSchema): any {
 			const doc = target.dom;
 
 			// Validate if schema provided
-			if (schema) {
-				const result = schema.shape[prop]?.safeParse(value);
-				if (result && !result.success) {
-					throw new Error(`Validation failed for ${String(prop)}: ${result.error.message}`);
+			if (schema && 'shape' in schema) {
+				const propSchema = (schema as any).shape[prop];
+				if (propSchema) {
+					const result = propSchema.safeParse(value);
+					if (!result.success) {
+						throw new Error(`Validation failed for ${String(prop)}: ${result.error.message}`);
+					}
 				}
 			}
 
@@ -702,7 +694,7 @@ export function createRootProxy(instance: any, schema?: ZodSchema): any {
 			// Methods are not enumerable
 			if (
 				prop === 'load' || prop === 'save' || prop === 'toString' || prop === 'parse'
-				|| prop === 'toJSON' || prop === 'toXML' || prop === 'dom' || prop === 'proxy'
+				|| prop === 'toJSON' || prop === 'dom' || prop === 'proxy'
 			) {
 				return undefined;
 			}
@@ -730,7 +722,7 @@ export function createRootProxy(instance: any, schema?: ZodSchema): any {
 /**
  * Create iOS configuration proxy
  */
-function createIOSProxy(doc: Document, instance: any): any {
+function createIOSProxy(doc: Document, _instance: any): any {
 	const handler = {
 		get(_target: any, prop: string | symbol) {
 			if (typeof prop === 'symbol') return undefined;
@@ -828,7 +820,7 @@ function createIOSProxy(doc: Document, instance: any): any {
 			return undefined;
 		},
 
-		set(_target: any, prop: string | symbol, value: any) {
+		set(_target: any, prop: string | symbol, _value: any) {
 			if (typeof prop === 'symbol') return false;
 			// Implement iOS property setting
 			return true;
@@ -841,7 +833,7 @@ function createIOSProxy(doc: Document, instance: any): any {
 /**
  * Create Android configuration proxy
  */
-function createAndroidProxy(doc: Document, instance: any): any {
+function createAndroidProxy(doc: Document, _instance: any): any {
 	const handler = {
 		get(_target: any, prop: string | symbol) {
 			if (typeof prop === 'symbol') return undefined;
@@ -849,10 +841,16 @@ function createAndroidProxy(doc: Document, instance: any): any {
 			const androidElem = findElement(doc, 'android');
 			if (!androidElem) return undefined;
 
-			const xmlTag = toXmlTag(prop);
+			// Special handling for toolAPILevel (normalize to toolApiLevel)
+			let normalizedProp = prop;
+			if (prop === 'toolAPILevel') {
+				normalizedProp = 'toolApiLevel';
+			}
+
+			const xmlTag = toXmlTag(normalizedProp);
 
 			// Special handling for manifest
-			if (prop === 'manifest') {
+			if (normalizedProp === 'manifest') {
 				const manifestElem = androidElem.getElementsByTagName('manifest')[0];
 				if (!manifestElem) return undefined;
 
@@ -863,7 +861,7 @@ function createAndroidProxy(doc: Document, instance: any): any {
 			}
 
 			// Special handling for abi
-			if (prop === 'abi') {
+			if (normalizedProp === 'abi') {
 				const abiElem = androidElem.getElementsByTagName('abi')[0];
 				if (!abiElem) return undefined;
 
@@ -877,8 +875,8 @@ function createAndroidProxy(doc: Document, instance: any): any {
 					const elem = child as Element;
 					if (elem.tagName === xmlTag) {
 						const value = xml.getValueString(elem);
-						// Try to parse as number for toolAPILevel
-						if (prop === 'toolAPILevel' || prop === 'toolApiLevel') {
+						// Try to parse as number for toolAPILevel/toolApiLevel
+						if (normalizedProp === 'toolApiLevel') {
 							const num = Number.parseFloat(value);
 							return isNaN(num) ? undefined : num;
 						}
@@ -891,7 +889,7 @@ function createAndroidProxy(doc: Document, instance: any): any {
 			return undefined;
 		},
 
-		set(_target: any, prop: string | symbol, value: any) {
+		set(_target: any, prop: string | symbol, _value: any) {
 			if (typeof prop === 'symbol') return false;
 			// Implement Android property setting
 			return true;
@@ -904,7 +902,7 @@ function createAndroidProxy(doc: Document, instance: any): any {
 /**
  * Create iPhone configuration proxy
  */
-function createIPhoneProxy(doc: Document, instance: any): any {
+function createIPhoneProxy(doc: Document, _instance: any): any {
 	const handler = {
 		get(_target: any, prop: string | symbol) {
 			if (typeof prop === 'symbol') return undefined;
@@ -991,7 +989,7 @@ function createIPhoneProxy(doc: Document, instance: any): any {
 			return undefined;
 		},
 
-		set(_target: any, prop: string | symbol, value: any) {
+		set(_target: any, prop: string | symbol, _value: any) {
 			if (typeof prop === 'symbol') return false;
 			// Implement iPhone property setting
 			return true;
@@ -1004,7 +1002,7 @@ function createIPhoneProxy(doc: Document, instance: any): any {
 /**
  * Create deployment targets proxy
  */
-function createDeploymentTargetsProxy(doc: Document, instance: any): any {
+function createDeploymentTargetsProxy(doc: Document, _instance: any): any {
 	const handler = {
 		get(_target: any, prop: string | symbol) {
 			if (typeof prop === 'symbol') return undefined;
@@ -1029,7 +1027,7 @@ function createDeploymentTargetsProxy(doc: Document, instance: any): any {
 			return undefined;
 		},
 
-		set(_target: any, prop: string | symbol, value: any) {
+		set(_target: any, prop: string | symbol, _value: any) {
 			if (typeof prop === 'symbol') return false;
 			// Implement deployment target setting
 			return true;

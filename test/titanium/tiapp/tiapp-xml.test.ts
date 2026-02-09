@@ -35,7 +35,7 @@ describe('TiappXML', () => {
 			tiapp.name = 'newname';
 			expect(tiapp.name).toBe('newname');
 
-			const xml = tiapp.toString('xml');
+			const xml = tiapp.toString();
 			expect(xml).toContain('<name>newname</name>');
 		});
 
@@ -79,189 +79,189 @@ describe('TiappXML', () => {
 
 			const tiapp = new TiappXML().parse(xml);
 
-			expect(tiapp.id).toBeDefined();
+			expect(tiapp.id).toBe('com.example.app');
 			// Platform access through nested proxy
 			// expect(tiapp.id.android).toBe('com.example.android');
 		});
 
-		it('should create platform-specific properties', () => {
-			const tiapp = new TiappXML().parse(`<?xml version="1.0"?>
+	it('should create platform-specific properties', () => {
+		const _tiapp = new TiappXML().parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
 	<id>com.example.app</id>
 </ti:app>`);
 
-			// This would need additional implementation in the proxy
-			// tiapp.id.ios = 'com.example.ios';
-			// expect(tiapp.toString()).toContain('<id platform="ios">com.example.ios</id>');
-		});
+		// This would need additional implementation in the proxy
+		// _tiapp.id.ios = 'com.example.ios';
+		// expect(_tiapp.toString()).toContain('<id platform="ios">com.example.ios</id>');
+	});
 	});
 
 	describe('Modules Array', () => {
-		it('should read modules array', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read modules array', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.modules).toBeDefined();
-			expect(Array.isArray(tiapp.modules)).toBe(true);
-			expect(tiapp.modules.length).toBeGreaterThan(0);
-		});
+		expect(tiapp.modules).toBeDefined();
+		expect(Array.isArray(tiapp.modules)).toBe(true);
+		expect(tiapp.modules!.length).toBeGreaterThan(0);
+	});
 
-		it('should handle module properties', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should handle module properties', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			const firstModule = tiapp.modules[0];
-			expect(firstModule).toBeDefined();
-			expect(firstModule.id).toBe('ti.alltest');
-			expect(firstModule.version).toBe('1.2.3');
-		});
+		const firstModule = tiapp.modules![0];
+		expect(firstModule).toBeDefined();
+		expect(firstModule.id).toBe('ti.alltest');
+		expect(firstModule.version).toBe('1.2.3');
+	});
 
-		it('should add modules', () => {
-			const tiapp = new TiappXML().parse(`<?xml version="1.0"?>
+	it('should add modules', () => {
+		const tiapp = new TiappXML().parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
 	<id>test</id>
 	<modules></modules>
 </ti:app>`);
 
-			tiapp.modules.push({ id: 'ti.test', platform: 'android', version: '1.0' });
-			expect(tiapp.modules.length).toBe(1);
+		tiapp.modules!.push({ id: 'ti.test', platform: 'android', version: '1.0' });
+		expect(tiapp.modules!.length).toBe(1);
 
-			const xml = tiapp.toString();
-			expect(xml).toContain('ti.test');
-		});
+		const xml = tiapp.toString();
+		expect(xml).toContain('ti.test');
+	});
 
-		it('should remove modules', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should remove modules', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			const initialLength = tiapp.modules.length;
-			tiapp.modules.pop();
-			expect(tiapp.modules.length).toBe(initialLength - 1);
-		});
+		const initialLength = tiapp.modules!.length;
+		tiapp.modules!.pop();
+		expect(tiapp.modules!.length).toBe(initialLength - 1);
+	});
 	});
 
 	describe('Properties (Key-Value)', () => {
-		it('should read properties', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read properties', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			const prop = tiapp.properties['ti.ui.defaultunit'];
-			expect(prop).toBeDefined();
-			expect(prop.type).toBe('string');
-			expect(prop.value).toBe('system');
-		});
+		const prop = tiapp.properties!['ti.ui.defaultunit'];
+		expect(prop).toBeDefined();
+		expect(prop.type).toBe('string');
+		expect(prop.value).toBe('system');
+	});
 
-		it('should handle boolean properties', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should handle boolean properties', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			const prop = tiapp.properties['ti.android.debug'];
-			expect(prop).toBeDefined();
-			expect(prop.type).toBe('bool');
-			expect(prop.value).toBe(true);
-		});
+		const prop = tiapp.properties!['ti.android.debug'];
+		expect(prop).toBeDefined();
+		expect(prop.type).toBe('bool');
+		expect(prop.value).toBe(true);
+	});
 
-		it('should add properties', () => {
-			const tiapp = new TiappXML().parse(`<?xml version="1.0"?>
+	it('should add properties', () => {
+		const tiapp = new TiappXML().parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
 	<id>test</id>
 </ti:app>`);
 
-			tiapp.properties['my.prop'] = { type: 'string', value: 'test' };
-			expect(tiapp.properties['my.prop'].value).toBe('test');
+		tiapp.properties!['my.prop'] = { type: 'string', value: 'test' };
+		expect(tiapp.properties!['my.prop'].value).toBe('test');
 
-			const xml = tiapp.toString();
-			expect(xml).toContain('name="my.prop"');
-		});
+		const xml = tiapp.toString();
+		expect(xml).toContain('name="my.prop"');
+	});
 
-		it('should delete properties', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should delete properties', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.properties['ti.ui.defaultunit']).toBeDefined();
-			delete tiapp.properties['ti.ui.defaultunit'];
-			expect(tiapp.properties['ti.ui.defaultunit']).toBeUndefined();
-		});
+		expect(tiapp.properties!['ti.ui.defaultunit']).toBeDefined();
+		delete tiapp.properties!['ti.ui.defaultunit'];
+		expect(tiapp.properties!['ti.ui.defaultunit']).toBeUndefined();
+	});
 	});
 
 	describe('iOS Configuration', () => {
-		it('should read iOS config', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read iOS config', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.ios).toBeDefined();
-			// minIosVer is stored as string in XML
-			expect(tiapp.ios.minIosVer).toBe('5.0');
-			expect(tiapp.ios.teamId).toBe('foo');
-		});
+		expect(tiapp.ios).toBeDefined();
+		// minIosVer is stored as string in XML
+		expect(tiapp.ios!.minIosVer).toBe('5.0');
+		expect(tiapp.ios!.teamId).toBe('foo');
+	});
 
-		it('should read iOS plist', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read iOS plist', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.ios.plist).toBeDefined();
-			expect(typeof tiapp.ios.plist).toBe('object');
-		});
+		expect(tiapp.ios!.plist).toBeDefined();
+		expect(typeof tiapp.ios!.plist).toBe('object');
+	});
 
-		it('should read iOS capabilities', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read iOS capabilities', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.ios.capabilities).toBeDefined();
-			expect(tiapp.ios.capabilities['app-groups']).toBeDefined();
-			expect(Array.isArray(tiapp.ios.capabilities['app-groups'])).toBe(true);
-		});
+		expect(tiapp.ios!.capabilities).toBeDefined();
+		expect(tiapp.ios!.capabilities!['app-groups']).toBeDefined();
+		expect(Array.isArray(tiapp.ios!.capabilities!['app-groups'])).toBe(true);
+	});
 	});
 
 	describe('Android Configuration', () => {
-		it('should read Android config', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read Android config', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.android).toBeDefined();
-			// The XML tag is 'tool-api-level' which converts to 'toolApiLevel'
-			expect(tiapp.android.toolApiLevel).toBe(10);
-		});
+		expect(tiapp.android).toBeDefined();
+		// The XML tag is 'tool-api-level' which converts to 'toolAPILevel'
+		expect(tiapp.android!.toolAPILevel).toBe(10);
+	});
 
-		it('should read Android ABI as array', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read Android ABI as array', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.android.abi).toBeDefined();
-			expect(Array.isArray(tiapp.android.abi)).toBe(true);
-			expect(tiapp.android.abi.length).toBeGreaterThan(0);
-		});
+		expect(tiapp.android!.abi).toBeDefined();
+		expect(Array.isArray(tiapp.android!.abi)).toBe(true);
+		expect(tiapp.android!.abi!.length).toBeGreaterThan(0);
+	});
 
-		it('should read Android manifest', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read Android manifest', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.android.manifest).toBeDefined();
-			expect(typeof tiapp.android.manifest).toBe('string');
-		});
+		expect(tiapp.android!.manifest).toBeDefined();
+		expect(typeof tiapp.android!.manifest).toBe('string');
+	});
 	});
 
 	describe('iPhone Configuration', () => {
-		it('should read iPhone orientations', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read iPhone orientations', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.iphone).toBeDefined();
-			expect(tiapp.iphone.orientations).toBeDefined();
-			expect(tiapp.iphone.orientations.iphone).toBeDefined();
-			expect(Array.isArray(tiapp.iphone.orientations.iphone)).toBe(true);
-		});
+		expect(tiapp.iphone).toBeDefined();
+		expect(tiapp.iphone!.orientations).toBeDefined();
+		expect(tiapp.iphone!.orientations!.iphone).toBeDefined();
+		expect(Array.isArray(tiapp.iphone!.orientations!.iphone)).toBe(true);
+	});
 
-		it('should read iPhone background modes', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read iPhone background modes', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.iphone.backgroundModes).toBeDefined();
-			expect(Array.isArray(tiapp.iphone.backgroundModes)).toBe(true);
-		});
+		expect(tiapp.iphone!.backgroundModes).toBeDefined();
+		expect(Array.isArray(tiapp.iphone!.backgroundModes)).toBe(true);
+	});
 
-		it('should read iPhone required features', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read iPhone required features', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.iphone.requiredFeatures).toBeDefined();
-			expect(Array.isArray(tiapp.iphone.requiredFeatures)).toBe(true);
-		});
+		expect(tiapp.iphone!.requiredFeatures).toBeDefined();
+		expect(Array.isArray(tiapp.iphone!.requiredFeatures)).toBe(true);
+	});
 	});
 
 	describe('Deployment Targets', () => {
-		it('should read deployment targets', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+	it('should read deployment targets', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
-			expect(tiapp.deploymentTargets).toBeDefined();
-			expect(tiapp.deploymentTargets.iphone).toBeDefined();
-			expect(tiapp.deploymentTargets.android).toBeDefined();
-		});
+		expect(tiapp.deploymentTargets).toBeDefined();
+		expect(tiapp.deploymentTargets!.iphone).toBeDefined();
+		expect(tiapp.deploymentTargets!.android).toBeDefined();
+	});
 	});
 
 	describe('Whitespace Preservation', () => {
@@ -280,18 +280,17 @@ describe('TiappXML', () => {
 			expect(output).toContain('\n\t<version>1.0.0</version>');
 		});
 
-		it('should preserve existing formatting', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
-			const originalXml = tiapp.toString();
+	it('should preserve existing formatting', () => {
+		const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
 
-			// Make a change
-			const currentName = tiapp.name;
-			tiapp.name = currentName; // Set to same value
+		// Make a change
+		const currentName = tiapp.name;
+		tiapp.name = currentName; // Set to same value
 
-			const newXml = tiapp.toString();
-			// Structure should remain similar (whitespace preserved)
-			expect(newXml.split('\n').length).toBeGreaterThan(5);
-		});
+		const newXml = tiapp.toString();
+		// Structure should remain similar (whitespace preserved)
+		expect(newXml.split('\n').length).toBeGreaterThan(5);
+	});
 	});
 
 	describe('JSON Serialization', () => {
@@ -381,19 +380,19 @@ describe('TiappXML', () => {
 			expect(tiapp.name).toBeUndefined();
 		});
 
-		it('should handle numeric values', () => {
-			const tiapp = new TiappXML().parse(`<?xml version="1.0"?>
+	it('should handle numeric values', () => {
+		const tiapp = new TiappXML().parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
 	<id>test</id>
 </ti:app>`);
 
-			tiapp.version = 2.0;
-			// XML stores everything as strings
-			expect(tiapp.version).toBe('2');
+		tiapp.version = '2.0';
+		// XML stores everything as strings
+		expect(tiapp.version).toBe('2.0');
 
-			const xml = tiapp.toString();
-			expect(xml).toContain('<version>2</version>');
-		});
+		const xml = tiapp.toString();
+		expect(xml).toContain('<version>2.0</version>');
+	});
 
 		it('should handle boolean values', () => {
 			const tiapp = new TiappXML().parse(`<?xml version="1.0"?>

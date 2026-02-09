@@ -3,7 +3,6 @@ import { z } from 'zod';
 /**
  * Coerce values to strings for XML text content
  */
-const StringSchema = z.union([z.string(), z.number()]).transform((val) => String(val));
 const OptionalStringSchema = z.union([z.string(), z.number()]).transform((val) => String(val)).optional();
 
 /**
