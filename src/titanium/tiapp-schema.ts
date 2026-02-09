@@ -40,7 +40,7 @@ export const PropertyValueSchema = z.object({
 /**
  * Properties schema - record of property name to property value
  */
-export const PropertiesSchema = z.record(PropertyValueSchema).optional();
+export const PropertiesSchema = z.record(z.string(), PropertyValueSchema).optional();
 
 /**
  * Module schema for <module> elements
@@ -60,7 +60,7 @@ export const ModulesSchema = z.array(ModuleSchema).optional();
 /**
  * Deployment target schema
  */
-export const DeploymentTargetsSchema = z.record(z.union([z.boolean(), z.string()])).optional();
+export const DeploymentTargetsSchema = z.record(z.string(), z.union([z.boolean(), z.string()])).optional();
 
 /**
  * iOS capabilities schema
@@ -74,7 +74,7 @@ export const IOSCapabilitiesSchema = z.object({
  */
 const IOSExtensionTargetSchema = z.object({
 	name: z.string(),
-	ppUUIDs: z.record(z.string()).optional(),
+	ppUUIDs: z.record(z.string(), z.string()).optional(),
 });
 
 /**
@@ -103,15 +103,15 @@ export const IOSSchema = z.object({
 	useAppThinning: BooleanSchema.optional(),
 	logServerPort: z.union([z.number(), z.string()]).optional(),
 	capabilities: IOSCapabilitiesSchema,
-	entitlements: z.record(z.any()).optional(),
-	plist: z.record(z.any()).optional(),
+	entitlements: z.record(z.string(), z.any()).optional(),
+	plist: z.record(z.string(), z.any()).optional(),
 	extensions: z.array(IOSExtensionSchema).optional(),
 }).optional();
 
 /**
  * iPhone orientations schema
  */
-const IPhoneOrientationsSchema = z.record(z.array(z.string()));
+const IPhoneOrientationsSchema = z.record(z.string(), z.array(z.string()));
 
 /**
  * iPhone type schema
@@ -136,7 +136,7 @@ export const IPhoneSchema = z.object({
 /**
  * Android activity/service schema
  */
-const AndroidActivityServiceSchema = z.record(z.any());
+const AndroidActivityServiceSchema = z.record(z.string(), z.any());
 
 /**
  * Android configuration schema
@@ -168,7 +168,7 @@ const PluginsSchema = z.array(PluginSchema).optional();
 const CodeProcessorSchema = z.object({
 	enabled: BooleanSchema.optional(),
 	plugins: z.array(z.string()).optional(),
-	options: z.record(z.any()).optional(),
+	options: z.record(z.string(), z.any()).optional(),
 }).optional();
 
 /**
