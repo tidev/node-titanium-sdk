@@ -94,7 +94,9 @@ export function detectIndentation(doc: Document): string {
  */
 export function removeElement(elem: Element): void {
 	const parent = elem.parentNode;
-	if (!parent) return;
+	if (!parent) {
+		return;
+	}
 
 	// Remove preceding whitespace text node if it exists
 	const prevSibling = elem.previousSibling;
@@ -604,15 +606,15 @@ export function createRootProxy(instance: any, schema?: ZodSchema): any {
 				return createArrayProxy(doc, 'modules', 'module', instance);
 			}
 
-		// Check if there are platform-specific variants
-		const elements = findElements(doc, xmlTag);
-		const hasPlatformVariants = elements.some((e) => e.getAttribute('platform'));
+			// Check if there are platform-specific variants
+			const elements = findElements(doc, xmlTag);
+			const hasPlatformVariants = elements.some((e) => e.getAttribute('platform'));
 
-		if (hasPlatformVariants) {
-			// Return the default value (non-platform-specific element)
-			const defaultElem = findElement(doc, xmlTag);
-			return defaultElem ? parseValue(defaultElem) : undefined;
-		}
+			if (hasPlatformVariants) {
+				// Return the default value (non-platform-specific element)
+				const defaultElem = findElement(doc, xmlTag);
+				return defaultElem ? parseValue(defaultElem) : undefined;
+			}
 
 			// Find element
 			const elem = findElement(doc, xmlTag);
