@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { TiappXML } from '../../../src/titanium/tiapp-xml.js';
+import { rm } from 'node:fs/promises';
 
 const fixturesDir = join(fileURLToPath(import.meta.url), '../fixtures');
 
@@ -17,6 +18,21 @@ describe('TiappXML', () => {
 			expect(tiapp.id).toBe('ti.testapp');
 			expect(tiapp.name).toBe('testapp');
 			expect(tiapp.version).toBe('1.0');
+			expect(tiapp.publisher).toBe('tester');
+			expect(tiapp.url).toBe('https://titaniumsdk.com');
+			expect(tiapp.description).toBe('not specified');
+			expect(tiapp.copyright).toBe('2022 by tester');
+			expect(tiapp.icon).toBe('appicon.png');
+			expect(tiapp.persistentWifi).toBe(false);
+			expect(tiapp.prerenderedIcon).toBe(false);
+			expect(tiapp.statusbarStyle).toBe('default');
+			expect(tiapp.statusbarHidden).toBe(false);
+			expect(tiapp.guid).toBe('088dc83c-64af-4a81-b57c-7407649453f0');
+			expect(tiapp.modules).toBeDefined();
+			expect(Array.isArray(tiapp.modules)).toBe(true);
+			expect(tiapp.modules!.length).toBe(0);
+			expect(tiapp.android).toBeDefined();
+			expect(tiapp.ios).toBeDefined();
 		});
 
 		it('should handle missing properties', () => {
@@ -229,37 +245,11 @@ describe('TiappXML', () => {
 		});
 	});
 
-	describe('iPhone Configuration', () => {
-		it('should read iPhone orientations', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
-
-			expect(tiapp.iphone).toBeDefined();
-			expect(tiapp.iphone!.orientations).toBeDefined();
-			expect(tiapp.iphone!.orientations!.iphone).toBeDefined();
-			expect(Array.isArray(tiapp.iphone!.orientations!.iphone)).toBe(true);
-		});
-
-		it('should read iPhone background modes', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
-
-			expect(tiapp.iphone!.backgroundModes).toBeDefined();
-			expect(Array.isArray(tiapp.iphone!.backgroundModes)).toBe(true);
-		});
-
-		it('should read iPhone required features', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
-
-			expect(tiapp.iphone!.requiredFeatures).toBeDefined();
-			expect(Array.isArray(tiapp.iphone!.requiredFeatures)).toBe(true);
-		});
-	});
-
 	describe('Deployment Targets', () => {
 		it('should read deployment targets', () => {
 			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 
 			expect(tiapp.deploymentTargets).toBeDefined();
-			expect(tiapp.deploymentTargets!.iphone).toBeDefined();
 			expect(tiapp.deploymentTargets!.android).toBeDefined();
 		});
 	});
@@ -400,12 +390,12 @@ describe('TiappXML', () => {
 	<id>test</id>
 </ti:app>`);
 
-			tiapp.fullscreen = true;
+			tiapp.persistentWifi = true;
 			// XML stores everything as strings
-			expect(tiapp.fullscreen).toBe('true');
+			expect(tiapp.persistentWifi).toBe(true);
 
 			const xml = tiapp.toString();
-			expect(xml).toContain('<fullscreen>true</fullscreen>');
+			expect(xml).toContain('<persistent-wifi>true</persistent-wifi>');
 		});
 
 		it('should error if file does not exist', () => {
@@ -417,6 +407,10 @@ describe('TiappXML', () => {
 	});
 
 	describe('Save Operations', () => {
+		afterEach(async () => {
+			await rm('/tmp/test-tiapp.xml', { force: true });
+		});
+
 		it('should save to file', async () => {
 			const tiapp = new TiappXML().parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
@@ -431,6 +425,22 @@ describe('TiappXML', () => {
 			const tiapp2 = new TiappXML().load(tmpFile);
 			expect(tiapp2.id).toBe('test');
 			expect(tiapp2.name).toBe('test');
+		});
+	});
+
+	describe('Errors', () => {
+		it('should error if file does not exist', () => {
+			const tiapp = new TiappXML();
+			expect(() => tiapp.load(join(fixturesDir, 'does_not_exist.xml'))).toThrow(
+				'tiapp.xml file does not exist',
+			);
+		});
+
+		it('should error if file is not a valid XML file', () => {
+			const tiapp = new TiappXML();
+			expect(() => tiapp.load(join(fixturesDir, 'invalid.xml'))).toThrow(
+				'Invalid XML file',
+			);
 		});
 	});
 });

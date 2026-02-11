@@ -3,10 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { isFile } from '../util/is-file.js';
 import * as xml from '../util/xml.js';
-import {
-	createRootProxy,
-	toCamelCase,
-} from './tiapp-proxy.js';
+import { createRootProxy, toCamelCase } from './tiapp-proxy.js';
 import { TiappSchema, type Tiapp } from './tiapp-schema.js';
 
 declare module '@xmldom/xmldom' {
@@ -72,7 +69,19 @@ class TiappXMLImpl {
 	}
 
 	parse(content: string): TiappXMLProxy {
-		this.dom = new DOMParser(defaultDOMParserArgs).parseFromString(content, 'text/xml');
+		let errorMsg: string | undefined = undefined;
+		const dom = new DOMParser({
+			errorHandler(err) {
+				errorMsg = err;
+			},
+		}).parseFromString(content, 'text/xml');
+		if (errorMsg) {
+			throw new Error(`Invalid XML file: ${errorMsg}`);
+		}
+		if (!dom) {
+			throw new Error('Invalid XML file');
+		}
+		this.dom = dom;
 		return this.proxy;
 	}
 

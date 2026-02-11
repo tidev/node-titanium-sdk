@@ -1,4 +1,4 @@
-import type { ZodSchema } from 'zod';
+import type { ZodType } from 'zod';
 import { Plist } from '../util/plist.js';
 import * as xml from '../util/xml.js';
 
@@ -170,6 +170,27 @@ export function updateElement(elem: Element, value: any): void {
 export function parseValue(elem: Element): any {
 	const value = xml.getValueString(elem);
 	return value;
+}
+
+/**
+ * Parse and coerce value from element using schema when available
+ */
+function parseValueWithSchema(
+	elem: Element,
+	prop: string,
+	schema?: ZodType,
+): any {
+	const rawValue = parseValue(elem);
+	if (schema && 'shape' in schema) {
+		const propSchema = (schema as { shape: Record<string, ZodType> }).shape[prop];
+		if (propSchema) {
+			const result = propSchema.safeParse(rawValue);
+			if (result.success) {
+				return result.data;
+			}
+		}
+	}
+	return rawValue;
 }
 
 /**
@@ -578,7 +599,7 @@ export function createNestedObjectProxy(
 /**
  * Create the root proxy for TiappXML instance
  */
-export function createRootProxy(instance: any, schema?: ZodSchema): any {
+export function createRootProxy(instance: any, schema?: ZodType): any {
 	const handler: ProxyHandler<any> = {
 		get(target: any, prop: string | symbol) {
 			// Return methods directly
@@ -591,9 +612,10 @@ export function createRootProxy(instance: any, schema?: ZodSchema): any {
 				return target[prop];
 			}
 
-			if (typeof prop === 'symbol') return undefined;
+			if (typeof prop === 'symbol') {
+				return undefined;
+			}
 
-			const xmlTag = toXmlTag(prop);
 			const doc = target.dom;
 
 			// Special handling for properties
@@ -606,39 +628,40 @@ export function createRootProxy(instance: any, schema?: ZodSchema): any {
 				return createArrayProxy(doc, 'modules', 'module', instance);
 			}
 
+			const xmlTag = toXmlTag(prop);
+
 			// Check if there are platform-specific variants
 			const elements = findElements(doc, xmlTag);
 			const hasPlatformVariants = elements.some((e) => e.getAttribute('platform'));
 
 			if (hasPlatformVariants) {
 				// Return the default value (non-platform-specific element)
-				const defaultElem = findElement(doc, xmlTag);
-				return defaultElem ? parseValue(defaultElem) : undefined;
+				const defaultElem = elements.find((e) => !e.getAttribute('platform')) ?? null;
+				return defaultElem ? parseValueWithSchema(defaultElem, prop, schema) : undefined;
 			}
 
-			// Find element
-			const elem = findElement(doc, xmlTag);
-			if (!elem) return undefined;
+			// Reuse elements[0] since we already queried for this tag
+			const elem = elements[0] ?? null;
 
 			// Special handling for complex nested structures
 			if (prop === 'ios') {
-				return createIOSProxy(doc, instance);
+				return elem ? createIOSProxy(doc, instance) : {};
 			}
 
 			if (prop === 'android') {
-				return createAndroidProxy(doc, instance);
-			}
-
-			if (prop === 'iphone') {
-				return createIPhoneProxy(doc, instance);
+				return elem ? createAndroidProxy(doc, instance) : {};
 			}
 
 			if (prop === 'deploymentTargets') {
-				return createDeploymentTargetsProxy(doc, instance);
+				return elem ? createDeploymentTargetsProxy(doc, instance) : {};
 			}
 
-			// Default: return simple value
-			return parseValue(elem);
+			if (!elem) {
+				return undefined;
+			}
+
+			// Default: return simple value, coerced via schema when available
+			return parseValueWithSchema(elem, prop, schema);
 		},
 
 		set(target: any, prop: string | symbol, value: any) {
@@ -730,7 +753,9 @@ function createIOSProxy(doc: Document, _instance: any): any {
 			if (typeof prop === 'symbol') return undefined;
 
 			const iosElem = findElement(doc, 'ios');
-			if (!iosElem) return undefined;
+			if (!iosElem) {
+				return undefined;
+			}
 
 			const xmlTag = toXmlTag(prop);
 
@@ -894,106 +919,6 @@ function createAndroidProxy(doc: Document, _instance: any): any {
 		set(_target: any, prop: string | symbol, _value: any) {
 			if (typeof prop === 'symbol') return false;
 			// Implement Android property setting
-			return true;
-		},
-	};
-
-	return new Proxy({}, handler);
-}
-
-/**
- * Create iPhone configuration proxy
- */
-function createIPhoneProxy(doc: Document, _instance: any): any {
-	const handler = {
-		get(_target: any, prop: string | symbol) {
-			if (typeof prop === 'symbol') return undefined;
-
-			const iphoneElem = findElement(doc, 'iphone');
-			if (!iphoneElem) return undefined;
-
-			// Special handling for orientations
-			if (prop === 'orientations') {
-				const orientations: Record<string, string[]> = {};
-				let child = iphoneElem.firstChild;
-
-				while (child) {
-					if (child.nodeType === xml.ELEMENT_NODE) {
-						const elem = child as Element;
-						if (elem.tagName === 'orientations') {
-							const device = elem.getAttribute('device');
-							if (device) {
-								const orients: string[] = [];
-								let orientChild = elem.firstChild;
-
-								while (orientChild) {
-									if (orientChild.nodeType === xml.ELEMENT_NODE) {
-										const orientElem = orientChild as Element;
-										if (orientElem.tagName === 'orientation') {
-											orients.push(xml.getValueString(orientElem));
-										}
-									}
-									orientChild = orientChild.nextSibling;
-								}
-
-								orientations[device] = orients;
-							}
-						}
-					}
-					child = child.nextSibling;
-				}
-
-				return orientations;
-			}
-
-			// Special handling for backgroundModes
-			if (prop === 'backgroundModes') {
-				const backgroundElem = iphoneElem.getElementsByTagName('background')[0];
-				if (!backgroundElem) return undefined;
-
-				const modes: string[] = [];
-				let child = backgroundElem.firstChild;
-
-				while (child) {
-					if (child.nodeType === xml.ELEMENT_NODE) {
-						const elem = child as Element;
-						if (elem.tagName === 'mode') {
-							modes.push(xml.getValueString(elem));
-						}
-					}
-					child = child.nextSibling;
-				}
-
-				return modes;
-			}
-
-			// Special handling for requiredFeatures
-			if (prop === 'requiredFeatures') {
-				const requiresElem = iphoneElem.getElementsByTagName('requires')[0];
-				if (!requiresElem) return undefined;
-
-				const features: string[] = [];
-				let child = requiresElem.firstChild;
-
-				while (child) {
-					if (child.nodeType === xml.ELEMENT_NODE) {
-						const elem = child as Element;
-						if (elem.tagName === 'feature') {
-							features.push(xml.getValueString(elem));
-						}
-					}
-					child = child.nextSibling;
-				}
-
-				return features;
-			}
-
-			return undefined;
-		},
-
-		set(_target: any, prop: string | symbol, _value: any) {
-			if (typeof prop === 'symbol') return false;
-			// Implement iPhone property setting
 			return true;
 		},
 	};

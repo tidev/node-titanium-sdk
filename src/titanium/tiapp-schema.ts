@@ -59,7 +59,10 @@ export const ModulesSchema = z.array(ModuleSchema).optional();
 /**
  * Deployment target schema
  */
-export const DeploymentTargetsSchema = z.record(z.string(), z.union([z.boolean(), z.string()])).optional();
+export const DeploymentTargetsSchema = z.record(
+	z.string(),
+	z.union([z.boolean(), z.string()]),
+).optional();
 
 /**
  * iOS capabilities schema
@@ -108,31 +111,6 @@ export const IOSSchema = z.object({
 }).optional();
 
 /**
- * iPhone orientations schema
- */
-const IPhoneOrientationsSchema = z.record(z.string(), z.array(z.string()));
-
-/**
- * iPhone type schema
- */
-const IPhoneTypeSchema = z.object({
-	name: z.string(),
-	icon: z.string(),
-	uti: z.array(z.string()),
-	owner: z.boolean(),
-});
-
-/**
- * iPhone configuration schema
- */
-export const IPhoneSchema = z.object({
-	orientations: IPhoneOrientationsSchema,
-	backgroundModes: z.array(z.string()).optional(),
-	requiredFeatures: z.array(z.string()).optional(),
-	types: z.array(IPhoneTypeSchema).optional(),
-}).optional();
-
-/**
  * Android activity/service schema
  */
 const AndroidActivityServiceSchema = z.record(z.string(), z.any());
@@ -162,15 +140,6 @@ const PluginSchema = z.object({
 const PluginsSchema = z.array(PluginSchema).optional();
 
 /**
- * Code processor schema
- */
-const CodeProcessorSchema = z.object({
-	enabled: BooleanSchema.optional(),
-	plugins: z.array(z.string()).optional(),
-	options: z.record(z.string(), z.any()).optional(),
-}).optional();
-
-/**
  * Webpack configuration schema
  */
 const WebpackSchema = z.object({
@@ -189,8 +158,6 @@ const PlatformIdSchema = z.union([
 		ios: z.string().optional(),
 		iphone: z.string().optional(),
 		ipad: z.string().optional(),
-		mobileweb: z.string().optional(),
-		windows: z.string().optional(),
 	}),
 ]);
 
@@ -220,9 +187,7 @@ export const TiappSchema = z.object({
 	modules: ModulesSchema,
 	plugins: PluginsSchema,
 	ios: IOSSchema,
-	iphone: IPhoneSchema,
 	android: AndroidSchema,
-	codeProcessor: CodeProcessorSchema,
 	webpack: WebpackSchema,
 }).partial();
 
@@ -232,6 +197,5 @@ export const TiappSchema = z.object({
 export type PropertyValue = z.infer<typeof PropertyValueSchema>;
 export type Module = z.infer<typeof ModuleSchema>;
 export type IOSConfig = z.infer<typeof IOSSchema>;
-export type IPhoneConfig = z.infer<typeof IPhoneSchema>;
 export type AndroidConfig = z.infer<typeof AndroidSchema>;
 export type Tiapp = z.infer<typeof TiappSchema>;
