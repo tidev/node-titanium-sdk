@@ -653,7 +653,7 @@ export function createRootProxy(instance: any, schema?: ZodType): any {
 			}
 
 			if (prop === 'deploymentTargets') {
-				return elem ? createDeploymentTargetsProxy(doc, instance) : {};
+				return createDeploymentTargetsProxy(doc, instance);
 			}
 
 			if (!elem) {
