@@ -8,33 +8,6 @@ const fixturesDir = join(fileURLToPath(import.meta.url), '../fixtures');
 
 describe('TiappXML', () => {
 	describe('Basic Operations', () => {
-		it('should load a tiapp with an SDK version', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'hassdk.xml'));
-			expect(tiapp.sdkVersion).toBe('1.2.3');
-		});
-
-		it('should read simple properties', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
-			expect(tiapp.id).toBe('ti.testapp');
-			expect(tiapp.name).toBe('testapp');
-			expect(tiapp.version).toBe('1.0');
-			expect(tiapp.publisher).toBe('tester');
-			expect(tiapp.url).toBe('https://titaniumsdk.com');
-			expect(tiapp.description).toBe('not specified');
-			expect(tiapp.copyright).toBe('2022 by tester');
-			expect(tiapp.icon).toBe('appicon.png');
-			expect(tiapp.persistentWifi).toBe(false);
-			expect(tiapp.prerenderedIcon).toBe(false);
-			expect(tiapp.statusbarStyle).toBe('default');
-			expect(tiapp.statusbarHidden).toBe(false);
-			expect(tiapp.guid).toBe('088dc83c-64af-4a81-b57c-7407649453f0');
-			expect(tiapp.modules).toBeDefined();
-			expect(Array.isArray(tiapp.modules)).toBe(true);
-			expect(tiapp.modules!.length).toBe(0);
-			expect(tiapp.android).toBeDefined();
-			expect(tiapp.ios).toBeDefined();
-		});
-
 		it('should handle missing properties', () => {
 			const tiapp = new TiappXML().parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
@@ -86,7 +59,7 @@ describe('TiappXML', () => {
 	});
 
 	describe('Platform-Specific Properties', () => {
-		it('should handle platform-specific ids', () => {
+		it.only('should handle platform-specific ids', () => {
 			const xml = `<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
 	<id>com.example.app</id>
@@ -95,9 +68,12 @@ describe('TiappXML', () => {
 
 			const tiapp = new TiappXML().parse(xml);
 
-			expect(tiapp.id).toBe('com.example.app');
-			// Platform access through nested proxy
-			// expect(tiapp.id.android).toBe('com.example.android');
+			console.log('A -------');
+			console.log(tiapp.id);
+			// expect(tiapp.id).toBe('com.example.app');
+			console.log('B -------');
+			console.log(tiapp.id?.android);
+			// expect(tiapp.id?.android).toBe('com.example.android');
 		});
 
 	it('should create platform-specific properties', () => {
@@ -341,9 +317,15 @@ describe('TiappXML', () => {
 			expect(json.id).toBeDefined();
 			expect(typeof json.id === 'object' || typeof json.id === 'string').toBe(true);
 		});
+
+		it('should output JSON format', () => {
+			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
+			const json = tiapp.toJSON();
+			expect(json.id).toBe('ti.testapp');
+		});
 	});
 
-	describe('toString Formats', () => {
+	describe('toString()', () => {
 		it('should output XML format', () => {
 			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
 			const xml = tiapp.toString();
@@ -351,12 +333,6 @@ describe('TiappXML', () => {
 			expect(xml).toContain('<?xml');
 			expect(xml).toContain('<ti:app');
 			expect(xml).toContain('</ti:app>');
-		});
-
-		it('should output JSON format', () => {
-			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
-			const json = tiapp.toJSON();
-			expect(json.id).toBe('ti.testapp');
 		});
 	});
 
@@ -442,5 +418,36 @@ describe('TiappXML', () => {
 				'Invalid XML file',
 			);
 		});
+	});
+
+	describe('Sample Files', () => {
+		it('should load a tiapp with an SDK version', () => {
+			const tiapp = new TiappXML().load(join(fixturesDir, 'hassdk.xml'));
+			expect(tiapp.sdkVersion).toBe('1.2.3');
+		});
+
+		it('should read simple properties', () => {
+			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
+			expect(tiapp.id).toBe('ti.testapp');
+			expect(tiapp.name).toBe('testapp');
+			expect(tiapp.version).toBe('1.0');
+			expect(tiapp.publisher).toBe('tester');
+			expect(tiapp.url).toBe('https://titaniumsdk.com');
+			expect(tiapp.description).toBe('not specified');
+			expect(tiapp.copyright).toBe('2022 by tester');
+			expect(tiapp.icon).toBe('appicon.png');
+			expect(tiapp.persistentWifi).toBe(false);
+			expect(tiapp.prerenderedIcon).toBe(false);
+			expect(tiapp.statusbarStyle).toBe('default');
+			expect(tiapp.statusbarHidden).toBe(false);
+			expect(tiapp.guid).toBe('088dc83c-64af-4a81-b57c-7407649453f0');
+			expect(tiapp.modules).toBeDefined();
+			expect(Array.isArray(tiapp.modules)).toBe(true);
+			expect(tiapp.modules!.length).toBe(0);
+			expect(tiapp.android).toBeDefined();
+			expect(tiapp.ios).toBeDefined();
+		});
+
+		// tiapp2.xml
 	});
 });

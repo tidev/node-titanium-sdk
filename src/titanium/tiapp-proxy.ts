@@ -213,7 +213,15 @@ export function collectAllElements(doc: Document): string[] {
 }
 
 /**
+ * Resolve platform for findElement: use undefined for default (no platform attribute)
+ */
+function resolvePlatformForLookup(platform: string): string | undefined {
+	return platform === 'default' ? undefined : platform;
+}
+
+/**
  * Create a platform-specific proxy (e.g., for id.android, id.ios)
+ * Resolves the element without platform attribute for "default", or the matching platform attribute.
  */
 export function createPlatformProxy(
 	doc: Document,
@@ -222,9 +230,20 @@ export function createPlatformProxy(
 ): any {
 	const handler = {
 		get(_target: any, platform: string) {
-			if (typeof platform === 'symbol') return undefined;
+			console.log('platform', platform);
 
-			const elem = findElement(doc, tagName, platform);
+			if (typeof platform === 'symbol') {
+				return undefined;
+			}
+
+			// When used in string context (e.g. `${tiapp.id}`), return the default value
+			if (platform === 'valueOf' || platform === 'toString') {
+				const defaultElem = findElement(doc, tagName, undefined);
+				return () => defaultElem ? parseValue(defaultElem) : '';
+			}
+
+			const lookupPlatform = resolvePlatformForLookup(platform);
+			const elem = findElement(doc, tagName, lookupPlatform);
 			if (elem) {
 				return parseValue(elem);
 			}
@@ -234,11 +253,12 @@ export function createPlatformProxy(
 		set(_target: any, platform: string, value: any) {
 			if (typeof platform === 'symbol') return false;
 
-			let elem = findElement(doc, tagName, platform);
+			const lookupPlatform = resolvePlatformForLookup(platform);
+			let elem = findElement(doc, tagName, lookupPlatform);
 			if (elem) {
 				updateElement(elem, value);
 			} else {
-				elem = createElement(doc, tagName, value, platform);
+				elem = createElement(doc, tagName, value, lookupPlatform);
 			}
 			return true;
 		},
@@ -246,7 +266,8 @@ export function createPlatformProxy(
 		deleteProperty(_target: any, platform: string) {
 			if (typeof platform === 'symbol') return false;
 
-			const elem = findElement(doc, tagName, platform);
+			const lookupPlatform = resolvePlatformForLookup(platform);
+			const elem = findElement(doc, tagName, lookupPlatform);
 			if (elem) {
 				removeElement(elem);
 			}
@@ -630,17 +651,11 @@ export function createRootProxy(instance: any, schema?: ZodType): any {
 
 			const xmlTag = toXmlTag(prop);
 
-			// Check if there are platform-specific variants
-			const elements = findElements(doc, xmlTag);
-			const hasPlatformVariants = elements.some((e) => e.getAttribute('platform'));
-
-			if (hasPlatformVariants) {
-				// Return the default value (non-platform-specific element)
-				const defaultElem = elements.find((e) => !e.getAttribute('platform')) ?? null;
-				return defaultElem ? parseValueWithSchema(defaultElem, prop, schema) : undefined;
+			if (prop === 'id') {
+				return createPlatformProxy(doc, xmlTag, instance);
 			}
 
-			// Reuse elements[0] since we already queried for this tag
+			const elements = findElements(doc, xmlTag);
 			const elem = elements[0] ?? null;
 
 			// Special handling for complex nested structures
