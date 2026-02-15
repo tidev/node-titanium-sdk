@@ -2,8 +2,6 @@ import { DOMParser, type Options } from '@xmldom/xmldom';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { isFile } from '../util/is-file.js';
-import * as xml from '../util/xml.js';
-import { TiappSchema, type Tiapp } from './tiapp-schema.js';
 import { tiappXmlToJson, applyTiappJsonToXml } from './tiapp-transform.js';
 
 declare module '@xmldom/xmldom' {
