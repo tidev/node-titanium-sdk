@@ -14,9 +14,15 @@ const OptionalStringSchema = z
 const BooleanSchema = z
 	.union([z.boolean(), z.literal('true'), z.literal('false'), z.string()])
 	.transform((val) => {
-		if (typeof val === 'boolean') return val;
-		if (val === 'true') return true;
-		if (val === 'false') return false;
+		if (typeof val === 'boolean') {
+			return val;
+		}
+		if (val === 'true') {
+			return true;
+		}
+		if (val === 'false') {
+			return false;
+		}
 		return Boolean(val);
 	});
 
@@ -24,7 +30,9 @@ const BooleanSchema = z
  * Number schema that accepts numbers or numeric strings
  */
 const NumberSchema = z.union([z.number(), z.string()]).transform((val) => {
-	if (typeof val === 'number') return val;
+	if (typeof val === 'number') {
+		return val;
+	}
 	return Number.parseFloat(val);
 });
 
@@ -37,9 +45,12 @@ export const PropertyValueSchema = z.object({
 });
 
 /**
- * Properties schema - record of property name to property value
+ * Properties schema - record of property name to property value.
+ * Accepts both { type, value } format and flat primitive values.
  */
-export const PropertiesSchema = z.record(z.string(), PropertyValueSchema).optional();
+export const PropertiesSchema = z
+	.record(z.string(), z.union([PropertyValueSchema, z.string(), z.number(), z.boolean()]))
+	.optional();
 
 /**
  * Module schema for <module> elements
@@ -81,11 +92,18 @@ const IOSExtensionTargetSchema = z.object({
 });
 
 /**
- * iOS extension schema
+ * iOS extension provisioning profile schema
+ */
+const IOSProvisioningProfileSchema = z.record(z.string(), z.any());
+
+/**
+ * iOS extension schema - accepts target/targets and provisioningProfiles
  */
 const IOSExtensionSchema = z.object({
 	projectPath: z.string(),
+	target: z.string().optional(),
 	targets: z.array(IOSExtensionTargetSchema).optional(),
+	provisioningProfiles: z.array(IOSProvisioningProfileSchema).optional(),
 });
 
 /**
@@ -105,18 +123,26 @@ export const IOSSchema = z
 		useAutolayout: BooleanSchema.optional(),
 		useNewBuildSystem: BooleanSchema.optional(),
 		useAppThinning: BooleanSchema.optional(),
-		logServerPort: z.union([z.number(), z.string()]).optional(),
+		logServerPort: z.number().optional(),
 		capabilities: IOSCapabilitiesSchema,
 		entitlements: z.record(z.string(), z.any()).optional(),
-		plist: z.record(z.string(), z.any()).optional(),
+		plist: OptionalStringSchema,
 		extensions: z.array(IOSExtensionSchema).optional(),
 	})
 	.optional();
 
 /**
- * Android activity/service schema
+ * Android activity/service item (array element)
  */
-const AndroidActivityServiceSchema = z.record(z.string(), z.any());
+const AndroidActivityServiceItemSchema = z.record(z.string(), z.any());
+
+/**
+ * Android activity/service schema - accepts array or record format
+ */
+const AndroidActivityServiceSchema = z.union([
+	z.array(AndroidActivityServiceItemSchema),
+	z.record(z.string(), z.any()),
+]);
 
 /**
  * Android configuration schema
@@ -145,35 +171,13 @@ const PluginSchema = z.object({
 const PluginsSchema = z.array(PluginSchema).optional();
 
 /**
- * Webpack configuration schema
- */
-const WebpackSchema = z
-	.object({
-		type: z.string().optional(),
-		transpileDependencies: z.array(z.string()).optional(),
-	})
-	.optional();
-
-/**
- * Platform-specific ID schema
- */
-const PlatformIdSchema = z.union([
-	z.string(),
-	z.object({
-		default: z.string().optional(),
-		android: z.string().optional(),
-		ios: z.string().optional(),
-		iphone: z.string().optional(),
-		ipad: z.string().optional(),
-	}),
-]);
-
-/**
  * Main Tiapp schema
  */
 export const TiappSchema = z
 	.object({
-		id: PlatformIdSchema.optional(),
+		id: z.string().optional(),
+		idPlatformAndroid: z.string().optional(),
+		idPlatformIos: z.string().optional(),
 		name: OptionalStringSchema,
 		version: OptionalStringSchema,
 		publisher: OptionalStringSchema,
@@ -196,7 +200,6 @@ export const TiappSchema = z
 		plugins: PluginsSchema,
 		ios: IOSSchema,
 		android: AndroidSchema,
-		webpack: WebpackSchema,
 	})
 	.partial();
 

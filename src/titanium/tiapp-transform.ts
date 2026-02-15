@@ -170,8 +170,12 @@ export function updateElement(elem: Element, value: any): void {
  */
 function parseSimpleValue(elem: Element, parseBool = true): string | boolean {
 	const raw = xml.getValueString(elem);
-	if (parseBool && raw === 'true') return true;
-	if (parseBool && raw === 'false') return false;
+	if (parseBool && raw === 'true') {
+		return true;
+	}
+	if (parseBool && raw === 'false') {
+		return false;
+	}
 	return raw;
 }
 
@@ -182,9 +186,13 @@ function parsePropertyValue(elem: Element): { type: string; value: unknown } {
 	const type = elem.getAttribute('type') || 'string';
 	const raw = xml.getValueString(elem);
 	let value: unknown = raw;
-	if (type === 'bool') value = raw === 'true';
-	else if (type === 'int') value = Number.parseInt(raw) || 0;
-	else if (type === 'double') value = Number.parseFloat(raw) || 0;
+	if (type === 'bool') {
+		value = raw === 'true';
+	} else if (type === 'int') {
+		value = Number.parseInt(raw) || 0;
+	} else if (type === 'double') {
+		value = Number.parseFloat(raw) || 0;
+	}
 	return { type, value };
 }
 
@@ -193,7 +201,9 @@ function parsePropertyValue(elem: Element): { type: string; value: unknown } {
  */
 function readDeploymentTargets(doc: Document): Record<string, boolean | string> | undefined {
 	const container = findElement(doc, 'deployment-targets');
-	if (!container) return undefined;
+	if (!container) {
+		return undefined;
+	}
 
 	const result: Record<string, boolean | string> = {};
 	let child = container.firstChild;
@@ -214,18 +224,21 @@ function readDeploymentTargets(doc: Document): Record<string, boolean | string> 
 }
 
 /**
- * Read properties structure
+ * Read properties structure (flat key -> value for JSON output)
  */
-function readProperties(
-	doc: Document
-): Record<string, { type: string; value: unknown }> | undefined {
+function readProperties(doc: Document): Record<string, unknown> | undefined {
 	const elements = findElements(doc, 'property');
-	if (elements.length === 0) return undefined;
+	if (elements.length === 0) {
+		return undefined;
+	}
 
-	const result: Record<string, { type: string; value: unknown }> = {};
+	const result: Record<string, unknown> = {};
 	for (const elem of elements) {
 		const name = elem.getAttribute('name');
-		if (name) result[name] = parsePropertyValue(elem);
+		if (name) {
+			const pv = parsePropertyValue(elem);
+			result[name] = pv.value;
+		}
 	}
 	return result;
 }
@@ -239,7 +252,9 @@ function readModules(
 	| Array<{ id: string; platform?: string; version?: string | number; deployType?: string }>
 	| undefined {
 	const container = findElement(doc, 'modules');
-	if (!container) return undefined;
+	if (!container) {
+		return undefined;
+	}
 
 	const modules: Array<{
 		id: string;
@@ -269,13 +284,16 @@ function readModules(
 }
 
 /**
- * Read plugins array
+ * Read plugins array (plugin elements may be inside plugins container)
  */
 function readPlugins(doc: Document): Array<{ id: string; version?: string | number }> | undefined {
-	const elements = findElements(doc, 'plugin');
-	if (elements.length === 0) return undefined;
+	const elements = doc.getElementsByTagName ? doc.getElementsByTagName('plugin') : [];
+	const list = Array.from(elements);
+	if (list.length === 0) {
+		return undefined;
+	}
 
-	return elements.map((elem) => ({
+	return list.map((elem) => ({
 		id: xml.getValueString(elem).trim(),
 		version: elem.getAttribute('version') || undefined,
 	}));
@@ -286,14 +304,15 @@ function readPlugins(doc: Document): Array<{ id: string; version?: string | numb
  */
 function readIOSCapabilities(iosElem: Element): Record<string, unknown> | undefined {
 	const capElem = iosElem.getElementsByTagName('capabilities')[0];
-	if (!capElem) return undefined;
+	if (!capElem) {
+		return undefined;
+	}
 
 	const capabilities: Record<string, unknown> = {};
 	let child = capElem.firstChild;
 	while (child) {
 		if (child.nodeType === ELEMENT_NODE) {
 			const elem = child as Element;
-			const key = toCamelCase(elem.tagName);
 			if (elem.tagName === 'app-groups' || elem.tagName === 'appGroups') {
 				const groups: string[] = [];
 				let groupChild = elem.firstChild;
@@ -319,7 +338,9 @@ function readIOSCapabilities(iosElem: Element): Record<string, unknown> | undefi
  */
 function readIOS(doc: Document): Record<string, unknown> | undefined {
 	const iosElem = findElement(doc, 'ios');
-	if (!iosElem) return undefined;
+	if (!iosElem) {
+		return undefined;
+	}
 
 	const result: Record<string, unknown> = {};
 	const simpleTags = [
@@ -342,13 +363,19 @@ function readIOS(doc: Document): Record<string, unknown> | undefined {
 		const child = iosElem.getElementsByTagName(tag)[0];
 		if (child) {
 			const key = toCamelCase(tag);
-			const val = parseSimpleValue(child);
+			let val: unknown = parseSimpleValue(child);
+			if (tag === 'log-server-port' && typeof val === 'string') {
+				const n = Number.parseInt(val, 10);
+				val = Number.isNaN(n) ? val : n;
+			}
 			result[key] = val;
 		}
 	}
 
 	const cap = readIOSCapabilities(iosElem);
-	if (cap) result.capabilities = cap;
+	if (cap) {
+		result.capabilities = cap;
+	}
 
 	const entElem = iosElem.getElementsByTagName('entitlements')[0];
 	if (entElem) {
@@ -362,51 +389,60 @@ function readIOS(doc: Document): Record<string, unknown> | undefined {
 
 	const plistElem = iosElem.getElementsByTagName('plist')[0];
 	if (plistElem) {
-		const dictElem = plistElem.getElementsByTagName('dict')[0];
-		if (dictElem) {
-			const pl = new Plist();
-			pl.parse(`<plist version="1.0">${dictElem.toString()}</plist>`);
-			const filtered: Record<string, unknown> = {};
-			for (const k of Object.keys(pl)) {
-				if (
-					!/^CFBundle(DisplayName|Executable|IconFile|Identifier|InfoDictionaryVersion|Name|PackageType|Signature)|LSRequiresIPhoneOS$/.test(
-						k
-					)
-				) {
-					filtered[k] = pl[k];
-				}
-			}
-			result.plist = filtered;
-		}
+		result.plist = plistElem.toString();
 	}
 
 	const extElem = iosElem.getElementsByTagName('extensions')[0];
 	if (extElem) {
 		const extensions: Array<{
 			projectPath: string;
-			targets?: Array<{ name: string; ppUUIDs?: Record<string, string> }>;
+			target?: string;
+			provisioningProfiles?: Array<Record<string, unknown>>;
 		}> = [];
 		const extList = extElem.getElementsByTagName('extension');
 		for (let i = 0; i < extList.length; i++) {
 			const ext = extList[i];
-			const projectPath = ext.getAttribute('project-path') || xml.getValueString(ext) || '';
+			const projectPath =
+				ext.getAttribute('projectPath') ||
+				ext.getAttribute('project-path') ||
+				xml.getValueString(ext) ||
+				'';
 			const extObj: {
 				projectPath: string;
-				targets?: Array<{ name: string; ppUUIDs?: Record<string, string> }>;
+				target?: string;
+				provisioningProfiles?: Array<Record<string, unknown>>;
 			} = { projectPath };
 			const targets = ext.getElementsByTagName('target');
 			if (targets.length > 0) {
-				extObj.targets = [];
-				for (let j = 0; j < targets.length; j++) {
-					const t = targets[j];
-					extObj.targets!.push({
-						name: t.getAttribute('name') || xml.getValueString(t) || '',
-					});
+				const t = targets[0];
+				extObj.target = t.getAttribute('name') || xml.getValueString(t) || '';
+				const ppElem = t.getElementsByTagName('provisioning-profiles')[0];
+				if (ppElem) {
+					const profiles: Array<Record<string, unknown>> = [];
+					const device = ppElem.getElementsByTagName('device')[0];
+					const distAppstore = ppElem.getElementsByTagName('dist-appstore')[0];
+					const distAdhoc = ppElem.getElementsByTagName('dist-adhoc')[0];
+					if (device || distAppstore || distAdhoc) {
+						const prof: Record<string, unknown> = {};
+						if (device) {
+							prof.device = xml.getValueString(device);
+						}
+						if (distAppstore) {
+							prof.distAppstore = xml.getValueString(distAppstore);
+						}
+						if (distAdhoc) {
+							prof.distAdhoc = true;
+						}
+						profiles.push(prof);
+					}
+					extObj.provisioningProfiles = profiles;
 				}
 			}
 			extensions.push(extObj);
 		}
-		if (extensions.length > 0) result.extensions = extensions;
+		if (extensions.length > 0) {
+			result.extensions = extensions;
+		}
 	}
 
 	return result;
@@ -416,8 +452,15 @@ function readIOS(doc: Document): Record<string, unknown> | undefined {
  * Read Android config
  */
 function readAndroid(doc: Document): Record<string, unknown> | undefined {
-	const androidElem = findElement(doc, 'android');
-	if (!androidElem) return undefined;
+	// findElement may miss 'android' in namespaced docs; try getElementsByTagName
+	let androidElem = findElement(doc, 'android');
+	if (!androidElem && doc.getElementsByTagName) {
+		const list = doc.getElementsByTagName('android');
+		androidElem = list.length ? list[0] : null;
+	}
+	if (!androidElem) {
+		return undefined;
+	}
 
 	const result: Record<string, unknown> = {};
 	const manifestElem = androidElem.getElementsByTagName('manifest')[0];
@@ -427,10 +470,26 @@ function readAndroid(doc: Document): Record<string, unknown> | undefined {
 			.replace(/ xmlns:android="http:\/\/schemas\.android\.com\/apk\/res\/android"/g, '');
 	}
 
-	const toolApiElem = androidElem.getElementsByTagName('tool-api-level')[0];
-	if (toolApiElem) {
-		const v = Number.parseFloat(xml.getValueString(toolApiElem));
-		result.toolAPILevel = Number.isNaN(v) ? undefined : v;
+	// tool-api-level: search within android
+	let toolApiVal: number | undefined;
+	const toolApiList = androidElem.getElementsByTagName('tool-api-level');
+	if (toolApiList.length > 0) {
+		toolApiVal = Number.parseFloat(xml.getValueString(toolApiList[0]));
+	}
+	if (toolApiVal === undefined || Number.isNaN(toolApiVal)) {
+		// Fallback: walk direct children (getElementsByTagName can fail in namespaced docs)
+		xml.forEachElement(androidElem, (el) => {
+			const name = (el as Element & { localName?: string }).localName || el.tagName || '';
+			if (name.toLowerCase().replace(/_/g, '-') === 'tool-api-level') {
+				const v = Number.parseFloat(xml.getValueString(el));
+				if (!Number.isNaN(v)) {
+					toolApiVal = v;
+				}
+			}
+		});
+	}
+	if (toolApiVal !== undefined && !Number.isNaN(toolApiVal)) {
+		result.toolAPILevel = toolApiVal;
 	}
 
 	const abiElem = androidElem.getElementsByTagName('abi')[0];
@@ -441,32 +500,38 @@ function readAndroid(doc: Document): Record<string, unknown> | undefined {
 
 	const activitiesElem = androidElem.getElementsByTagName('activities')[0];
 	if (activitiesElem) {
-		const activities: Record<string, unknown> = {};
+		const activities: Array<Record<string, unknown>> = [];
 		const acts = activitiesElem.getElementsByTagName('activity');
 		for (let i = 0; i < acts.length; i++) {
 			const a = acts[i];
 			const url = a.getAttribute('url') || xml.getValueString(a) || '';
-			const key = url || `activity-${i}`;
-			activities[key] = {
+			activities.push({
 				url,
-				...Object.fromEntries(Array.from(a.attributes).map((attr) => [attr.name, attr.value])),
-			};
+				...Object.fromEntries(
+					Array.from(a.attributes)
+						.filter((attr) => attr.name !== 'url')
+						.map((attr) => [toCamelCase(attr.name), attr.value])
+				),
+			});
 		}
 		result.activities = activities;
 	}
 
 	const servicesElem = androidElem.getElementsByTagName('services')[0];
 	if (servicesElem) {
-		const services: Record<string, unknown> = {};
+		const services: Array<Record<string, unknown>> = [];
 		const svcs = servicesElem.getElementsByTagName('service');
 		for (let i = 0; i < svcs.length; i++) {
 			const s = svcs[i];
 			const url = s.getAttribute('url') || xml.getValueString(s) || '';
-			const key = url || `service-${i}`;
-			services[key] = {
+			services.push({
 				url,
-				...Object.fromEntries(Array.from(s.attributes).map((attr) => [attr.name, attr.value])),
-			};
+				...Object.fromEntries(
+					Array.from(s.attributes)
+						.filter((attr) => attr.name !== 'url')
+						.map((attr) => [toCamelCase(attr.name), attr.value])
+				),
+			});
 		}
 		result.services = services;
 	}
@@ -479,11 +544,15 @@ function readAndroid(doc: Document): Record<string, unknown> | undefined {
  */
 function readWebpack(doc: Document): Record<string, unknown> | undefined {
 	const webpackElem = findElement(doc, 'webpack');
-	if (!webpackElem) return undefined;
+	if (!webpackElem) {
+		return undefined;
+	}
 
 	const result: Record<string, unknown> = {};
 	const typeElem = webpackElem.getElementsByTagName('type')[0];
-	if (typeElem) result.type = xml.getValueString(typeElem);
+	if (typeElem) {
+		result.type = xml.getValueString(typeElem);
+	}
 
 	const depsElem = webpackElem.getElementsByTagName('transpile-dependencies')[0];
 	if (depsElem) {
@@ -550,17 +619,16 @@ export function tiappXmlToJson(doc: Document): TiappData {
 			const camelKey = toCamelCase(tagName);
 
 			if (SIMPLE_TAGS.includes(tagName)) {
-				if (platformTags.has(tagName)) {
-					if (!result[camelKey]) result[camelKey] = {};
-					const obj = result[camelKey] as Record<string, string>;
+				if (platformTags.has(tagName) && tagName === 'id') {
 					const platform = elem.getAttribute('platform');
 					const val = xml.getValueString(elem);
 					if (platform) {
-						obj[platform] = val;
+						const platformKey = 'idPlatform' + platform.charAt(0).toUpperCase() + platform.slice(1);
+						result[platformKey] = val;
 					} else {
-						obj.default = val;
+						result.id = val;
 					}
-				} else if (!result[camelKey]) {
+				} else if (!platformTags.has(tagName) && !result[camelKey]) {
 					const val = parseSimpleValue(elem);
 					result[camelKey] = val;
 				}
@@ -568,14 +636,21 @@ export function tiappXmlToJson(doc: Document): TiappData {
 				result.deploymentTargets = readDeploymentTargets(doc);
 			} else if (tagName === 'property') {
 				// Handled in readProperties
-				if (!result.properties) result.properties = readProperties(doc);
+				if (!result.properties) {
+					result.properties = readProperties(doc);
+				}
 			} else if (tagName === 'modules') {
 				result.modules = readModules(doc);
-			} else if (tagName === 'plugin') {
-				if (!result.plugins) result.plugins = readPlugins(doc);
+			} else if (tagName === 'plugins') {
+				if (!result.plugins) {
+					result.plugins = readPlugins(doc);
+				}
 			} else if (tagName === 'ios') {
 				result.ios = readIOS(doc);
-			} else if (tagName === 'android') {
+			} else if (
+				tagName === 'android' ||
+				(elem as Element & { localName?: string }).localName === 'android'
+			) {
 				result.android = readAndroid(doc);
 			} else if (tagName === 'webpack') {
 				result.webpack = readWebpack(doc);
@@ -584,11 +659,11 @@ export function tiappXmlToJson(doc: Document): TiappData {
 		child = child.nextSibling;
 	}
 
-	// Normalize platform id: if object has only 'default', flatten to string
-	if (result.id && typeof result.id === 'object' && result.id !== null) {
-		const idObj = result.id as Record<string, string>;
-		if (Object.keys(idObj).length === 1 && idObj.default) {
-			result.id = idObj.default;
+	// Ensure plugins are read (container may have different tagName in namespaced docs)
+	if (!result.plugins) {
+		const plugins = readPlugins(doc);
+		if (plugins && plugins.length > 0) {
+			result.plugins = plugins;
 		}
 	}
 
@@ -599,16 +674,26 @@ export function tiappXmlToJson(doc: Document): TiappData {
  * Deep equality check
  */
 function deepEqual(a: unknown, b: unknown): boolean {
-	if (a === b) return true;
-	if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') return false;
-	if (Array.isArray(a) !== Array.isArray(b)) return false;
+	if (a === b) {
+		return true;
+	}
+	if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') {
+		return false;
+	}
+	if (Array.isArray(a) !== Array.isArray(b)) {
+		return false;
+	}
 	if (Array.isArray(a) && Array.isArray(b)) {
-		if (a.length !== b.length) return false;
+		if (a.length !== b.length) {
+			return false;
+		}
 		return a.every((v, i) => deepEqual(v, b[i]));
 	}
 	const keysA = Object.keys(a as object);
 	const keysB = Object.keys(b as object);
-	if (keysA.length !== keysB.length) return false;
+	if (keysA.length !== keysB.length) {
+		return false;
+	}
 	return keysA.every(
 		(k) =>
 			keysB.includes(k) &&
@@ -636,27 +721,45 @@ function writeSimpleValue(doc: Document, key: string, value: unknown, platform?:
 function removeSimpleElement(doc: Document, key: string, platform?: string): void {
 	const xmlTag = toXmlTag(key);
 	const elem = findElement(doc, xmlTag, platform);
-	if (elem) removeElement(elem);
+	if (elem) {
+		removeElement(elem);
+	}
+}
+
+/**
+ * Normalize property value to { type, value } format
+ */
+function normalizePropertyValue(pv: unknown): { type: string; value: unknown } {
+	if (pv !== null && typeof pv === 'object' && 'value' in pv) {
+		return {
+			type: (pv as { type?: string }).type || 'string',
+			value: (pv as { value: unknown }).value,
+		};
+	}
+	// Infer type from flat value
+	const type = typeof pv === 'boolean' ? 'bool' : typeof pv === 'number' ? 'double' : 'string';
+	return { type, value: pv };
 }
 
 /**
  * Write properties to XML
  */
-function writeProperties(
-	doc: Document,
-	properties: Record<string, { type?: string; value: unknown }>
-): void {
+function writeProperties(doc: Document, properties: Record<string, unknown>): void {
 	const root = doc.documentElement;
 	const indent = detectIndentation(doc);
 	const existing = findElements(doc, 'property');
 	const existingNames = new Set(existing.map((e) => e.getAttribute('name')).filter(Boolean));
 
 	for (const [name, pv] of Object.entries(properties)) {
-		const type = pv.type || 'string';
-		let val = pv.value;
-		if (type === 'bool') val = val ? 'true' : 'false';
-		else if (type === 'int' || type === 'double') val = String(val);
-		else val = String(val ?? '');
+		const { type, value } = normalizePropertyValue(pv);
+		let val: string;
+		if (type === 'bool') {
+			val = value ? 'true' : 'false';
+		} else if (type === 'int' || type === 'double') {
+			val = String(value);
+		} else {
+			val = String(value ?? '');
+		}
 
 		if (existingNames.has(name)) {
 			const elem = existing.find((e) => e.getAttribute('name') === name);
@@ -669,7 +772,7 @@ function writeProperties(
 			const elem = doc.createElement('property');
 			elem.setAttribute('name', name);
 			elem.setAttribute('type', type);
-			elem.appendChild(doc.createTextNode(String(val)));
+			elem.appendChild(doc.createTextNode(val));
 			root.appendChild(elem);
 		}
 	}
@@ -677,7 +780,9 @@ function writeProperties(
 	// Remove properties that are no longer in the object
 	for (const elem of existing) {
 		const name = elem.getAttribute('name');
-		if (name && !(name in properties)) removeElement(elem);
+		if (name && !(name in properties)) {
+			removeElement(elem);
+		}
 	}
 }
 
@@ -695,7 +800,9 @@ function writeDeploymentTargets(doc: Document, targets: Record<string, boolean |
 	}
 
 	// Clear and rebuild
-	while (container!.firstChild) container!.removeChild(container!.firstChild);
+	while (container!.firstChild) {
+		container!.removeChild(container!.firstChild);
+	}
 	const innerIndent = indent + indent;
 	for (const [device, value] of Object.entries(targets)) {
 		container!.appendChild(doc.createTextNode(`\n${innerIndent}`));
@@ -723,14 +830,22 @@ function writeModules(
 		root.appendChild(container);
 	}
 
-	while (container!.firstChild) container!.removeChild(container!.firstChild);
+	while (container!.firstChild) {
+		container!.removeChild(container!.firstChild);
+	}
 	const innerIndent = indent + indent;
 	for (const mod of modules) {
 		container!.appendChild(doc.createTextNode(`\n${innerIndent}`));
 		const elem = doc.createElement('module');
-		if (mod.platform) elem.setAttribute('platform', mod.platform);
-		if (mod.version !== undefined) elem.setAttribute('version', String(mod.version));
-		if (mod.deployType) elem.setAttribute('deploy-type', mod.deployType);
+		if (mod.platform) {
+			elem.setAttribute('platform', mod.platform);
+		}
+		if (mod.version !== undefined) {
+			elem.setAttribute('version', String(mod.version));
+		}
+		if (mod.deployType) {
+			elem.setAttribute('deploy-type', mod.deployType);
+		}
 		elem.appendChild(doc.createTextNode(mod.id));
 		container!.appendChild(elem);
 	}
@@ -748,12 +863,16 @@ function writePlugins(
 	const root = doc.documentElement;
 	const indent = detectIndentation(doc);
 
-	for (const p of existing) removeElement(p);
+	for (const p of existing) {
+		removeElement(p);
+	}
 
 	for (const p of plugins) {
 		root.appendChild(doc.createTextNode(`\n${indent}`));
 		const elem = doc.createElement('plugin');
-		if (p.version !== undefined) elem.setAttribute('version', String(p.version));
+		if (p.version !== undefined) {
+			elem.setAttribute('version', String(p.version));
+		}
 		elem.appendChild(doc.createTextNode(p.id));
 		root.appendChild(elem);
 	}
@@ -767,25 +886,37 @@ function writeId(doc: Document, id: string | Record<string, string | undefined>)
 		// Remove any platform-specific id elements, keep only default
 		const elems = findElements(doc, 'id');
 		for (const e of elems) {
-			if (e.getAttribute('platform')) removeElement(e);
+			if (e.getAttribute('platform')) {
+				removeElement(e);
+			}
 		}
 		const defaultElem = findElement(doc, 'id');
-		if (defaultElem) updateElement(defaultElem, id);
-		else createElement(doc, 'id', id);
+		if (defaultElem) {
+			updateElement(defaultElem, id);
+		} else {
+			createElement(doc, 'id', id);
+		}
 	} else {
 		const obj = id as Record<string, string | undefined>;
 		for (const [platform, value] of Object.entries(obj)) {
-			if (value === undefined) continue;
+			if (value === undefined) {
+				continue;
+			}
 			const key = platform === 'default' ? undefined : platform;
 			const elem = findElement(doc, 'id', key);
-			if (elem) updateElement(elem, value);
-			else createElement(doc, 'id', value, key);
+			if (elem) {
+				updateElement(elem, value);
+			} else {
+				createElement(doc, 'id', value, key);
+			}
 		}
 		// Remove ids not in obj
 		const elems = findElements(doc, 'id');
 		for (const e of elems) {
 			const platform = e.getAttribute('platform') || 'default';
-			if (!(platform in obj)) removeElement(e);
+			if (!(platform in obj)) {
+				removeElement(e);
+			}
 		}
 	}
 }
@@ -797,34 +928,50 @@ function applyDiff(doc: Document, before: TiappData, after: TiappData, key: stri
 	const beforeVal = before[key];
 	const afterVal = after[key];
 
-	if (deepEqual(beforeVal, afterVal)) return;
+	if (deepEqual(beforeVal, afterVal)) {
+		return;
+	}
 
 	if (afterVal === undefined) {
 		// Remove
 		if (key === 'id') {
-			for (const e of findElements(doc, 'id')) removeElement(e);
+			for (const e of findElements(doc, 'id')) {
+				removeElement(e);
+			}
 		} else if (key === 'properties') {
 			const elems = findElements(doc, 'property');
 			for (const e of elems) removeElement(e);
 		} else if (key === 'deploymentTargets') {
 			const container = findElement(doc, 'deployment-targets');
-			if (container) removeElement(container);
+			if (container) {
+				removeElement(container);
+			}
 		} else if (key === 'modules') {
 			const container = findElement(doc, 'modules');
 			if (container) {
-				while (container.firstChild) container.removeChild(container.firstChild);
+				while (container.firstChild) {
+					container.removeChild(container.firstChild);
+				}
 			}
 		} else if (key === 'plugins') {
-			for (const e of findElements(doc, 'plugin')) removeElement(e);
+			for (const e of findElements(doc, 'plugin')) {
+				removeElement(e);
+			}
 		} else if (key === 'ios') {
 			const ios = findElement(doc, 'ios');
-			if (ios) removeElement(ios);
+			if (ios) {
+				removeElement(ios);
+			}
 		} else if (key === 'android') {
 			const android = findElement(doc, 'android');
-			if (android) removeElement(android);
+			if (android) {
+				removeElement(android);
+			}
 		} else if (key === 'webpack') {
 			const webpack = findElement(doc, 'webpack');
-			if (webpack) removeElement(webpack);
+			if (webpack) {
+				removeElement(webpack);
+			}
 		} else {
 			removeSimpleElement(doc, key);
 		}
@@ -835,7 +982,7 @@ function applyDiff(doc: Document, before: TiappData, after: TiappData, key: stri
 	if (key === 'id') {
 		writeId(doc, afterVal as string | Record<string, string | undefined>);
 	} else if (key === 'properties' && typeof afterVal === 'object' && afterVal !== null) {
-		writeProperties(doc, afterVal as Record<string, { type?: string; value: unknown }>);
+		writeProperties(doc, afterVal as Record<string, unknown>);
 	} else if (key === 'deploymentTargets' && typeof afterVal === 'object' && afterVal !== null) {
 		writeDeploymentTargets(doc, afterVal as Record<string, boolean | string>);
 	} else if (key === 'modules' && Array.isArray(afterVal)) {

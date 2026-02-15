@@ -22,14 +22,12 @@
   <statusbar-hidden>false</statusbar-hidden>
   <fullscreen>false</fullscreen>
   <navbar-hidden>false</navbar-hidden>
-  <analytics>false</analytics>
   <guid>088dc83c-64af-4a81-b57c-7407649453f0</guid>
   <property name="ti.ui.defaultunit">system</property>
   <property name="ti.deploytype">production</property>
   <property name="ti.android.debug" type="bool">true</property>
   <property name="ti.android.loadfromsdcard" type="bool">false</property>
   <property name="ti.android.compilejs" type="bool">false</property>
-  <property name="ti.android.include_all_modules" type="bool">false</property>
   <property name="another property">this "one" with quotes</property>
   <property name="ti.bb.invoke.target.key.push" type="string"
   >ti.testapp.invoke.push</property>
@@ -37,7 +35,8 @@
   >ti.testapp.invoke.open</property>
   <property name="push_title" type="string"
   >Some Title for BB Push, typically the app name"</property>
-  <property name="run-on-main-thread" type="bool">true</property>
+  <property name="ti.skipAppIdValidation" type="bool">false</property>
+  <property name="ti.skipVersionValidation" type="bool">false</property>
   <ios>
     <enable-launch-screen-storyboard>true</enable-launch-screen-storyboard>
     <use-app-thinning>true</use-app-thinning>
@@ -203,22 +202,15 @@
         />
       </application>
     </manifest>
-    <activity
-      android:name="ti.modules.titanium.ui.android.TiPreferencesActivity"
-    />
     <tool-api-level>10</tool-api-level>
-    <proguard>true</proguard>
     <abi>armeabi,armeabi-v7a,x86</abi> <!-- or "all" -->
+    <activities>
+      <activity url="activity.js" />
+    </activities>
     <services>
       <service type="interval" url="testservice.js" />
     </services>
   </android>
-  <webpack>
-    <type>alloy</type>
-    <transpile-dependencies>
-      <dep>some_module</dep>
-    </transpile-dependencies>
-  </webpack>
   <modules>
     <module version="1.2.3">ti.alltest</module>
     <module platform="commonjs" version="1.2.3">ti.cjstest</module>

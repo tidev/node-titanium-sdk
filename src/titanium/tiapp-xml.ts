@@ -65,7 +65,7 @@ export class TiappXML {
 
 	parse(content: string) {
 		let errorMsg: string | undefined = undefined;
-		const dom = new DOMParser({
+		this.dom = new DOMParser({
 			errorHandler(err) {
 				errorMsg = err;
 			},
@@ -73,10 +73,6 @@ export class TiappXML {
 		if (errorMsg) {
 			throw new Error(`Invalid XML file: ${errorMsg}`);
 		}
-		if (!dom) {
-			throw new Error('Invalid XML file');
-		}
-		this.dom = dom;
 		return this;
 	}
 

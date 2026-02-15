@@ -14,8 +14,7 @@ describe('TiappXML', () => {
 	<id>test</id>
 </ti:app>`);
 			const data = tiapp.data();
-			expect(data.id).toBe('test');
-			expect(data.name).toBeUndefined();
+			expect(data).toMatchObject({ id: 'test' });
 		});
 	});
 
@@ -76,7 +75,8 @@ describe('TiappXML', () => {
 			const tiapp = new TiappXML().parse(xml);
 			const data = tiapp.data();
 
-			expect(data.id).toEqual({ default: 'com.example.app', android: 'com.example.android' });
+			expect(data.id).toBe('com.example.app');
+			expect(data.idPlatformAndroid).toBe('com.example.android');
 		});
 
 		it('should create platform-specific properties', () => {
@@ -86,10 +86,12 @@ describe('TiappXML', () => {
 </ti:app>`);
 
 			const data = tiapp.data();
-			data.id = { default: 'com.example.app', ios: 'com.example.ios' };
+			data.id = 'com.example.app2';
+			data.idPlatformIos = 'com.example.ios';
 			tiapp.apply(data);
 
-			expect(tiapp.data().id).toEqual({ default: 'com.example.app', ios: 'com.example.ios' });
+			expect(tiapp.data().id).toBe('com.example.app2');
+			expect(tiapp.data().idPlatformIos).toBe('com.example.ios');
 			expect(tiapp.toString()).toContain('<id platform="ios">com.example.ios</id>');
 		});
 	});
@@ -149,20 +151,14 @@ describe('TiappXML', () => {
 			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 			const data = tiapp.data();
 
-			const prop = data.properties!['ti.ui.defaultunit'];
-			expect(prop).toBeDefined();
-			expect(prop.type).toBe('string');
-			expect(prop.value).toBe('system');
+			expect(data.properties!['ti.ui.defaultunit']).toBe('system');
 		});
 
 		it('should handle boolean properties', () => {
 			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 			const data = tiapp.data();
 
-			const prop = data.properties!['ti.android.debug'];
-			expect(prop).toBeDefined();
-			expect(prop.type).toBe('bool');
-			expect(prop.value).toBe(true);
+			expect(data.properties!['ti.android.debug']).toBe(true);
 		});
 
 		it('should add properties', () => {
@@ -173,10 +169,10 @@ describe('TiappXML', () => {
 
 			const data = tiapp.data();
 			data.properties = data.properties || {};
-			data.properties['my.prop'] = { type: 'string', value: 'test' };
+			data.properties['my.prop'] = 'test';
 			tiapp.apply(data);
 
-			expect(tiapp.data().properties!['my.prop'].value).toBe('test');
+			expect(tiapp.data().properties!['my.prop']).toBe('test');
 
 			const xml = tiapp.toString();
 			expect(xml).toContain('name="my.prop"');
@@ -209,7 +205,8 @@ describe('TiappXML', () => {
 			const data = tiapp.data();
 
 			expect(data.ios!.plist).toBeDefined();
-			expect(typeof data.ios!.plist).toBe('object');
+			expect(typeof data.ios!.plist).toBe('string');
+			expect(data.ios!.plist).toContain('<dict>');
 		});
 
 		it('should read iOS capabilities', () => {
@@ -361,6 +358,12 @@ describe('TiappXML', () => {
 			expect(xml).toContain('<ti:app');
 			expect(xml).toContain('</ti:app>');
 		});
+
+		it('should set xml version if not present', () => {
+			const tiapp = new TiappXML().parse(`<ti:app xmlns:ti="http://ti.tidev.io">
+</ti:app>`);
+			expect(tiapp.toString()).toMatch(/^<\?xml/);
+		});
 	});
 
 	describe('Edge Cases', () => {
@@ -465,7 +468,13 @@ describe('TiappXML', () => {
 	});
 
 	describe('Sample Files', () => {
-		it('should load a tiapp with an SDK version', () => {
+		it('should load a tiapp during construction', () => {
+			const tiapp = new TiappXML(join(fixturesDir, 'hassdk.xml'));
+			const data = tiapp.data();
+			expect(data.sdkVersion).toBe('1.2.3');
+		});
+
+		it('should load a tiapp after construction', () => {
 			const tiapp = new TiappXML().load(join(fixturesDir, 'hassdk.xml'));
 			const data = tiapp.data();
 			expect(data.sdkVersion).toBe('1.2.3');
@@ -474,23 +483,225 @@ describe('TiappXML', () => {
 		it('should read simple properties', () => {
 			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
 			const data = tiapp.data();
-			expect(data.id).toBe('ti.testapp');
-			expect(data.name).toBe('testapp');
-			expect(data.version).toBe('1.0');
-			expect(data.publisher).toBe('tester');
-			expect(data.url).toBe('https://titaniumsdk.com');
-			expect(data.description).toBe('not specified');
-			expect(data.copyright).toBe('2022 by tester');
-			expect(data.icon).toBe('appicon.png');
-			expect(data.persistentWifi).toBe(false);
-			expect(data.prerenderedIcon).toBe(false);
-			expect(data.statusbarStyle).toBe('default');
-			expect(data.statusbarHidden).toBe(false);
-			expect(data.guid).toBe('088dc83c-64af-4a81-b57c-7407649453f0');
-			expect(data.modules).toBeDefined();
-			expect(Array.isArray(data.modules)).toBe(true);
-			expect(data.modules!.length).toBe(0);
-			expect(data.android).toBeDefined();
+			expect(data).toMatchObject({
+				id: 'ti.testapp',
+				name: 'testapp',
+				version: '1.0',
+				publisher: 'tester',
+				url: 'https://titaniumsdk.com',
+				description: 'not specified',
+				copyright: '2022 by tester',
+				icon: 'appicon.png',
+				persistentWifi: false,
+				prerenderedIcon: false,
+				statusbarStyle: 'default',
+				statusbarHidden: false,
+				guid: '088dc83c-64af-4a81-b57c-7407649453f0',
+				modules: [],
+				android: {},
+			});
+		});
+
+		it('should read complex properties', () => {
+			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
+			const data = tiapp.data();
+			expect(data).toMatchObject({
+				deploymentTargets: {
+					iphone: true,
+					ipad: true,
+					android: true,
+				},
+				sdkVersion: '2.2.0',
+				id: 'ti.testapp',
+				idPlatformAndroid: 'ti.testapp.android',
+				idPlatformIos: 'ti.testapp.ios',
+				name: 'testapp',
+				version: '1.0',
+				publisher: 'tester',
+				url: 'http://',
+				description: 'not specified',
+				copyright: '2012 by tester',
+				icon: 'appicon.png',
+				persistentWifi: false,
+				prerenderedIcon: false,
+				statusbarStyle: 'default',
+				statusbarHidden: false,
+				fullscreen: false,
+				navbarHidden: false,
+				guid: '088dc83c-64af-4a81-b57c-7407649453f0',
+				properties: {
+					'ti.ui.defaultunit': 'system',
+					'ti.deploytype': 'production',
+					'ti.android.debug': true,
+					'ti.android.loadfromsdcard': false,
+					'ti.android.compilejs': false,
+					'another property': 'this "one" with quotes',
+					'ti.bb.invoke.target.key.push': 'ti.testapp.invoke.push',
+					'ti.bb.invoke.target.key.open': 'ti.testapp.invoke.open',
+					push_title: 'Some Title for BB Push, typically the app name"',
+					'ti.skipAppIdValidation': false,
+					'ti.skipVersionValidation': false,
+				},
+				ios: {
+					enableLaunchScreenStoryboard: true,
+					useAppThinning: true,
+					enablecoverage: true,
+					enablemdfind: true,
+					defaultBackgroundColor: '#FFFFFF',
+					minIosVer: '5.0',
+					teamId: 'foo',
+					logServerPort: 10571,
+					capabilities: {
+						appGroups: ['group.com.appc.foo', 'group.com.appc.bar'],
+					},
+					entitlements: {
+						'application-identifier': 'XXXXXXXXXX.com.test.app',
+						'aps-environment': 'production',
+					},
+					plist: `<plist>
+      <dict>
+        <key>UISupportedInterfaceOrientations</key>
+        <array>
+          <string>UIInterfaceOrientationPortrait</string>
+          <string>UIInterfaceOrientationPortraitUpsideDown</string>
+          <string>UIInterfaceOrientationLandscapeLeft</string>
+          <string>UIInterfaceOrientationLandscapeRight</string>
+        </array>
+        <key>UIBackgroundModes</key>
+        <array>
+          <string>audio</string>
+          <string>location</string>
+          <string>voip</string>
+          <string>newsstand-content</string>
+          <string>external-accessory</string>
+          <string>bluetooth-central</string>
+        </array>
+        <key>UIRequiredDeviceCapabilities</key>
+        <array>
+          <string>telephony</string>
+          <string>wifi</string>
+          <string>sms</string>
+          <string>still-camera</string>
+          <string>auto-focus-camera</string>
+          <string>front-facing-camera</string>
+          <string>camera-flash</string>
+          <string>video-camera</string>
+          <string>accelerometer</string>
+          <string>gyroscope</string>
+          <string>location-services</string>
+          <string>gps</string>
+          <string>magnetometer</string>
+          <string>gamekit</string>
+          <string>microphone</string>
+          <string>opengles-1</string>
+          <string>opengles-2</string>
+          <string>armv6</string>
+          <string>armv7</string>
+          <string>peer-peer</string>
+          <string>bluetooth-le</string>
+        </array>
+        <key>UIRequiresPersistentWiFi</key>
+        <true/>
+        <key>UIPrerenderedIcon</key>
+        <true/>
+        <key>UIStatusBarHidden</key>
+        <true/>
+        <key>UIStatusBarStyle</key>
+        <string>UIStatusBarStyleBlackTranslucent</string>
+        <key>UIAppFonts</key>
+        <array>
+          <string>/fonts/MyFont_1.otf</string>
+          <string>/fonts/MyFont_2.otf</string>
+        </array>
+      </dict>
+    </plist>`,
+					extensions: [
+						{
+							projectPath: '/path/to/extention',
+							target: 'Some Target',
+							provisioningProfiles: [],
+						},
+						{
+							projectPath: '/path/to/extention2',
+							target: 'Another Target',
+							provisioningProfiles: [
+								{
+									device: 'abc',
+									distAppstore: '123',
+									distAdhoc: true,
+								},
+							],
+						},
+						{
+							projectPath: '/path/to/another/extention',
+							target: 'Test WatchKit Extension',
+						},
+					],
+				},
+				android: {
+					manifest: `<manifest>
+      <uses-sdk android:minSdkVersion="10" android:targetSdkVersion="17" android:maxSdkVersion="18"/>
+      <supports-screens android:anyDensity="false" android:xlargeScreens="true"/>
+      <application>
+        <activity android:alwaysRetainTaskState="true" android:configChanges="keyboardHidden|orientation" android:label="testapp" android:name=".TestappActivity" android:theme="@style/Theme.Titanium">
+          <intent-filter>
+            <action android:name="android.intent.action.MAIN"/>
+            <category android:name="android.intent.category.LAUNCHER"/>
+          </intent-filter>
+        </activity>
+        <activity android:screenOrientation="landscape" android:name="ti.modules.titanium.facebook.FBActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+        <activity android:screenOrientation="landscape" android:name="org.appcelerator.titanium.TiActivity" android:configChanges="keyboardHidden|orientation"/>
+        <activity android:screenOrientation="landscape" android:name="org.appcelerator.titanium.TiModalActivity" android:configChanges="keyboardHidden|orientation" android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"/>
+        <activity android:screenOrientation="landscape" android:name="ti.modules.titanium.ui.TiTabActivity" android:configChanges="keyboardHidden|orientation"/>
+        <activity android:screenOrientation="landscape" android:name="ti.modules.titanium.media.TiVideoActivity" android:configChanges="keyboardHidden|orientation" android:theme="@android:style/Theme.NoTitleBar.Fullscreen"/>
+        <activity android:screenOrientation="landscape" android:name="ti.modules.titanium.ui.android.TiPreferencesActivity"/>
+      </application>
+    </manifest>`,
+					services: [
+						{
+							type: 'interval',
+							url: 'testservice.js',
+						},
+					],
+					activities: [
+						{
+							url: 'activity.js',
+						},
+					],
+					abi: ['armeabi', 'armeabi-v7a', 'x86'],
+				},
+				modules: [
+					{
+						id: 'ti.alltest',
+						version: '1.2.3',
+					},
+					{
+						id: 'ti.cjstest',
+						version: '1.2.3',
+						platform: 'commonjs',
+					},
+					{
+						id: 'ti.mwtest',
+						version: '4.5.6',
+					},
+					{
+						id: 'ti.androidtest',
+						version: '7.8',
+						platform: 'android',
+					},
+					{
+						id: 'ti.iphonetest',
+						version: '9.0',
+						platform: 'iphone',
+					},
+				],
+				plugins: [
+					{
+						id: 'ti_sample_plugin',
+						version: '1.0',
+					},
+				],
+			});
 		});
 	});
 });
