@@ -1,5 +1,5 @@
-import { Plist } from '../util/plist.js';
-import * as xml from '../util/xml.js';
+import { Plist } from '../../util/plist.js';
+import * as xml from '../../util/xml.js';
 import { TiappSchema, type Tiapp } from './tiapp-schema.js';
 
 export type TiappData = Record<string, unknown>;

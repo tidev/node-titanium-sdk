@@ -1,4 +1,4 @@
-import { TiappXML } from '../../../src/titanium/tiapp-xml.js';
+import { TiappXML } from '../../../src/titanium/tiapp/tiapp-xml.js';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';

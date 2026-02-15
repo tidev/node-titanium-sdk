@@ -1,4 +1,4 @@
-import { isFile } from '../util/is-file.js';
+import { isFile } from '../../util/is-file.js';
 import { tiappXmlToJson, applyTiappJsonToXml } from './tiapp-transform.js';
 import { DOMParser, type Options } from '@xmldom/xmldom';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
