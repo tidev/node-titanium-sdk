@@ -7,12 +7,12 @@
  */
 export function pngInfo(buf: Buffer): { width: number; height: number; alpha: boolean } {
 	const u32 = (o: number): number => {
-		return buf[o] << 24 | buf[o + 1] << 16 | buf[o + 2] << 8 | buf[o + 3];
+		return (buf[o] << 24) | (buf[o + 1] << 16) | (buf[o + 2] << 8) | buf[o + 3];
 	};
 
 	return {
 		width: u32(16),
 		height: u32(16 + 4),
-		alpha: !!(buf[25] & 4)
+		alpha: !!(buf[25] & 4),
 	};
 }

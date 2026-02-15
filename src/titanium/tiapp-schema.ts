@@ -3,22 +3,22 @@ import * as z from 'zod';
 /**
  * Coerce values to strings for XML text content
  */
-const OptionalStringSchema = z.union([z.string(), z.number()]).transform((val) => String(val)).optional();
+const OptionalStringSchema = z
+	.union([z.string(), z.number()])
+	.transform((val) => String(val))
+	.optional();
 
 /**
  * Boolean schema that accepts boolean or string 'true'/'false'
  */
-const BooleanSchema = z.union([
-	z.boolean(),
-	z.literal('true'),
-	z.literal('false'),
-	z.string(),
-]).transform((val) => {
-	if (typeof val === 'boolean') return val;
-	if (val === 'true') return true;
-	if (val === 'false') return false;
-	return Boolean(val);
-});
+const BooleanSchema = z
+	.union([z.boolean(), z.literal('true'), z.literal('false'), z.string()])
+	.transform((val) => {
+		if (typeof val === 'boolean') return val;
+		if (val === 'true') return true;
+		if (val === 'false') return false;
+		return Boolean(val);
+	});
 
 /**
  * Number schema that accepts numbers or numeric strings
@@ -59,17 +59,18 @@ export const ModulesSchema = z.array(ModuleSchema).optional();
 /**
  * Deployment target schema
  */
-export const DeploymentTargetsSchema = z.record(
-	z.string(),
-	z.union([z.boolean(), z.string()]),
-).optional();
+export const DeploymentTargetsSchema = z
+	.record(z.string(), z.union([z.boolean(), z.string()]))
+	.optional();
 
 /**
  * iOS capabilities schema
  */
-export const IOSCapabilitiesSchema = z.object({
-	appGroups: z.array(z.string()).optional(),
-}).optional();
+export const IOSCapabilitiesSchema = z
+	.object({
+		appGroups: z.array(z.string()).optional(),
+	})
+	.optional();
 
 /**
  * iOS extension target schema
@@ -90,25 +91,27 @@ const IOSExtensionSchema = z.object({
 /**
  * iOS configuration schema
  */
-export const IOSSchema = z.object({
-	excludeDirFromAssetCatalog: BooleanSchema.optional(),
-	enableLaunchScreenStoryboard: BooleanSchema.optional(),
-	enablecoverage: BooleanSchema.optional(),
-	enablemdfind: BooleanSchema.optional(),
-	minIosVer: NumberSchema.optional(),
-	defaultBackgroundColor: OptionalStringSchema,
-	teamId: OptionalStringSchema,
-	useJscoreFramework: BooleanSchema.optional(),
-	runOnMainThread: BooleanSchema.optional(),
-	useAutolayout: BooleanSchema.optional(),
-	useNewBuildSystem: BooleanSchema.optional(),
-	useAppThinning: BooleanSchema.optional(),
-	logServerPort: z.union([z.number(), z.string()]).optional(),
-	capabilities: IOSCapabilitiesSchema,
-	entitlements: z.record(z.string(), z.any()).optional(),
-	plist: z.record(z.string(), z.any()).optional(),
-	extensions: z.array(IOSExtensionSchema).optional(),
-}).optional();
+export const IOSSchema = z
+	.object({
+		excludeDirFromAssetCatalog: BooleanSchema.optional(),
+		enableLaunchScreenStoryboard: BooleanSchema.optional(),
+		enablecoverage: BooleanSchema.optional(),
+		enablemdfind: BooleanSchema.optional(),
+		minIosVer: NumberSchema.optional(),
+		defaultBackgroundColor: OptionalStringSchema,
+		teamId: OptionalStringSchema,
+		useJscoreFramework: BooleanSchema.optional(),
+		runOnMainThread: BooleanSchema.optional(),
+		useAutolayout: BooleanSchema.optional(),
+		useNewBuildSystem: BooleanSchema.optional(),
+		useAppThinning: BooleanSchema.optional(),
+		logServerPort: z.union([z.number(), z.string()]).optional(),
+		capabilities: IOSCapabilitiesSchema,
+		entitlements: z.record(z.string(), z.any()).optional(),
+		plist: z.record(z.string(), z.any()).optional(),
+		extensions: z.array(IOSExtensionSchema).optional(),
+	})
+	.optional();
 
 /**
  * Android activity/service schema
@@ -118,13 +121,15 @@ const AndroidActivityServiceSchema = z.record(z.string(), z.any());
 /**
  * Android configuration schema
  */
-export const AndroidSchema = z.object({
-	manifest: OptionalStringSchema,
-	toolAPILevel: NumberSchema.optional(),
-	abi: z.union([z.array(z.string()), z.string()]).optional(),
-	activities: AndroidActivityServiceSchema.optional(),
-	services: AndroidActivityServiceSchema.optional(),
-}).optional();
+export const AndroidSchema = z
+	.object({
+		manifest: OptionalStringSchema,
+		toolAPILevel: NumberSchema.optional(),
+		abi: z.union([z.array(z.string()), z.string()]).optional(),
+		activities: AndroidActivityServiceSchema.optional(),
+		services: AndroidActivityServiceSchema.optional(),
+	})
+	.optional();
 
 /**
  * Plugin schema
@@ -142,10 +147,12 @@ const PluginsSchema = z.array(PluginSchema).optional();
 /**
  * Webpack configuration schema
  */
-const WebpackSchema = z.object({
-	type: z.string().optional(),
-	transpileDependencies: z.array(z.string()).optional(),
-}).optional();
+const WebpackSchema = z
+	.object({
+		type: z.string().optional(),
+		transpileDependencies: z.array(z.string()).optional(),
+	})
+	.optional();
 
 /**
  * Platform-specific ID schema
@@ -164,32 +171,34 @@ const PlatformIdSchema = z.union([
 /**
  * Main Tiapp schema
  */
-export const TiappSchema = z.object({
-	id: PlatformIdSchema.optional(),
-	name: OptionalStringSchema,
-	version: OptionalStringSchema,
-	publisher: OptionalStringSchema,
-	url: OptionalStringSchema,
-	description: OptionalStringSchema,
-	copyright: OptionalStringSchema,
-	icon: OptionalStringSchema,
-	fullscreen: BooleanSchema.optional(),
-	navbarHidden: BooleanSchema.optional(),
-	analytics: BooleanSchema.optional(),
-	guid: OptionalStringSchema,
-	persistentWifi: BooleanSchema.optional(),
-	prerenderedIcon: BooleanSchema.optional(),
-	statusbarStyle: OptionalStringSchema,
-	statusbarHidden: BooleanSchema.optional(),
-	sdkVersion: OptionalStringSchema,
-	properties: PropertiesSchema,
-	deploymentTargets: DeploymentTargetsSchema,
-	modules: ModulesSchema,
-	plugins: PluginsSchema,
-	ios: IOSSchema,
-	android: AndroidSchema,
-	webpack: WebpackSchema,
-}).partial();
+export const TiappSchema = z
+	.object({
+		id: PlatformIdSchema.optional(),
+		name: OptionalStringSchema,
+		version: OptionalStringSchema,
+		publisher: OptionalStringSchema,
+		url: OptionalStringSchema,
+		description: OptionalStringSchema,
+		copyright: OptionalStringSchema,
+		icon: OptionalStringSchema,
+		fullscreen: BooleanSchema.optional(),
+		navbarHidden: BooleanSchema.optional(),
+		analytics: BooleanSchema.optional(),
+		guid: OptionalStringSchema,
+		persistentWifi: BooleanSchema.optional(),
+		prerenderedIcon: BooleanSchema.optional(),
+		statusbarStyle: OptionalStringSchema,
+		statusbarHidden: BooleanSchema.optional(),
+		sdkVersion: OptionalStringSchema,
+		properties: PropertiesSchema,
+		deploymentTargets: DeploymentTargetsSchema,
+		modules: ModulesSchema,
+		plugins: PluginsSchema,
+		ios: IOSSchema,
+		android: AndroidSchema,
+		webpack: WebpackSchema,
+	})
+	.partial();
 
 /**
  * Infer TypeScript types from schemas

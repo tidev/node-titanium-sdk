@@ -12,7 +12,7 @@ type TitaniumBuild = {
 		url: string;
 		size: number;
 	}[];
-}
+};
 
 /**
  * Retrieves the list of builds for a given branch.
@@ -20,10 +20,16 @@ type TitaniumBuild = {
  * @param {String} os - The name of the current OS (osx, linux, win32)
  * @returns {Promise<BranchBuild[]>}
  */
-export async function getTitaniumBranchBuilds(branch: string, os: string): Promise<TitaniumBuild[]> {
-	const res = await request(config.titanium.sdk.downloadURLs.branchBuilds.replace('${branch}', branch), {
-		responseType: 'json'
-	});
+export async function getTitaniumBranchBuilds(
+	branch: string,
+	os: string
+): Promise<TitaniumBuild[]> {
+	const res = await request(
+		config.titanium.sdk.downloadURLs.branchBuilds.replace('${branch}', branch),
+		{
+			responseType: 'json',
+		}
+	);
 	const now = Date.now();
 	const results = (await res.body.json()) as TitaniumBuild[];
 
@@ -31,7 +37,7 @@ export async function getTitaniumBranchBuilds(branch: string, os: string): Promi
 		os = 'osx';
 	}
 
-	return results.filter(b => {
-		return (!b.expires || Date.parse(b.expires) > now) && b.assets.some(a => a.os === os);
+	return results.filter((b) => {
+		return (!b.expires || Date.parse(b.expires) > now) && b.assets.some((a) => a.os === os);
 	});
 }

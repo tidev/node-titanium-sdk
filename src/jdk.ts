@@ -1,3 +1,9 @@
+import { config } from './config.js';
+import { expand } from './util/expand.js';
+import { isDir } from './util/is-dir.js';
+import { isFile } from './util/is-file.js';
+import { Issue } from './util/issue.js';
+import { tailgate } from './util/tailgate.js';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
@@ -5,12 +11,6 @@ import { realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import snooplogg from 'snooplogg';
-import { config } from './config.js';
-import { expand } from './util/expand.js';
-import { isDir } from './util/is-dir.js';
-import { isFile } from './util/is-file.js';
-import { Issue } from './util/issue.js';
-import { tailgate } from './util/tailgate.js';
 import which from 'which';
 
 const { error, log } = snooplogg('jdk');
@@ -34,16 +34,8 @@ export const libjvmLocations: Record<string, string[]> = {
 		'jre/lib/i386/server/libjvm.so',
 		'lib/server/libjvm.so',
 	],
-	darwin: [
-		'jre/lib/server/libjvm.dylib',
-		'../Libraries/libjvm.dylib',
-		'lib/server/libjvm.dylib',
-	],
-	win32: [
-		'jre/bin/server/jvm.dll',
-		'jre/bin/client/jvm.dll',
-		'bin/server/jvm.dll',
-	],
+	darwin: ['jre/lib/server/libjvm.dylib', '../Libraries/libjvm.dylib', 'lib/server/libjvm.dylib'],
+	win32: ['jre/bin/server/jvm.dll', 'jre/bin/client/jvm.dll', 'bin/server/jvm.dll'],
 };
 
 const exe = process.platform === 'win32' ? '.exe' : '';
@@ -106,7 +98,7 @@ export class JDK {
 		};
 
 		await Promise.all(
-			Object.keys(executables).map(async cmd => {
+			Object.keys(executables).map(async (cmd) => {
 				const p = join(path, 'bin', `${cmd}${exe}`);
 				if (isFile(p)) {
 					executables[cmd] = await realpath(p);
@@ -152,21 +144,22 @@ interface JDKs {
 let jdkCache: JDKs | null = null;
 let jdkSearchPathsHash: string | null = null;
 
-export async function detectJDKs(options: {
-	bypassCache?: boolean;
-	javaHome?: string;
-	searchPaths?: string[];
-} = {}): Promise<JDKs> {
+export async function detectJDKs(
+	options: {
+		bypassCache?: boolean;
+		javaHome?: string;
+		searchPaths?: string[];
+	} = {}
+): Promise<JDKs> {
 	const { home, searchPaths } = await getSearchPaths(options);
-	const searchPathsHash = createHash('sha256')
-		.update(searchPaths.toSorted().join()).digest('hex');
+	const searchPathsHash = createHash('sha256').update(searchPaths.toSorted().join()).digest('hex');
 
 	if (jdkCache !== null && !options.bypassCache && jdkSearchPathsHash === searchPathsHash) {
 		return jdkCache;
 	}
 
 	return tailgate('jdk:detect', async () => {
-		const results = await Promise.allSettled(searchPaths.map(path => JDK.load(path)));
+		const results = await Promise.allSettled(searchPaths.map((path) => JDK.load(path)));
 		const jdks: JDK[] = [];
 		const issues: Issue[] = [];
 
@@ -184,11 +177,13 @@ export async function detectJDKs(options: {
 		if (process.platform === 'win32') {
 			for (const jdk of jdks) {
 				if (jdk.path.includes('&')) {
-					issues.push(new Issue(`JDK path contains ampersand: ${jdk.path}`, {
-						id: 'JDK_PATH_CONTAINS_AMPERSAND',
-						type: 'warning',
-						details: 'The JDK path contains an ampersand (&) and may cause issues.',
-					}));
+					issues.push(
+						new Issue(`JDK path contains ampersand: ${jdk.path}`, {
+							id: 'JDK_PATH_CONTAINS_AMPERSAND',
+							type: 'warning',
+							details: 'The JDK path contains an ampersand (&) and may cause issues.',
+						})
+					);
 				}
 			}
 		}

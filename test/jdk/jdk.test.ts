@@ -1,13 +1,13 @@
+import { config, resetConfig } from '../../src/config.js';
+import { detectJDKs, JDK } from '../../src/jdk.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { config, resetConfig } from '../../src/config.js';
-import { detectJDKs, JDK } from '../../src/jdk.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const exe = process.platform === 'win32' ? '.exe' : '';
 
-describe('JDK', function() {
+describe('JDK', function () {
 	let javaHome: string | undefined;
 
 	beforeAll(() => {
@@ -31,10 +31,12 @@ describe('JDK', function() {
 
 	describe('load()', () => {
 		it('should throw error if dir is not a string', async () => {
-			await expect(JDK.load(undefined as any)).rejects
-				.toThrowError(new TypeError('Expected JDK path to be a valid string'));
-			await expect(JDK.load(123 as any)).rejects
-				.toThrowError(new TypeError('Expected JDK path to be a valid string'));
+			await expect(JDK.load(undefined as any)).rejects.toThrowError(
+				new TypeError('Expected JDK path to be a valid string')
+			);
+			await expect(JDK.load(123 as any)).rejects.toThrowError(
+				new TypeError('Expected JDK path to be a valid string')
+			);
 		});
 
 		it('should throw error if dir does not exist', async () => {
@@ -42,8 +44,9 @@ describe('JDK', function() {
 		});
 
 		it('should error if dir is missing essential jdk tools', async () => {
-			await expect(JDK.load(path.join(__dirname, 'mocks', 'incomplete-jdk'))).rejects
-				.toThrow('Directory missing required program');
+			await expect(JDK.load(path.join(__dirname, 'mocks', 'incomplete-jdk'))).rejects.toThrow(
+				'Directory missing required program'
+			);
 		});
 
 		it('should detect JDK 1.6', async () => {
@@ -195,7 +198,7 @@ describe('JDK', function() {
 				const { home, jdks } = await detectJDKs({ bypassCache: true });
 				expect(home).toBe(dir);
 
-				const jdk = jdks.find(jdk => jdk.path === dir);
+				const jdk = jdks.find((jdk) => jdk.path === dir);
 				expect(jdk).toBeDefined();
 				expect(jdk!.build).toBeNull();
 				expect(jdk!.executables).toEqual({
@@ -250,9 +253,7 @@ describe('JDK', function() {
 			config.jdk.searchPaths[process.platform] = [];
 			const { jdks, issues } = await detectJDKs({
 				bypassCache: true,
-				searchPaths: [
-					path.join(__dirname, 'mocks', 'incomplete-jdk'),
-				]
+				searchPaths: [path.join(__dirname, 'mocks', 'incomplete-jdk')],
 			});
 			expect(jdks).toEqual([]);
 			expect(issues.length).toBe(1);

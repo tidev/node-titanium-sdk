@@ -1,8 +1,8 @@
+import { isFile } from '../util/is-file.js';
+import { tiappXmlToJson, applyTiappJsonToXml } from './tiapp-transform.js';
 import { DOMParser, type Options } from '@xmldom/xmldom';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { isFile } from '../util/is-file.js';
-import { tiappXmlToJson, applyTiappJsonToXml } from './tiapp-transform.js';
 
 declare module '@xmldom/xmldom' {
 	interface Options {
@@ -40,7 +40,7 @@ export class TiappXML {
 			// Initialize with empty document
 			this.dom = new DOMParser(defaultDOMParserArgs).parseFromString(
 				'<?xml version="1.0" encoding="UTF-8"?>\n<ti:app xmlns:ti="http://ti.tidev.io"></ti:app>',
-				'text/xml',
+				'text/xml'
 			);
 		}
 	}

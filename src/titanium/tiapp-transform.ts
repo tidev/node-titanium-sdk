@@ -23,11 +23,7 @@ export function toXmlTag(camelCase: string): string {
 /**
  * Find an element by tag name and optional platform attribute
  */
-export function findElement(
-	doc: Document,
-	tagName: string,
-	platform?: string,
-): Element | null {
+export function findElement(doc: Document, tagName: string, platform?: string): Element | null {
 	const root = doc.documentElement;
 	let child = root.firstChild;
 
@@ -79,7 +75,8 @@ export function detectIndentation(doc: Document): string {
 	let child = root.firstChild;
 
 	while (child) {
-		if (child.nodeType === 3) { // TEXT_NODE
+		if (child.nodeType === 3) {
+			// TEXT_NODE
 			const text = child.nodeValue || '';
 			const match = text.match(/\n([\t ]+)/);
 			if (match) {
@@ -122,7 +119,7 @@ export function createElement(
 	doc: Document,
 	tagName: string,
 	value: any,
-	platform?: string,
+	platform?: string
 ): Element {
 	const root = doc.documentElement;
 	const indent = detectIndentation(doc);
@@ -219,7 +216,9 @@ function readDeploymentTargets(doc: Document): Record<string, boolean | string> 
 /**
  * Read properties structure
  */
-function readProperties(doc: Document): Record<string, { type: string; value: unknown }> | undefined {
+function readProperties(
+	doc: Document
+): Record<string, { type: string; value: unknown }> | undefined {
 	const elements = findElements(doc, 'property');
 	if (elements.length === 0) return undefined;
 
@@ -234,11 +233,20 @@ function readProperties(doc: Document): Record<string, { type: string; value: un
 /**
  * Read modules array
  */
-function readModules(doc: Document): Array<{ id: string; platform?: string; version?: string | number; deployType?: string }> | undefined {
+function readModules(
+	doc: Document
+):
+	| Array<{ id: string; platform?: string; version?: string | number; deployType?: string }>
+	| undefined {
 	const container = findElement(doc, 'modules');
 	if (!container) return undefined;
 
-	const modules: Array<{ id: string; platform?: string; version?: string | number; deployType?: string }> = [];
+	const modules: Array<{
+		id: string;
+		platform?: string;
+		version?: string | number;
+		deployType?: string;
+	}> = [];
 	let child = container.firstChild;
 	while (child) {
 		if (child.nodeType === ELEMENT_NODE) {
@@ -315,10 +323,20 @@ function readIOS(doc: Document): Record<string, unknown> | undefined {
 
 	const result: Record<string, unknown> = {};
 	const simpleTags = [
-		'enable-launch-screen-storyboard', 'use-app-thinning', 'enablecoverage', 'enablemdfind',
-		'default-background-color', 'min-ios-ver', 'team-id', 'log-server-port',
-		'use-jscore-framework', 'run-on-main-thread', 'use-autolayout', 'use-new-build-system',
-		'use-app-thinning', 'exclude-dir-from-asset-catalog',
+		'enable-launch-screen-storyboard',
+		'use-app-thinning',
+		'enablecoverage',
+		'enablemdfind',
+		'default-background-color',
+		'min-ios-ver',
+		'team-id',
+		'log-server-port',
+		'use-jscore-framework',
+		'run-on-main-thread',
+		'use-autolayout',
+		'use-new-build-system',
+		'use-app-thinning',
+		'exclude-dir-from-asset-catalog',
 	];
 	for (const tag of simpleTags) {
 		const child = iosElem.getElementsByTagName(tag)[0];
@@ -350,7 +368,11 @@ function readIOS(doc: Document): Record<string, unknown> | undefined {
 			pl.parse(`<plist version="1.0">${dictElem.toString()}</plist>`);
 			const filtered: Record<string, unknown> = {};
 			for (const k of Object.keys(pl)) {
-				if (!/^CFBundle(DisplayName|Executable|IconFile|Identifier|InfoDictionaryVersion|Name|PackageType|Signature)|LSRequiresIPhoneOS$/.test(k)) {
+				if (
+					!/^CFBundle(DisplayName|Executable|IconFile|Identifier|InfoDictionaryVersion|Name|PackageType|Signature)|LSRequiresIPhoneOS$/.test(
+						k
+					)
+				) {
 					filtered[k] = pl[k];
 				}
 			}
@@ -360,12 +382,18 @@ function readIOS(doc: Document): Record<string, unknown> | undefined {
 
 	const extElem = iosElem.getElementsByTagName('extensions')[0];
 	if (extElem) {
-		const extensions: Array<{ projectPath: string; targets?: Array<{ name: string; ppUUIDs?: Record<string, string> }> }> = [];
+		const extensions: Array<{
+			projectPath: string;
+			targets?: Array<{ name: string; ppUUIDs?: Record<string, string> }>;
+		}> = [];
 		const extList = extElem.getElementsByTagName('extension');
 		for (let i = 0; i < extList.length; i++) {
 			const ext = extList[i];
 			const projectPath = ext.getAttribute('project-path') || xml.getValueString(ext) || '';
-			const extObj: { projectPath: string; targets?: Array<{ name: string; ppUUIDs?: Record<string, string> }> } = { projectPath };
+			const extObj: {
+				projectPath: string;
+				targets?: Array<{ name: string; ppUUIDs?: Record<string, string> }>;
+			} = { projectPath };
 			const targets = ext.getElementsByTagName('target');
 			if (targets.length > 0) {
 				extObj.targets = [];
@@ -394,10 +422,9 @@ function readAndroid(doc: Document): Record<string, unknown> | undefined {
 	const result: Record<string, unknown> = {};
 	const manifestElem = androidElem.getElementsByTagName('manifest')[0];
 	if (manifestElem) {
-		result.manifest = manifestElem.toString().replace(
-			/ xmlns:android="http:\/\/schemas\.android\.com\/apk\/res\/android"/g,
-			'',
-		);
+		result.manifest = manifestElem
+			.toString()
+			.replace(/ xmlns:android="http:\/\/schemas\.android\.com\/apk\/res\/android"/g, '');
 	}
 
 	const toolApiElem = androidElem.getElementsByTagName('tool-api-level')[0];
@@ -420,7 +447,10 @@ function readAndroid(doc: Document): Record<string, unknown> | undefined {
 			const a = acts[i];
 			const url = a.getAttribute('url') || xml.getValueString(a) || '';
 			const key = url || `activity-${i}`;
-			activities[key] = { url, ...Object.fromEntries(Array.from(a.attributes).map((attr) => [attr.name, attr.value])) };
+			activities[key] = {
+				url,
+				...Object.fromEntries(Array.from(a.attributes).map((attr) => [attr.name, attr.value])),
+			};
 		}
 		result.activities = activities;
 	}
@@ -433,7 +463,10 @@ function readAndroid(doc: Document): Record<string, unknown> | undefined {
 			const s = svcs[i];
 			const url = s.getAttribute('url') || xml.getValueString(s) || '';
 			const key = url || `service-${i}`;
-			services[key] = { url, ...Object.fromEntries(Array.from(s.attributes).map((attr) => [attr.name, attr.value])) };
+			services[key] = {
+				url,
+				...Object.fromEntries(Array.from(s.attributes).map((attr) => [attr.name, attr.value])),
+			};
 		}
 		result.services = services;
 	}
@@ -469,9 +502,23 @@ function readWebpack(doc: Document): Record<string, unknown> | undefined {
  * Simple scalar tags at root level (with optional platform attribute)
  */
 const SIMPLE_TAGS = [
-	'id', 'name', 'version', 'publisher', 'url', 'description', 'copyright',
-	'icon', 'fullscreen', 'navbar-hidden', 'analytics', 'guid', 'persistent-wifi',
-	'prerendered-icon', 'statusbar-style', 'statusbar-hidden', 'sdk-version',
+	'id',
+	'name',
+	'version',
+	'publisher',
+	'url',
+	'description',
+	'copyright',
+	'icon',
+	'fullscreen',
+	'navbar-hidden',
+	'analytics',
+	'guid',
+	'persistent-wifi',
+	'prerendered-icon',
+	'statusbar-style',
+	'statusbar-hidden',
+	'sdk-version',
 ];
 
 /**
@@ -562,18 +609,17 @@ function deepEqual(a: unknown, b: unknown): boolean {
 	const keysA = Object.keys(a as object);
 	const keysB = Object.keys(b as object);
 	if (keysA.length !== keysB.length) return false;
-	return keysA.every((k) => keysB.includes(k) && deepEqual((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]));
+	return keysA.every(
+		(k) =>
+			keysB.includes(k) &&
+			deepEqual((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k])
+	);
 }
 
 /**
  * Write a simple scalar value to XML
  */
-function writeSimpleValue(
-	doc: Document,
-	key: string,
-	value: unknown,
-	platform?: string,
-): void {
+function writeSimpleValue(doc: Document, key: string, value: unknown, platform?: string): void {
 	const xmlTag = toXmlTag(key);
 	const strVal = value === true ? 'true' : value === false ? 'false' : String(value);
 	const elem = findElement(doc, xmlTag, platform);
@@ -596,7 +642,10 @@ function removeSimpleElement(doc: Document, key: string, platform?: string): voi
 /**
  * Write properties to XML
  */
-function writeProperties(doc: Document, properties: Record<string, { type?: string; value: unknown }>): void {
+function writeProperties(
+	doc: Document,
+	properties: Record<string, { type?: string; value: unknown }>
+): void {
 	const root = doc.documentElement;
 	const indent = detectIndentation(doc);
 	const existing = findElements(doc, 'property');
@@ -661,7 +710,10 @@ function writeDeploymentTargets(doc: Document, targets: Record<string, boolean |
 /**
  * Write modules to XML
  */
-function writeModules(doc: Document, modules: Array<{ id: string; platform?: string; version?: string | number; deployType?: string }>): void {
+function writeModules(
+	doc: Document,
+	modules: Array<{ id: string; platform?: string; version?: string | number; deployType?: string }>
+): void {
 	const indent = detectIndentation(doc);
 	const root = doc.documentElement;
 	let container = findElement(doc, 'modules');
@@ -688,7 +740,10 @@ function writeModules(doc: Document, modules: Array<{ id: string; platform?: str
 /**
  * Write plugins to XML
  */
-function writePlugins(doc: Document, plugins: Array<{ id: string; version?: string | number }>): void {
+function writePlugins(
+	doc: Document,
+	plugins: Array<{ id: string; version?: string | number }>
+): void {
 	const existing = findElements(doc, 'plugin');
 	const root = doc.documentElement;
 	const indent = detectIndentation(doc);
@@ -738,12 +793,7 @@ function writeId(doc: Document, id: string | Record<string, string | undefined>)
 /**
  * Apply diff from before to after, updating the XML document
  */
-function applyDiff(
-	doc: Document,
-	before: TiappData,
-	after: TiappData,
-	key: string,
-): void {
+function applyDiff(doc: Document, before: TiappData, after: TiappData, key: string): void {
 	const beforeVal = before[key];
 	const afterVal = after[key];
 
@@ -789,7 +839,15 @@ function applyDiff(
 	} else if (key === 'deploymentTargets' && typeof afterVal === 'object' && afterVal !== null) {
 		writeDeploymentTargets(doc, afterVal as Record<string, boolean | string>);
 	} else if (key === 'modules' && Array.isArray(afterVal)) {
-		writeModules(doc, afterVal as Array<{ id: string; platform?: string; version?: string | number; deployType?: string }>);
+		writeModules(
+			doc,
+			afterVal as Array<{
+				id: string;
+				platform?: string;
+				version?: string | number;
+				deployType?: string;
+			}>
+		);
 	} else if (key === 'plugins' && Array.isArray(afterVal)) {
 		writePlugins(doc, afterVal as Array<{ id: string; version?: string | number }>);
 	} else if (key === 'ios' || key === 'android' || key === 'webpack') {
@@ -797,7 +855,11 @@ function applyDiff(
 		// If it changed, we could replace the whole element - but that's complex.
 		// For MVP, only support top-level and known structures.
 		// TODO: implement ios/android/webpack write
-	} else if (typeof afterVal === 'string' || typeof afterVal === 'number' || typeof afterVal === 'boolean') {
+	} else if (
+		typeof afterVal === 'string' ||
+		typeof afterVal === 'number' ||
+		typeof afterVal === 'boolean'
+	) {
 		writeSimpleValue(doc, key, afterVal);
 	}
 }
@@ -818,11 +880,7 @@ export function validateTiappData(data: TiappData): Tiapp {
  * Apply JSON changes to XML document. Computes diff between before and after,
  * updates the document accordingly, and validates the result.
  */
-export function applyTiappJsonToXml(
-	before: TiappData,
-	after: TiappData,
-	doc: Document,
-): Document {
+export function applyTiappJsonToXml(before: TiappData, after: TiappData, doc: Document): Document {
 	validateTiappData(after);
 
 	const allKeys = new Set([...Object.keys(before), ...Object.keys(after)]);

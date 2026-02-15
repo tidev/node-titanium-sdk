@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises';
 import { isFile } from '../../util/is-file.js';
+import { readFile } from 'node:fs/promises';
 
 /**
  * Cached regex for matching key/values in properties files.

@@ -1,7 +1,7 @@
+import { isFile } from '../../src/util/is-file.js';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { describe, expect, it } from 'vitest';
-import { isFile } from '../../src/util/is-file.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

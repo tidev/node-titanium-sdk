@@ -41,8 +41,8 @@ export function tailgate<T>(name: string, callback: () => T): Promise<T> {
 
 		if (result instanceof Promise) {
 			result
-				.then(result => dispatchResolvers('resolve', result))
-				.catch(err => dispatchResolvers('reject', err));
+				.then((result) => dispatchResolvers('resolve', result))
+				.catch((err) => dispatchResolvers('reject', err));
 		} else {
 			dispatchResolvers('resolve', result);
 		}

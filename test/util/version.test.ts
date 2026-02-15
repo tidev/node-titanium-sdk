@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import * as version from '../../src/util/version.js';
+import { describe, expect, it } from 'vitest';
 
 describe('version', () => {
 	describe('compare()', () => {
@@ -57,8 +57,7 @@ describe('version', () => {
 		});
 
 		it('should throw an error if the version is invalid', () => {
-			expect(() => version.compare('foo', 'bar'))
-				.toThrow('Invalid version format');
+			expect(() => version.compare('foo', 'bar')).toThrow('Invalid version format');
 		});
 	});
 
@@ -148,10 +147,8 @@ describe('version', () => {
 		});
 
 		it('should throw an error if the version is invalid', () => {
-			expect(() => version.format(undefined as any))
-				.toThrow('Invalid version "undefined"');
-			expect(() => version.format(null as any))
-				.toThrow('Invalid version "null"');
+			expect(() => version.format(undefined as any)).toThrow('Invalid version "undefined"');
+			expect(() => version.format(null as any)).toThrow('Invalid version "null"');
 		});
 	});
 
@@ -370,12 +367,17 @@ describe('version', () => {
 
 	describe('sort()', () => {
 		it('should sort versions', () => {
-			expect(version.sort(['1.0.2', '1.0.1', '1.0.0']))
-				.toEqual(['1.0.0', '1.0.1', '1.0.2']);
-			expect(version.sort(['1.0.2-beta', '1.0.1-beta', '1.0.0-beta']))
-				.toEqual(['1.0.0-beta', '1.0.1-beta', '1.0.2-beta']);
-			expect(version.sort(['1.0.2-beta', '1.0.1-beta', '1.0.0-beta']))
-				.toEqual(['1.0.0-beta', '1.0.1-beta', '1.0.2-beta']);
+			expect(version.sort(['1.0.2', '1.0.1', '1.0.0'])).toEqual(['1.0.0', '1.0.1', '1.0.2']);
+			expect(version.sort(['1.0.2-beta', '1.0.1-beta', '1.0.0-beta'])).toEqual([
+				'1.0.0-beta',
+				'1.0.1-beta',
+				'1.0.2-beta',
+			]);
+			expect(version.sort(['1.0.2-beta', '1.0.1-beta', '1.0.0-beta'])).toEqual([
+				'1.0.0-beta',
+				'1.0.1-beta',
+				'1.0.2-beta',
+			]);
 		});
 	});
 });

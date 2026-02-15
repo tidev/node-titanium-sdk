@@ -1,8 +1,8 @@
+import { detectAndroidSDKs, AndroidSDK } from '../../src/android/android-sdk.js';
+import { config, resetConfig } from '../../src/config.js';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { config, resetConfig } from '../../src/config.js';
-import { detectAndroidSDKs, AndroidSDK } from '../../src/android/android-sdk.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const exe = process.platform === 'win32' ? '.exe' : '';
@@ -13,27 +13,35 @@ describe('Android SDK', () => {
 
 	describe('load()', () => {
 		it('should error if directory is invalid', async () => {
-			await expect(AndroidSDK.load(undefined as any))
-				.rejects.toThrowError(new TypeError('Expected Android SDK path to be a valid string'));
-			await expect(AndroidSDK.load(123 as any))
-				.rejects.toThrowError(new TypeError('Expected Android SDK path to be a valid string'));
-			await expect(AndroidSDK.load(''))
-				.rejects.toThrowError(new TypeError('Expected Android SDK path to be a valid string'));
+			await expect(AndroidSDK.load(undefined as any)).rejects.toThrowError(
+				new TypeError('Expected Android SDK path to be a valid string')
+			);
+			await expect(AndroidSDK.load(123 as any)).rejects.toThrowError(
+				new TypeError('Expected Android SDK path to be a valid string')
+			);
+			await expect(AndroidSDK.load('')).rejects.toThrowError(
+				new TypeError('Expected Android SDK path to be a valid string')
+			);
 		});
 
 		it('should error if directory does not exist', async () => {
-			await expect(AndroidSDK.load(join(__dirname, 'doesnotexist')))
-				.rejects.toThrowError(new Error(`Android SDK path does not exist: ${join(__dirname, 'doesnotexist')}`));
+			await expect(AndroidSDK.load(join(__dirname, 'doesnotexist'))).rejects.toThrowError(
+				new Error(`Android SDK path does not exist: ${join(__dirname, 'doesnotexist')}`)
+			);
 		});
 
 		it('should error if missing adb executable', async () => {
-			await expect(AndroidSDK.load(join(__dirname, 'mocks', 'sdk', testPlatform, 'missing-adb')))
-				.rejects.toThrowError(new Error('Invalid Android SDK: missing required executable "adb"'));
+			await expect(
+				AndroidSDK.load(join(__dirname, 'mocks', 'sdk', testPlatform, 'missing-adb'))
+			).rejects.toThrowError(new Error('Invalid Android SDK: missing required executable "adb"'));
 		});
 
 		it('should error if missing emulator executable', async () => {
-			await expect(AndroidSDK.load(join(__dirname, 'mocks', 'sdk', testPlatform, 'missing-emulator')))
-				.rejects.toThrowError(new Error('Invalid Android SDK: missing required executable "emulator"'));
+			await expect(
+				AndroidSDK.load(join(__dirname, 'mocks', 'sdk', testPlatform, 'missing-emulator'))
+			).rejects.toThrowError(
+				new Error('Invalid Android SDK: missing required executable "emulator"')
+			);
 		});
 
 		it('should detect minimal sdk', async () => {
@@ -53,7 +61,13 @@ describe('Android SDK', () => {
 		});
 
 		it('should detect sdk with platforms and system images', async () => {
-			const path = join(__dirname, 'mocks', 'sdk', testPlatform, 'with-platforms-and-system-images');
+			const path = join(
+				__dirname,
+				'mocks',
+				'sdk',
+				testPlatform,
+				'with-platforms-and-system-images'
+			);
 			const sdk = await AndroidSDK.load(path);
 			expect(sdk.addons).to.have.length(0);
 			expect(sdk.executables).to.deep.equal({
@@ -74,16 +88,16 @@ describe('Android SDK', () => {
 					revision: 1,
 					sdk: 'android-36',
 					skins: ['WVGA800'],
-					version: '16'
-				}
+					version: '16',
+				},
 			]);
 			expect(sdk.systemImages).to.deep.equal({
 				'android-36.1/example/x86_64': {
 					abi: 'x86_64',
 					sdk: 'android-36.1',
 					skins: [],
-					type: 'example'
-				}
+					type: 'example',
+				},
 			});
 
 			expect(sdk.issues).to.have.length(0);
@@ -92,7 +106,13 @@ describe('Android SDK', () => {
 
 	describe('detect()', () => {
 		it('should find Android SDKs', async () => {
-			const path = join(__dirname, 'mocks', 'sdk', testPlatform, 'with-platforms-and-system-images');
+			const path = join(
+				__dirname,
+				'mocks',
+				'sdk',
+				testPlatform,
+				'with-platforms-and-system-images'
+			);
 			config.android.sdk.searchPaths[process.platform] = [];
 			const { sdks } = await detectAndroidSDKs({
 				bypassCache: true,
@@ -120,18 +140,18 @@ describe('Android SDK', () => {
 							revision: 1,
 							sdk: 'android-36',
 							skins: ['WVGA800'],
-							version: '16'
-						}
+							version: '16',
+						},
 					],
 					systemImages: {
 						'android-36.1/example/x86_64': {
 							abi: 'x86_64',
 							sdk: 'android-36.1',
 							skins: [],
-							type: 'example'
-						}
-					}
-				}
+							type: 'example',
+						},
+					},
+				},
 			]);
 		});
 

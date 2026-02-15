@@ -1,14 +1,14 @@
 import { config } from '../config.js';
-import { basename, join } from 'node:path';
+import { expand } from '../util/expand.js';
 import { isDir } from '../util/is-dir.js';
 import { isFile } from '../util/is-file.js';
-import { expand } from '../util/expand.js';
-import { tailgate } from '../util/tailgate.js';
-import { createHash } from 'node:crypto';
-import snooplogg from 'snooplogg';
 import { Issue } from '../util/issue.js';
-import { readdir, readFile } from 'node:fs/promises';
+import { tailgate } from '../util/tailgate.js';
 import { readPropertiesFile } from './util/read-properties-file.js';
+import { createHash } from 'node:crypto';
+import { readdir, readFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
+import snooplogg from 'snooplogg';
 import which from 'which';
 
 const { error, log } = snooplogg('android:ndk');
@@ -64,7 +64,7 @@ export class AndroidNDK {
 			throw new Error('Android NDK path does not exist: ${path}');
 		}
 
-		for (const name of [ 'build', 'platforms' ]) {
+		for (const name of ['build', 'platforms']) {
 			if (!isDir(join(path, name))) {
 				throw new Error(`Directory does not contain the "${name}" directory`);
 			}
@@ -83,7 +83,7 @@ export class AndroidNDK {
 		let arch = '32-bit';
 		let executables = {
 			'ndk-build': join(path, `ndk-build${cmd}`),
-			'ndk-which': ndkWhich
+			'ndk-which': ndkWhich,
 		};
 
 		for (const name of Object.keys(executables)) {
@@ -117,7 +117,10 @@ export class AndroidNDK {
 			// no version, try to find it in the release.txt file
 			for (const filename of await readdir(path)) {
 				if (filename.toLowerCase() === 'release.txt') {
-					const release = (await readFile(join(path, filename), 'utf8')).split(/\r?\n/).shift()?.trim();
+					const release = (await readFile(join(path, filename), 'utf8'))
+						.split(/\r?\n/)
+						.shift()
+						?.trim();
 					// release comes back in the format "r10e (64-bit)", so we
 					// need to extract a meaningful version number from that
 					const m = release?.match(releaseRegExp);
@@ -159,36 +162,39 @@ let ndkSearchPathsHash: string | null = null;
  * @param {Boolean} [force=false] - When `true`, bypasses cache and forces redetection.
  * @returns {Promise<Array.<NDK>>}
  */
-export async function detectAndroidNDKs(options: {
-	bypassCache?: boolean;
-	searchPaths?: string[];
-} = {}): Promise<NDKs> {
+export async function detectAndroidNDKs(
+	options: {
+		bypassCache?: boolean;
+		searchPaths?: string[];
+	} = {}
+): Promise<NDKs> {
 	const searchPaths = await getSearchPaths(options);
-	const searchPathsHash = createHash('sha256')
-		.update(searchPaths.toSorted().join()).digest('hex');
+	const searchPathsHash = createHash('sha256').update(searchPaths.toSorted().join()).digest('hex');
 
 	if (ndkCache !== null && !options.bypassCache && ndkSearchPathsHash === searchPathsHash) {
 		return ndkCache;
 	}
 
 	return tailgate('android:ndk:detect', async () => {
-		const results = await Promise.allSettled(searchPaths.map(async path => {
-			try {
-				return await AndroidNDK.load(path);
-			} catch (e) {
-				// Not an NDK, check subdirectories
-				if (isDir(path)) {
-					for (const name of await readdir(path)) {
-						try {
-							return await AndroidNDK.load(join(path, name));
-						} catch {
-							// Not an NDK
+		const results = await Promise.allSettled(
+			searchPaths.map(async (path) => {
+				try {
+					return await AndroidNDK.load(path);
+				} catch (e) {
+					// Not an NDK, check subdirectories
+					if (isDir(path)) {
+						for (const name of await readdir(path)) {
+							try {
+								return await AndroidNDK.load(join(path, name));
+							} catch {
+								// Not an NDK
+							}
 						}
 					}
+					throw e;
 				}
-				throw e;
-			}
-		}));
+			})
+		);
 		const ndks: AndroidNDK[] = [];
 		const issues: Issue[] = [];
 
@@ -201,11 +207,13 @@ export async function detectAndroidNDKs(options: {
 		}
 
 		if (!ndks.length) {
-			issues.push(new Issue('No Android NDKs found', {
-				id: 'ANDROID_NDK_NOT_FOUND',
-				type: 'warning',
-				details: 'No Android NDKs found. Please install the Android NDK and try again.',
-			}));
+			issues.push(
+				new Issue('No Android NDKs found', {
+					id: 'ANDROID_NDK_NOT_FOUND',
+					type: 'warning',
+					details: 'No Android NDKs found. Please install the Android NDK and try again.',
+				})
+			);
 		}
 
 		ndkCache = {

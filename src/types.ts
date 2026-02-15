@@ -1,10 +1,12 @@
 import type { AgentOptions } from 'node:http';
 
-export type ConfigSearchPaths = string[] | {
-	darwin?: string[];
-	linux?: string[];
-	win32?: string[];
-};
+export type ConfigSearchPaths =
+	| string[]
+	| {
+			darwin?: string[];
+			linux?: string[];
+			win32?: string[];
+	  };
 
 export interface Config {
 	android: {

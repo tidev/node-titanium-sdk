@@ -63,18 +63,9 @@ export const defaultConfig: Config = {
 			 * @type {String[]|Object}
 			 */
 			searchPaths: {
-				darwin: [
-					'~/Library/Android/sdk/ndk',
-					'~/Library/Android/sdk/ndk-bundle',
-				],
-				linux: [
-					'~/Android/sdk/ndk',
-					'~/Android/sdk/ndk-bundle',
-				],
-				win32: [
-					'%LOCALAPPDATA%\\Android\\sdk\\ndk',
-					'%LOCALAPPDATA%\\Android\\sdk\\ndk-bundle',
-				],
+				darwin: ['~/Library/Android/sdk/ndk', '~/Library/Android/sdk/ndk-bundle'],
+				linux: ['~/Android/sdk/ndk', '~/Android/sdk/ndk-bundle'],
+				win32: ['%LOCALAPPDATA%\\Android\\sdk\\ndk', '%LOCALAPPDATA%\\Android\\sdk\\ndk-bundle'],
 			},
 		},
 		sdk: {
@@ -83,17 +74,9 @@ export const defaultConfig: Config = {
 			 * @type {String[]|Object}
 			 */
 			searchPaths: {
-				darwin: [
-					'~/Library/Android/sdk',
-					'/usr/local/share',
-				],
-				linux: [
-					'~/Android/sdk',
-					'/usr/local/share',
-				],
-				win32: [
-					'%LOCALAPPDATA%\\Android\\sdk',
-				],
+				darwin: ['~/Library/Android/sdk', '/usr/local/share'],
+				linux: ['~/Android/sdk', '/usr/local/share'],
+				win32: ['%LOCALAPPDATA%\\Android\\sdk'],
 			},
 		},
 	},
@@ -165,10 +148,7 @@ export const defaultConfig: Config = {
 			 * A list of paths to search for Xcode installations.
 			 * @type {String[]}
 			 */
-			searchPaths: [
-				'/Applications',
-				'~/Applications',
-			],
+			searchPaths: ['/Applications', '~/Applications'],
 		},
 	},
 
@@ -180,19 +160,9 @@ export const defaultConfig: Config = {
 		 * @type {String[]|Object}
 		 */
 		searchPaths: {
-			darwin: [
-				'/Library/Java/JavaVirtualMachines',
-				'/System/Library/Java/JavaVirtualMachines',
-			],
-			linux: [
-				'/usr/lib/jvm/default',
-				'/usr/lib/jvm',
-			],
-			win32: [
-				'%ProgramFiles%\\Java',
-				'%ProgramFiles(x86)%\\Java',
-				'~\\Java',
-			],
+			darwin: ['/Library/Java/JavaVirtualMachines', '/System/Library/Java/JavaVirtualMachines'],
+			linux: ['/usr/lib/jvm/default', '/usr/lib/jvm'],
+			win32: ['%ProgramFiles%\\Java', '%ProgramFiles(x86)%\\Java', '~\\Java'],
 		},
 
 		windows: {
@@ -269,9 +239,7 @@ export const defaultConfig: Config = {
 					'~/Library/Application Support/Titanium',
 					'/Library/Application Support/Titanium', // legacy
 				],
-				linux: [
-					'~/.titanium',
-				],
+				linux: ['~/.titanium'],
 				win32: [
 					'%ProgramData%\\Titanium',
 					'%APPDATA%\\Titanium',
@@ -306,9 +274,7 @@ export const defaultConfig: Config = {
 					'~/Library/Application Support/Titanium',
 					'/Library/Application Support/Titanium', // legacy
 				],
-				linux: [
-					'~/.titanium',
-				],
+				linux: ['~/.titanium'],
 				win32: [
 					'%ProgramData%\\Titanium',
 					'%APPDATA%\\Titanium',

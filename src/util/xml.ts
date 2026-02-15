@@ -70,8 +70,7 @@ export function parse(
  * string if attribute does not exist
  */
 export function getAttr(node: Element, attr: string): string | number | null {
-	return node && (parse(node.getAttribute(attr), false) as string | number | null)
-		|| null;
+	return (node && (parse(node.getAttribute(attr), false) as string | number | null)) || null;
 }
 
 /**

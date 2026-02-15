@@ -1,8 +1,25 @@
 {
   "name": "node-titanium-sdk",
   "version": "7.0.0",
-  "author": "TiDev, Inc. <npm@tidev.io>",
   "description": "Titanium SDK Library",
+  "keywords": [
+    "mobile",
+    "tidev",
+    "titanium",
+    "titanium-sdk"
+  ],
+  "homepage": "https://github.com/tidev/node-titanium-sdk",
+  "bugs": "https://github.com/tidev/node-titanium-sdk/issues",
+  "license": "Apache-2.0",
+  "author": "TiDev, Inc. <npm@tidev.io>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tidev/node-titanium-sdk"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
   "type": "module",
   "module": "./dist/index.mjs",
   "exports": {
@@ -32,17 +49,18 @@
       "require": "./dist/util/index.cjs"
     }
   },
-  "license": "Apache-2.0",
-  "keywords": [
-    "titanium",
-    "titanium-sdk",
-    "tidev",
-    "mobile"
-  ],
-  "files": [
-    "bin",
-    "dist"
-  ],
+  "scripts": {
+    "build": "rimraf dist && tsdown -c tsdown.config.ts",
+    "check": "pnpm type-check && pnpm lint",
+    "coverage": "vitest --coverage",
+    "fmt": "oxfmt",
+    "lint": "oxlint",
+    "prepublishOnly": "pnpm run build",
+    "test": "cross-env CI=1 vitest",
+    "test:bun": "cross-env CI=1 bun --bun --config=bunfig.toml ./node_modules/vitest/vitest.mjs --reporter=verbose",
+    "test:deno": "cross-env CI=1 deno run --allow-all --sloppy-imports ./node_modules/vitest/vitest.mjs",
+    "type-check": "tsc --noEmit"
+  },
   "dependencies": {
     "@babel/core": "7.29.0",
     "@babel/parser": "7.29.0",
@@ -70,23 +88,5 @@
     "tsdown": "0.20.3",
     "typescript": "5.9.3",
     "vitest": "4.0.18"
-  },
-  "homepage": "https://github.com/tidev/node-titanium-sdk",
-  "bugs": "https://github.com/tidev/node-titanium-sdk/issues",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/tidev/node-titanium-sdk"
-  },
-  "scripts": {
-    "build": "rimraf dist && tsdown -c tsdown.config.ts",
-    "check": "pnpm type-check && pnpm lint",
-    "coverage": "vitest --coverage",
-    "fmt": "oxfmt",
-    "lint": "oxlint",
-    "prepublishOnly": "pnpm run build",
-    "test": "cross-env CI=1 vitest",
-    "test:bun": "cross-env CI=1 bun --bun --config=bunfig.toml ./node_modules/vitest/vitest.mjs --reporter=verbose",
-    "test:deno": "cross-env CI=1 deno run --allow-all --sloppy-imports ./node_modules/vitest/vitest.mjs",
-    "type-check": "tsc --noEmit"
   }
 }

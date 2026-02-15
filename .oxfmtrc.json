@@ -17,7 +17,7 @@
     "sortSideEffects": false
   },
   "experimentalSortPackageJson": true,
-  "ignorePatterns": [],
+  "ignorePatterns": ["lib/**", "test-old/**", "test/**/mocks/**"],
   "insertFinalNewline": true,
   "objectWrap": "preserve",
   "overrides": [

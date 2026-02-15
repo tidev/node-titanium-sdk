@@ -26,38 +26,42 @@ export async function getTitaniumReleases(unstable?: boolean): Promise<TitaniumR
 	const releaseRE = /^(\d+)\.(\d+)\.(\d+)\.(\w+)$/;
 
 	const fetches = [
-		unstable && request(config.titanium.sdk.downloadURLs.releases.beta, {
-			responseType: 'json'
-		}).then(async res => ({
-			type: 'beta',
-			releases: (await res.body.json()) as TitaniumRelease[]
-		})),
+		unstable &&
+			request(config.titanium.sdk.downloadURLs.releases.beta, {
+				responseType: 'json',
+			}).then(async (res) => ({
+				type: 'beta',
+				releases: (await res.body.json()) as TitaniumRelease[],
+			})),
 
-		unstable && request(config.titanium.sdk.downloadURLs.releases.rc, {
-			responseType: 'json'
-		}).then(async res => ({
-			type: 'rc',
-			releases: (await res.body.json()) as TitaniumRelease[]
-		})),
+		unstable &&
+			request(config.titanium.sdk.downloadURLs.releases.rc, {
+				responseType: 'json',
+			}).then(async (res) => ({
+				type: 'rc',
+				releases: (await res.body.json()) as TitaniumRelease[],
+			})),
 
 		request(config.titanium.sdk.downloadURLs.releases.ga, {
-			responseType: 'json'
-		}).then(async res => ({
+			responseType: 'json',
+		}).then(async (res) => ({
 			type: 'ga',
-			releases: (await res.body.json()) as TitaniumRelease[]
-		}))
+			releases: (await res.body.json()) as TitaniumRelease[],
+		})),
 	];
 
 	const results = await Promise.all(fetches);
 
 	return results
-		.flatMap(value => {
-			return value ? value.releases.map(rel => {
-				rel.type = value.type;
-				return rel;
-			}) : [];
+		.flatMap((value) => {
+			return value
+				? value.releases.map((rel) => {
+						rel.type = value.type;
+						return rel;
+					})
+				: [];
 		})
-		.filter(r => r.assets.some(a => a.os === os))
+		.filter((r) => r.assets.some((a) => a.os === os))
 		.sort((a, b) => {
 			const aMatch = a.name.toLowerCase().match(releaseRE);
 			const bMatch = b.name.toLowerCase().match(releaseRE);

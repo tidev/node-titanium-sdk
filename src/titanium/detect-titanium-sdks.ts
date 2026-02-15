@@ -1,9 +1,9 @@
-import { createHash } from 'node:crypto';
 import { config } from '../config.js';
 import { expand } from '../util/expand.js';
-import { tailgate } from '../util/tailgate.js';
-import { Issue } from '../util/issue.js';
 import { isDir } from '../util/is-dir.js';
+import { Issue } from '../util/issue.js';
+import { tailgate } from '../util/tailgate.js';
+import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 
@@ -48,14 +48,14 @@ class TitaniumSDK {
 			path,
 			platforms: Array.isArray(manifest.platforms)
 				? manifest.platforms.reduce((platforms, name) => {
-					platforms[name] = {
-						path: join(path, name)
-					};
-					return platforms;
-				}, {})
+						platforms[name] = {
+							path: join(path, name),
+						};
+						return platforms;
+					}, {})
 				: {},
 			type: getSDKType(manifest.name),
-			version: manifest.version
+			version: manifest.version,
 		});
 	}
 }
@@ -71,13 +71,14 @@ interface TiSDKs {
 let tisdkCache: TiSDKs | null = null;
 let tisdkSearchPathsHash: string | null = null;
 
-export async function detectTitaniumSDKs(options: {
-	bypassCache?: boolean;
-	searchPaths?: string[];
-} = {}): Promise<TiSDKs> {
+export async function detectTitaniumSDKs(
+	options: {
+		bypassCache?: boolean;
+		searchPaths?: string[];
+	} = {}
+): Promise<TiSDKs> {
 	const searchPaths = await getSearchPaths(options);
-	const searchPathsHash = createHash('sha256')
-		.update(searchPaths.toSorted().join()).digest('hex');
+	const searchPathsHash = createHash('sha256').update(searchPaths.toSorted().join()).digest('hex');
 
 	if (tisdkCache !== null && !options.bypassCache && tisdkSearchPathsHash === searchPathsHash) {
 		return tisdkCache;
@@ -86,41 +87,45 @@ export async function detectTitaniumSDKs(options: {
 	return tailgate('titanium:tisdk:detect', async () => {
 		const sdks: TitaniumSDK[] = [];
 
-		await Promise.all(searchPaths.map(async path => {
-			// path could be an actual SDK or it could be a Titanium install
-			// directory with the mobilesdk/<os> subdir
-			try {
-				sdks.push(await TitaniumSDK.load(path));
-			} catch {
-				// Not an SDK, check subdirectories
-				if (basename(path) !== os && basename(dirname(path)) !== 'mobilesdk') {
-					path = join(path, 'mobilesdk', os);
-				}
-				if (isDir(path)) {
-					for (const dir of await readdir(path)) {
-						try {
-							sdks.push(await TitaniumSDK.load(join(path, dir)));
-						} catch {
-							// Not an SDK
+		await Promise.all(
+			searchPaths.map(async (path) => {
+				// path could be an actual SDK or it could be a Titanium install
+				// directory with the mobilesdk/<os> subdir
+				try {
+					sdks.push(await TitaniumSDK.load(path));
+				} catch {
+					// Not an SDK, check subdirectories
+					if (basename(path) !== os && basename(dirname(path)) !== 'mobilesdk') {
+						path = join(path, 'mobilesdk', os);
+					}
+					if (isDir(path)) {
+						for (const dir of await readdir(path)) {
+							try {
+								sdks.push(await TitaniumSDK.load(join(path, dir)));
+							} catch {
+								// Not an SDK
+							}
 						}
 					}
 				}
-			}
-		}));
+			})
+		);
 
 		const issues: Issue[] = [];
 
 		if (!sdks.length) {
-			issues.push(new Issue('No Titanium SDKs found', {
-				id: 'TITANIUM_SDK_NOT_FOUND',
-				type: 'warning',
-				details: 'No Titanium SDKs found. Please install the Titanium SDK and try again.',
-			}));
+			issues.push(
+				new Issue('No Titanium SDKs found', {
+					id: 'TITANIUM_SDK_NOT_FOUND',
+					type: 'warning',
+					details: 'No Titanium SDKs found. Please install the Titanium SDK and try again.',
+				})
+			);
 		}
 
 		tisdkCache = {
 			installPath: config.titanium.sdk.installPath[process.platform],
-			latest: sdks.find(s => /.GA$/.test(s.name))?.name || sdks[0]?.name || null,
+			latest: sdks.find((s) => /.GA$/.test(s.name))?.name || sdks[0]?.name || null,
 			sdkPaths: searchPaths,
 			sdks,
 			issues,

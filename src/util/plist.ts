@@ -1,8 +1,8 @@
+import { isFile } from './is-file.js';
+import * as xml from './xml.js';
 import { DOMParser } from '@xmldom/xmldom';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { isFile } from './is-file.js';
-import * as xml from './xml.js';
 
 interface PlistDocument extends XMLDocument {
 	create(tag: string, nodeValue: string | null, parent: Node): Element;
@@ -21,9 +21,7 @@ class PlistType {
 	constructor(type: string, value: any) {
 		this.className = 'PlistType';
 		this.type = type;
-		this.value = type === 'real' && Number.parseInt(value) === value
-			? value.toFixed(1)
-			: value;
+		this.value = type === 'real' && Number.parseInt(value) === value ? value.toFixed(1) : value;
 	}
 }
 
@@ -117,7 +115,7 @@ function walkDict(obj: any, node: Node) {
 				throw new Error('Error parsing plist: Expected <key> entry');
 			}
 
-			key = (node.firstChild && (node.firstChild as Text).data || '').trim();
+			key = ((node.firstChild && (node.firstChild as Text).data) || '').trim();
 
 			next = (node as Node).nextSibling;
 			while (next && (next as Node).nodeType !== xml.ELEMENT_NODE) {
@@ -137,27 +135,27 @@ function walkDict(obj: any, node: Node) {
 			}
 
 			if (next.tagName === 'dict') {
-				walkDict(obj[key] = {}, next.firstChild);
+				walkDict((obj[key] = {}), next.firstChild);
 			} else if (next.tagName === 'true') {
 				obj[key] = true;
 			} else if (next.tagName === 'false') {
 				obj[key] = false;
 			} else if (next.tagName === 'string') {
-				obj[key] = '' + (next.firstChild && next.firstChild.data || '').trim(); // cast all values as strings
+				obj[key] = '' + ((next.firstChild && next.firstChild.data) || '').trim(); // cast all values as strings
 			} else if (next.tagName === 'integer') {
 				obj[key] = Number.parseInt(next.firstChild && next.firstChild.data) || 0;
 			} else if (next.tagName === 'real') {
 				obj[key] = Number.parseFloat(next.firstChild && next.firstChild.data) || 0;
 			} else if (next.tagName === 'date') {
 				// note: plists do not support milliseconds
-				const d = (next.firstChild && next.firstChild.data || '').trim();
+				const d = ((next.firstChild && next.firstChild.data) || '').trim();
 				obj[key] = d ? new Date(d) : null; // note: toXml() can't convert a null date back to a <date> tag
 			} else if (next.tagName === 'array') {
-				walkArray(obj[key] = [], next.firstChild);
+				walkArray((obj[key] = []), next.firstChild);
 			} else if (next.tagName === 'data') {
 				obj[key] = new PlistType(
 					'data',
-					(next.firstChild && next.firstChild.data || '').replace(/\s*/g, '')
+					((next.firstChild && next.firstChild.data) || '').replace(/\s*/g, '')
 				);
 				node = next;
 			}
@@ -214,12 +212,7 @@ function walkArray(arr: any[], node: Node) {
 					break;
 
 				case 'data':
-					arr.push(
-						new PlistType(
-							'data',
-							(node.firstChild?.textContent || '').replace(/\s*/g, '')
-						)
-					);
+					arr.push(new PlistType('data', (node.firstChild?.textContent || '').replace(/\s*/g, '')));
 			}
 		}
 		node = node.nextSibling as Node;
@@ -300,9 +293,7 @@ export class Plist {
 	 * @returns A XML document object
 	 */
 	toXml(indent = 0): Element {
-		const dom = new DOMParser().parseFromString(
-			'<plist version="1.0"/>'
-		) as PlistDocument;
+		const dom = new DOMParser().parseFromString('<plist version="1.0"/>') as PlistDocument;
 
 		dom.create = (tag: string, nodeValue: string | null, parent: Node) => {
 			const node = dom.createElement(tag);
@@ -352,8 +343,10 @@ export class Plist {
 	 */
 	toString(fmt?: string): string {
 		if (fmt === 'xml') {
-			return '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
-				+ this.toXml().toString().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+			return (
+				'<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' +
+				this.toXml().toString().replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+			);
 		} else if (fmt === 'pretty-json') {
 			return JSON.stringify(this, plistTypeFormatter, '\t');
 		} else if (fmt === 'json') {

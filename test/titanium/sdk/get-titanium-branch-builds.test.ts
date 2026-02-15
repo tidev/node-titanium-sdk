@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import { getTitaniumBranchBuilds } from '../../../src/titanium/get-titanium-branch-builds.js';
+import { describe, expect, it } from 'vitest';
 
 describe('getTitaniumBranchBuilds()', () => {
 	it('should return the list of builds', async () => {

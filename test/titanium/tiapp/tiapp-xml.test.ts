@@ -1,8 +1,8 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { TiappXML } from '../../../src/titanium/tiapp-xml.js';
 import { rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterEach, describe, expect, it } from 'vitest';
 
 const fixturesDir = join(fileURLToPath(import.meta.url), '../fixtures');
 
@@ -409,7 +409,7 @@ describe('TiappXML', () => {
 		it('should error if file does not exist', () => {
 			const tiapp = new TiappXML();
 			expect(() => tiapp.load(join(fixturesDir, 'does_not_exist.xml'))).toThrow(
-				'tiapp.xml file does not exist',
+				'tiapp.xml file does not exist'
 			);
 		});
 	});
@@ -454,15 +454,13 @@ describe('TiappXML', () => {
 		it('should error if file does not exist', () => {
 			const tiapp = new TiappXML();
 			expect(() => tiapp.load(join(fixturesDir, 'does_not_exist.xml'))).toThrow(
-				'tiapp.xml file does not exist',
+				'tiapp.xml file does not exist'
 			);
 		});
 
 		it('should error if file is not a valid XML file', () => {
 			const tiapp = new TiappXML();
-			expect(() => tiapp.load(join(fixturesDir, 'invalid.xml'))).toThrow(
-				'Invalid XML file',
-			);
+			expect(() => tiapp.load(join(fixturesDir, 'invalid.xml'))).toThrow('Invalid XML file');
 		});
 	});
 

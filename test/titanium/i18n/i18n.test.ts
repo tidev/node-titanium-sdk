@@ -1,7 +1,7 @@
+import * as i18n from '../../../src/titanium/i18n.js';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import * as i18n from '../../../src/titanium/i18n.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -39,7 +39,9 @@ describe('i18n', () => {
 
 	describe('findLaunchScreens()', () => {
 		it('should find the launch screens', async () => {
-			const result = await i18n.findLaunchScreens(join(__dirname, 'mocks', 'good'), { bypassCache: true });
+			const result = await i18n.findLaunchScreens(join(__dirname, 'mocks', 'good'), {
+				bypassCache: true,
+			});
 			expect(result).toEqual([
 				join(__dirname, 'mocks', 'good', 'i18n', 'en', 'Default-568h@2x.png'),
 			]);
@@ -49,15 +51,21 @@ describe('i18n', () => {
 		});
 
 		it('should return no launch screens if the directory does not exist', async () => {
-			const result = await i18n.findLaunchScreens(join(__dirname, 'mocks', 'does-not-exist'), { bypassCache: true });
+			const result = await i18n.findLaunchScreens(join(__dirname, 'mocks', 'does-not-exist'), {
+				bypassCache: true,
+			});
 			expect(result).toEqual([]);
 		});
 
 		it('should return no launch screens if the directory is empty', async () => {
-			let result = await i18n.findLaunchScreens(join(__dirname, 'mocks', 'empty'), { bypassCache: true });
+			let result = await i18n.findLaunchScreens(join(__dirname, 'mocks', 'empty'), {
+				bypassCache: true,
+			});
 			expect(result).toEqual([]);
 
-			result = await i18n.findLaunchScreens(join(__dirname, 'mocks', 'empty2'), { bypassCache: true });
+			result = await i18n.findLaunchScreens(join(__dirname, 'mocks', 'empty2'), {
+				bypassCache: true,
+			});
 			expect(result).toEqual([]);
 		});
 	});
