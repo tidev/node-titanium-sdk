@@ -879,6 +879,37 @@ function writePlugins(
 }
 
 /**
+ * Build full id value (string or platform object) from flat tiapp data
+ */
+function buildFullId(data: TiappData): string | Record<string, string | undefined> | undefined {
+	const idVal = data.id;
+	const platformKeys = ['Ios', 'Android', 'Iphone', 'Ipad'];
+	const platformObj: Record<string, string | undefined> = {};
+
+	if (typeof idVal === 'string') {
+		platformObj.default = idVal;
+	} else if (idVal && typeof idVal === 'object' && !Array.isArray(idVal)) {
+		Object.assign(platformObj, idVal as Record<string, string | undefined>);
+	}
+
+	for (const k of platformKeys) {
+		const key = 'idPlatform' + k;
+		const platform = k.toLowerCase();
+		if (data[key] !== undefined && data[key] !== null) {
+			platformObj[platform] = String(data[key]);
+		}
+	}
+
+	if (Object.keys(platformObj).length === 0) {
+		return undefined;
+	}
+	if (Object.keys(platformObj).length === 1 && platformObj.default !== undefined) {
+		return platformObj.default;
+	}
+	return platformObj;
+}
+
+/**
  * Write platform-specific id
  */
 function writeId(doc: Document, id: string | Record<string, string | undefined>): void {
@@ -979,8 +1010,11 @@ function applyDiff(doc: Document, before: TiappData, after: TiappData, key: stri
 	}
 
 	// Add or update
-	if (key === 'id') {
-		writeId(doc, afterVal as string | Record<string, string | undefined>);
+	if (key === 'id' || key.startsWith('idPlatform')) {
+		const fullId = buildFullId(after);
+		if (fullId !== undefined) {
+			writeId(doc, fullId);
+		}
 	} else if (key === 'properties' && typeof afterVal === 'object' && afterVal !== null) {
 		writeProperties(doc, afterVal as Record<string, unknown>);
 	} else if (key === 'deploymentTargets' && typeof afterVal === 'object' && afterVal !== null) {
