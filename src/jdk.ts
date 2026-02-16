@@ -7,11 +7,12 @@ import { tailgate } from './util/tailgate.js';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { realpath } from 'node:fs/promises';
+import { readdir, realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import snooplogg from 'snooplogg';
 import which from 'which';
+import type { ErrorWithCode } from './types.js';
 
 const { error, log } = snooplogg('jdk');
 
@@ -103,7 +104,9 @@ export class JDK {
 				if (isFile(p)) {
 					executables[cmd] = await realpath(p);
 				} else {
-					throw new Error(`Directory missing required program: ${path}`);
+					const err = new Error(`Directory missing required program: ${path}`) as ErrorWithCode;
+					err.code = 'JDK_MISSING_REQUIRED_PROGRAM';
+					throw err;
 				}
 			})
 		);
@@ -159,17 +162,33 @@ export async function detectJDKs(
 	}
 
 	return tailgate('jdk:detect', async () => {
-		const results = await Promise.allSettled(searchPaths.map((path) => JDK.load(path)));
 		const jdks: JDK[] = [];
 		const issues: Issue[] = [];
+		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({ path, depth: 0 }));
 
-		for (const result of results) {
-			if (result.status === 'fulfilled' && result.value) {
-				jdks.push(result.value);
-			} else if (result.status === 'rejected') {
-				error(result.reason.message);
-				if (result.reason instanceof Issue) {
-					issues.push(result.reason);
+		while (queue.length > 0) {
+			const { path, depth } = queue.shift()!;
+			try {
+				jdks.push(await JDK.load(path));
+			} catch (err) {
+				if (err instanceof Error && 'code' in err && err.code === 'JDK_MISSING_REQUIRED_PROGRAM') {
+					// Not a JDK, check subdirectories
+					if (depth === 0) {
+						for (const name of await readdir(path)) {
+							const dir = join(path, name);
+							if (isDir(dir)) {
+								queue.push({ path: dir, depth: 1 });
+							}
+						}
+					} else {
+						error(err);
+					}
+				} else if (err instanceof Issue) {
+					error(err.message);
+					issues.push(err);
+				} else {
+					// ignore all other errors
+					error(err);
 				}
 			}
 		}

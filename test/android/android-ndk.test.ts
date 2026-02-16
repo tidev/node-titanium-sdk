@@ -24,33 +24,22 @@ describe('Android NDK', () => {
 		});
 
 		it('should error if directory does not exist', async () => {
-			await expect(AndroidNDK.load(join(__dirname, 'doesnotexist'))).rejects.toThrowError(
-				new Error('Android NDK path does not exist: ${path}')
+			const path = join(__dirname, 'doesnotexist');
+			await expect(AndroidNDK.load(path)).rejects.toThrowError(
+				new Error(`Android NDK path does not exist: ${path}`)
 			);
-		});
-
-		it('should error if directory is missing the "build" directory', async () => {
-			await expect(
-				AndroidNDK.load(join(__dirname, 'mocks', 'ndk', 'all', 'no-build-dir'))
-			).rejects.toThrowError(new Error('Directory does not contain the "build" directory'));
-		});
-
-		it('should error if directory is missing the "platforms" directory', async () => {
-			await expect(
-				AndroidNDK.load(join(__dirname, 'mocks', 'ndk', 'all', 'no-platforms-dir'))
-			).rejects.toThrowError(new Error('Directory does not contain the "platforms" directory'));
 		});
 
 		it('should error if directory is missing the "ndk-build" executable', async () => {
 			await expect(
 				AndroidNDK.load(join(__dirname, 'mocks', 'ndk', 'all', 'no-ndk-build'))
-			).rejects.toThrowError(new Error('Directory does not contain the "ndk-build" executable'));
+			).rejects.toThrow('Directory does not contain the "ndk-build" executable');
 		});
 
 		it('should error if directory is missing the "ndk-which" executable', async () => {
 			await expect(
 				AndroidNDK.load(join(__dirname, 'mocks', 'ndk', process.platform, 'no-ndk-which'))
-			).rejects.toThrowError(new Error('Directory does not contain the "ndk-which" executable'));
+			).rejects.toThrow('Directory does not contain the "ndk-which" executable');
 		});
 
 		it('should detect an NDK with no version', async () => {

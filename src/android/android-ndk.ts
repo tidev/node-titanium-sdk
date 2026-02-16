@@ -10,6 +10,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import snooplogg from 'snooplogg';
 import which from 'which';
+import type { ErrorWithCode } from '../types.js';
 
 const { error, log } = snooplogg('android:ndk');
 
@@ -61,13 +62,7 @@ export class AndroidNDK {
 			throw new TypeError('Expected Android NDK path to be a valid string');
 		}
 		if (!isDir(path)) {
-			throw new Error('Android NDK path does not exist: ${path}');
-		}
-
-		for (const name of ['build', 'platforms']) {
-			if (!isDir(join(path, name))) {
-				throw new Error(`Directory does not contain the "${name}" directory`);
-			}
+			throw new Error(`Android NDK path does not exist: ${path}`);
 		}
 
 		let ndkWhich = join(path, `ndk-which${cmd}`);
@@ -88,7 +83,9 @@ export class AndroidNDK {
 
 		for (const name of Object.keys(executables)) {
 			if (!isFile(executables[name])) {
-				throw new Error(`Directory does not contain the "${name}" executable`);
+				const err = new Error(`Directory does not contain the "${name}" executable`) as ErrorWithCode;
+				err.code = 'ANDROID_NDK_MISSING_EXECUTABLE';
+				throw err;
 			}
 		}
 
@@ -176,33 +173,34 @@ export async function detectAndroidNDKs(
 	}
 
 	return tailgate('android:ndk:detect', async () => {
-		const results = await Promise.allSettled(
-			searchPaths.map(async (path) => {
-				try {
-					return await AndroidNDK.load(path);
-				} catch (e) {
-					// Not an NDK, check subdirectories
-					if (isDir(path)) {
-						for (const name of await readdir(path)) {
-							try {
-								return await AndroidNDK.load(join(path, name));
-							} catch {
-								// Not an NDK
-							}
-						}
-					}
-					throw e;
-				}
-			})
-		);
 		const ndks: AndroidNDK[] = [];
 		const issues: Issue[] = [];
+		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({ path, depth: 0 }));
 
-		for (const result of results) {
-			if (result.status === 'fulfilled' && result.value) {
-				ndks.push(result.value);
-			} else if (result.status === 'rejected') {
-				error(result.reason.message);
+		while (queue.length > 0) {
+			const { path, depth } = queue.shift()!;
+			try {
+				ndks.push(await AndroidNDK.load(path));
+			} catch (err) {
+				if (err instanceof Error && 'code' in err && (err.code === 'ANDROID_NDK_MISSING_EXECUTABLE' || err.code === 'ANDROID_NDK_MISSING_DIRECTORY')) {
+					// Not an NDK, check subdirectories
+					if (depth === 0) {
+						for (const name of await readdir(path)) {
+							const dir = join(path, name);
+							if (isDir(dir)) {
+								queue.push({ path: dir, depth: 1 });
+							}
+						}
+					} else {
+						error(err);
+					}
+				} else if (err instanceof Issue) {
+					error(err.message);
+					issues.push(err);
+				} else {
+					// ignore all other errors
+					error(err);
+				}
 			}
 		}
 

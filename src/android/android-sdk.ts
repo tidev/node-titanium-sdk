@@ -347,33 +347,34 @@ export async function detectAndroidSDKs(
 	}
 
 	return tailgate('android:sdk:detect', async () => {
-		const results = await Promise.allSettled(
-			searchPaths.map(async (path) => {
-				try {
-					return await AndroidSDK.load(path);
-				} catch (e) {
-					// Not an SDK, check subdirectories
-					if (isDir(path)) {
-						for (const name of await readdir(path)) {
-							try {
-								return await AndroidSDK.load(join(path, name));
-							} catch {
-								// Not an SDK
-							}
-						}
-					}
-					throw e;
-				}
-			})
-		);
 		const sdks: AndroidSDK[] = [];
 		const issues: Issue[] = [];
+		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({ path, depth: 0 }));
 
-		for (const result of results) {
-			if (result.status === 'fulfilled' && result.value) {
-				sdks.push(result.value);
-			} else if (result.status === 'rejected') {
-				error(result.reason.message);
+		while (queue.length > 0) {
+			const { path, depth } = queue.shift()!;
+			try {
+				sdks.push(await AndroidSDK.load(path));
+			} catch (err) {
+				if (err instanceof Error && 'code' in err && (err.code === 'ANDROID_SDK_MISSING_EXECUTABLE' || err.code === 'ANDROID_SDK_MISSING_DIRECTORY')) {
+					// Not an SDK, check subdirectories
+					if (depth === 0) {
+						for (const name of await readdir(path)) {
+							const dir = join(path, name);
+							if (isDir(dir)) {
+								queue.push({ path: dir, depth: 1 });
+							}
+						}
+					} else {
+						error(err);
+					}
+				} else if (err instanceof Issue) {
+					error(err.message);
+					issues.push(err);
+				} else {
+					// ignore all other errors
+					error(err);
+				}
 			}
 		}
 

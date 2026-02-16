@@ -161,7 +161,7 @@ export const defaultConfig: Config = {
 		 */
 		searchPaths: {
 			darwin: ['/Library/Java/JavaVirtualMachines', '/System/Library/Java/JavaVirtualMachines'],
-			linux: ['/usr/lib/jvm/default', '/usr/lib/jvm'],
+			linux: ['/usr/lib/jvm/default', '/usr/lib/jvm', '~/opt/java'],
 			win32: ['%ProgramFiles%\\Java', '%ProgramFiles(x86)%\\Java', '~\\Java'],
 		},
 
