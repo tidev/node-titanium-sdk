@@ -85,7 +85,7 @@
     "lefthook": "2.1.1",
     "oxfmt": "0.32.0",
     "oxlint": "1.47.0",
-    "rimraf": "6.1.2",
+    "rimraf": "6.1.3",
     "tsdown": "0.20.3",
     "typescript": "5.9.3",
     "vitest": "4.0.18"
