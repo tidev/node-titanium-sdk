@@ -1,4 +1,5 @@
-import { parsePlist } from '../../util/plist.js';
+import { DOMParser } from '@xmldom/xmldom';
+import { parsePlist, stringifyPlist } from '../../util/plist.js';
 import * as xml from '../../util/xml.js';
 import { TiappSchema, type Tiapp } from './tiapp-schema.js';
 
@@ -379,17 +380,22 @@ function readIOS(doc: Document): Record<string, unknown> | undefined {
 
 	const entElem = iosElem.getElementsByTagName('entitlements')[0];
 	if (entElem) {
-		const dictElem = entElem.getElementsByTagName('dict')[0];
-		if (dictElem) {
+		const entRoot = entElem.firstElementChild ?? entElem.getElementsByTagName('dict')[0];
+		if (entRoot) {
 			result.entitlements = parsePlist<Record<string, unknown>>(
-				`<plist version="1.0">${dictElem.toString()}</plist>`
+				`<plist version="1.0">${entRoot.toString()}</plist>`
 			);
 		}
 	}
 
 	const plistElem = iosElem.getElementsByTagName('plist')[0];
 	if (plistElem) {
-		result.plist = plistElem.toString();
+		const plistRoot = plistElem.firstElementChild ?? plistElem.getElementsByTagName('dict')[0];
+		if (plistRoot) {
+			result.plist = parsePlist<Record<string, unknown>>(
+				`<plist version="1.0">${plistRoot.toString()}</plist>`
+			);
+		}
 	}
 
 	const extElem = iosElem.getElementsByTagName('extensions')[0];
@@ -879,6 +885,167 @@ function writePlugins(
 }
 
 /**
+ * Normalize plist XML indentation to match tiapp.xml format.
+ * Plist/xmlbuilder uses 2 spaces per level; the root dict is at 2 spaces, subtract 1 so it aligns at baseIndent.
+ */
+function normalizePlistIndent(xml: string, baseIndent: string): string {
+	return xml.replace(/^([ \t]*)/gm, (match) => {
+		const tabCount = (match.match(/\t/g) || []).length;
+		if (tabCount > 0) {
+			return baseIndent + '\t'.repeat(Math.max(0, tabCount - 1));
+		}
+		const spaces = match.replace(/\t/g, '  ').length;
+		const level = Math.max(0, Math.floor(spaces / 2) - 1);
+		return baseIndent + '\t'.repeat(level);
+	});
+}
+
+/**
+ * Extract the root dict or array from plist XML string (preserves original formatting).
+ */
+function extractPlistRoot(plistXml: string): string | null {
+	const dictStart = plistXml.indexOf('<dict>');
+	const arrayStart = plistXml.indexOf('<array>');
+	let start: number;
+	let openTag: string;
+	let closeTag: string;
+	if (dictStart >= 0 && (arrayStart < 0 || dictStart < arrayStart)) {
+		start = dictStart;
+		openTag = '<dict>';
+		closeTag = '</dict>';
+	} else if (arrayStart >= 0) {
+		start = arrayStart;
+		openTag = '<array>';
+		closeTag = '</array>';
+	} else {
+		return null;
+	}
+	let depth = 0;
+	let pos = start;
+	while (pos < plistXml.length) {
+		const nextOpen = plistXml.indexOf(openTag, pos);
+		const nextClose = plistXml.indexOf(closeTag, pos);
+		if (nextClose < 0) break;
+		if (nextOpen >= 0 && nextOpen < nextClose) {
+			depth++;
+			pos = nextOpen + openTag.length;
+		} else {
+			depth--;
+			if (depth === 0) {
+				return plistXml.slice(start, nextClose + closeTag.length);
+			}
+			pos = nextClose + closeTag.length;
+		}
+	}
+	return null;
+}
+
+/**
+ * Insert plist/entitlements object as XML into a parent element.
+ * Uses plist.stringify to produce valid plist XML, then extracts the root dict/array.
+ */
+function insertPlistAsXml(
+	doc: Document,
+	parent: Element,
+	obj: Record<string, unknown>,
+	indent: string
+): void {
+	const plistXml = stringifyPlist(obj);
+	const rawXml = extractPlistRoot(plistXml);
+	if (rawXml) {
+		const normalized = normalizePlistIndent(rawXml, indent);
+		const fragment = new DOMParser().parseFromString(
+			`<wrap>${normalized}</wrap>`,
+			'text/xml'
+		);
+		const dictElem = fragment.getElementsByTagName('dict')[0] ?? fragment.getElementsByTagName('array')[0];
+		if (dictElem) {
+			const imported = doc.importNode(dictElem, true);
+			parent.appendChild(doc.createTextNode(`\n${indent}`));
+			parent.appendChild(imported);
+			parent.appendChild(doc.createTextNode(`\n${indent.replace(/\t$/, '')}`));
+		}
+	}
+}
+
+/**
+ * Write iOS config to XML
+ */
+function writeIOS(doc: Document, ios: Record<string, unknown>): void {
+	const indent = detectIndentation(doc);
+	const root = doc.documentElement;
+	let iosElem = findElement(doc, 'ios');
+	if (!iosElem) {
+		const last = root.lastChild;
+		if (last?.nodeType === 3 && /^\s*$/.test((last as Text).nodeValue ?? '')) {
+			root.removeChild(last);
+		}
+		root.appendChild(doc.createTextNode(`\n${indent}`));
+		iosElem = doc.createElement('ios');
+		root.appendChild(iosElem);
+		root.appendChild(doc.createTextNode('\n'));
+	}
+
+	// Clear and rebuild
+	while (iosElem.firstChild) {
+		iosElem.removeChild(iosElem.firstChild);
+	}
+
+	const innerIndent = indent + indent;
+	const plistIndent = innerIndent + indent;
+
+	if (ios.plist && typeof ios.plist === 'object' && ios.plist !== null && !Array.isArray(ios.plist)) {
+		iosElem.appendChild(doc.createTextNode(`\n${innerIndent}`));
+		const plistElem = doc.createElement('plist');
+		iosElem.appendChild(plistElem);
+		insertPlistAsXml(doc, plistElem, ios.plist as Record<string, unknown>, plistIndent);
+	}
+
+	if (
+		ios.entitlements &&
+		typeof ios.entitlements === 'object' &&
+		ios.entitlements !== null &&
+		!Array.isArray(ios.entitlements)
+	) {
+		iosElem.appendChild(doc.createTextNode(`\n${innerIndent}`));
+		const entElem = doc.createElement('entitlements');
+		iosElem.appendChild(entElem);
+		insertPlistAsXml(doc, entElem, ios.entitlements as Record<string, unknown>, plistIndent);
+	}
+
+	// Write simple iOS tags
+	const simpleTags = [
+		'enable-launch-screen-storyboard',
+		'use-app-thinning',
+		'enablecoverage',
+		'enablemdfind',
+		'default-background-color',
+		'min-ios-ver',
+		'team-id',
+		'log-server-port',
+		'use-jscore-framework',
+		'run-on-main-thread',
+		'use-autolayout',
+		'use-new-build-system',
+		'exclude-dir-from-asset-catalog',
+	];
+	for (const tag of simpleTags) {
+		const key = toCamelCase(tag);
+		const val = ios[key];
+		if (val !== undefined && val !== null) {
+			iosElem.appendChild(doc.createTextNode(`\n${innerIndent}`));
+			const elem = doc.createElement(tag);
+			const strVal =
+				val === true ? 'true' : val === false ? 'false' : String(val);
+			elem.appendChild(doc.createTextNode(strVal));
+			iosElem.appendChild(elem);
+		}
+	}
+
+	iosElem.appendChild(doc.createTextNode(`\n${indent}`));
+}
+
+/**
  * Build full id value (string or platform object) from flat tiapp data
  */
 function buildFullId(data: TiappData): string | Record<string, string | undefined> | undefined {
@@ -1031,11 +1198,8 @@ function applyDiff(doc: Document, before: TiappData, after: TiappData, key: stri
 		);
 	} else if (key === 'plugins' && Array.isArray(afterVal)) {
 		writePlugins(doc, afterVal as Array<{ id: string; version?: string | number }>);
-	} else if (key === 'ios' || key === 'android' || key === 'webpack') {
-		// For nested structures, we'd need full write support. For now, skip deep diff.
-		// If it changed, we could replace the whole element - but that's complex.
-		// For MVP, only support top-level and known structures.
-		// TODO: implement ios/android/webpack write
+	} else if (key === 'ios' && typeof afterVal === 'object' && afterVal !== null) {
+		writeIOS(doc, afterVal as Record<string, unknown>);
 	} else if (
 		typeof afterVal === 'string' ||
 		typeof afterVal === 'number' ||

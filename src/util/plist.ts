@@ -5,6 +5,15 @@ import { dirname } from 'node:path';
 import plist from 'simple-plist';
 
 /**
+ * Convert a JavaScript object to a plist XML string.
+ * @param obj - The JavaScript object to convert.
+ * @returns The plist XML string.
+ */
+export function stringifyPlist(obj: Record<string, unknown>): string {
+	return plist.stringify(obj);
+}
+
+/**
  * Parse a plist string or buffer into a JavaScript object.
  * @param str - The plist string or buffer to parse.
  * @returns The parsed JavaScript object.

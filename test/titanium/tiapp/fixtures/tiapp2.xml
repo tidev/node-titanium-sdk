@@ -214,7 +214,6 @@
   <modules>
     <module version="1.2.3">ti.alltest</module>
     <module platform="commonjs" version="1.2.3">ti.cjstest</module>
-    <module platform="mobileweb" version="4.5.6">ti.mwtest</module>
     <module platform="android" version="7.8">ti.androidtest</module>
     <module platform="iphone" version="9.0">ti.iphonetest</module>
   </modules>

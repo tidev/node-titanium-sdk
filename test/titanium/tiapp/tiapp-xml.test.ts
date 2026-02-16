@@ -62,6 +62,48 @@ describe('TiappXML', () => {
 			const xml = tiapp.toString();
 			expect(xml).not.toContain('<icon>');
 		});
+
+		it('should handle ios plists', () => {
+			const tiapp = new TiappXML().parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<id>test</id>
+</ti:app>`);
+
+			const data = tiapp.data();
+			data.ios = {
+				plist: {
+					UIBackgroundModes: [
+						'audio',
+						'location',
+						'voip',
+						'newsstand-content',
+						'external-accessory',
+						'bluetooth-central',
+					],
+				},
+			};
+			tiapp.apply(data);
+			const xml = tiapp.toString();
+			expect(xml).toBe(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<id>test</id>
+	<ios>
+		<plist>
+			<dict>
+				<key>UIBackgroundModes</key>
+				<array>
+					<string>audio</string>
+					<string>location</string>
+					<string>voip</string>
+					<string>newsstand-content</string>
+					<string>external-accessory</string>
+					<string>bluetooth-central</string>
+				</array>
+			</dict>
+		</plist>
+	</ios>
+</ti:app>`);
+		});
 	});
 
 	describe('Platform-Specific Properties', () => {
@@ -205,8 +247,8 @@ describe('TiappXML', () => {
 			const data = tiapp.data();
 
 			expect(data.ios!.plist).toBeDefined();
-			expect(typeof data.ios!.plist).toBe('string');
-			expect(data.ios!.plist).toContain('<dict>');
+			expect(typeof data.ios!.plist).toBe('object');
+			expect(data.ios!.plist).toHaveProperty('UISupportedInterfaceOrientations');
 		});
 
 		it('should read iOS capabilities', () => {
@@ -483,7 +525,7 @@ describe('TiappXML', () => {
 		it('should read simple properties', () => {
 			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
 			const data = tiapp.data();
-			expect(data).toMatchObject({
+			expect(data).toEqual({
 				id: 'ti.testapp',
 				name: 'testapp',
 				version: '1.0',
@@ -494,6 +536,9 @@ describe('TiappXML', () => {
 				icon: 'appicon.png',
 				persistentWifi: false,
 				prerenderedIcon: false,
+				properties: {
+					'ti.ui.defaultunit': 'system',
+				},
 				statusbarStyle: 'default',
 				statusbarHidden: false,
 				guid: '088dc83c-64af-4a81-b57c-7407649453f0',
@@ -505,7 +550,7 @@ describe('TiappXML', () => {
 		it('should read complex properties', () => {
 			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp2.xml'));
 			const data = tiapp.data();
-			expect(data).toMatchObject({
+			expect(data).toEqual({
 				deploymentTargets: {
 					iphone: true,
 					ipad: true,
@@ -557,64 +602,54 @@ describe('TiappXML', () => {
 					entitlements: {
 						'application-identifier': 'XXXXXXXXXX.com.test.app',
 						'aps-environment': 'production',
+						'beta-reports-active': true,
+						'get-task-allow': false,
+						'keychain-access-groups': ['XXXXXXXXXX.com.test.app'],
 					},
-					plist: `<plist>
-      <dict>
-        <key>UISupportedInterfaceOrientations</key>
-        <array>
-          <string>UIInterfaceOrientationPortrait</string>
-          <string>UIInterfaceOrientationPortraitUpsideDown</string>
-          <string>UIInterfaceOrientationLandscapeLeft</string>
-          <string>UIInterfaceOrientationLandscapeRight</string>
-        </array>
-        <key>UIBackgroundModes</key>
-        <array>
-          <string>audio</string>
-          <string>location</string>
-          <string>voip</string>
-          <string>newsstand-content</string>
-          <string>external-accessory</string>
-          <string>bluetooth-central</string>
-        </array>
-        <key>UIRequiredDeviceCapabilities</key>
-        <array>
-          <string>telephony</string>
-          <string>wifi</string>
-          <string>sms</string>
-          <string>still-camera</string>
-          <string>auto-focus-camera</string>
-          <string>front-facing-camera</string>
-          <string>camera-flash</string>
-          <string>video-camera</string>
-          <string>accelerometer</string>
-          <string>gyroscope</string>
-          <string>location-services</string>
-          <string>gps</string>
-          <string>magnetometer</string>
-          <string>gamekit</string>
-          <string>microphone</string>
-          <string>opengles-1</string>
-          <string>opengles-2</string>
-          <string>armv6</string>
-          <string>armv7</string>
-          <string>peer-peer</string>
-          <string>bluetooth-le</string>
-        </array>
-        <key>UIRequiresPersistentWiFi</key>
-        <true/>
-        <key>UIPrerenderedIcon</key>
-        <true/>
-        <key>UIStatusBarHidden</key>
-        <true/>
-        <key>UIStatusBarStyle</key>
-        <string>UIStatusBarStyleBlackTranslucent</string>
-        <key>UIAppFonts</key>
-        <array>
-          <string>/fonts/MyFont_1.otf</string>
-          <string>/fonts/MyFont_2.otf</string>
-        </array>
-      </dict>
-    </plist>`,
+					plist: {
+						UISupportedInterfaceOrientations: [
+							'UIInterfaceOrientationPortrait',
+							'UIInterfaceOrientationPortraitUpsideDown',
+							'UIInterfaceOrientationLandscapeLeft',
+							'UIInterfaceOrientationLandscapeRight',
+						],
+						UIBackgroundModes: [
+							'audio',
+							'location',
+							'voip',
+							'newsstand-content',
+							'external-accessory',
+							'bluetooth-central',
+						],
+						UIRequiredDeviceCapabilities: [
+							'telephony',
+							'wifi',
+							'sms',
+							'still-camera',
+							'auto-focus-camera',
+							'front-facing-camera',
+							'camera-flash',
+							'video-camera',
+							'accelerometer',
+							'gyroscope',
+							'location-services',
+							'gps',
+							'magnetometer',
+							'gamekit',
+							'microphone',
+							'opengles-1',
+							'opengles-2',
+							'armv6',
+							'armv7',
+							'peer-peer',
+							'bluetooth-le',
+						],
+						UIRequiresPersistentWiFi: true,
+						UIPrerenderedIcon: true,
+						UIStatusBarHidden: true,
+						UIStatusBarStyle: 'UIStatusBarStyleBlackTranslucent',
+						UIAppFonts: ['/fonts/MyFont_1.otf', '/fonts/MyFont_2.otf'],
+					},
 					extensions: [
 						{
 							projectPath: '/path/to/extention',
@@ -669,6 +704,7 @@ describe('TiappXML', () => {
 						},
 					],
 					abi: ['armeabi', 'armeabi-v7a', 'x86'],
+					toolAPILevel: 10,
 				},
 				modules: [
 					{
@@ -679,10 +715,6 @@ describe('TiappXML', () => {
 						id: 'ti.cjstest',
 						version: '1.2.3',
 						platform: 'commonjs',
-					},
-					{
-						id: 'ti.mwtest',
-						version: '4.5.6',
 					},
 					{
 						id: 'ti.androidtest',

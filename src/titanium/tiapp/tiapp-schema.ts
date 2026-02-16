@@ -126,7 +126,7 @@ export const IOSSchema = z
 		logServerPort: z.number().optional(),
 		capabilities: IOSCapabilitiesSchema,
 		entitlements: z.record(z.string(), z.any()).optional(),
-		plist: OptionalStringSchema,
+		plist: z.record(z.string(), z.any()).optional(),
 		extensions: z.array(IOSExtensionSchema).optional(),
 	})
 	.optional();
