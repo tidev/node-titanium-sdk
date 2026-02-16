@@ -345,22 +345,16 @@ export async function detectAndroidSDKs(
 
 	return tailgate('android:sdk:detect', async () => {
 		const sdks: AndroidSDK[] = [];
+		const sdkPaths = new Set<string>();
 		const issues: Issue[] = [];
-		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({
-			path,
-			depth: 0,
-		}));
-		const visited = new Set<string>();
 
-		while (queue.length > 0) {
-			const { path, depth } = queue.shift()!;
-			if (visited.has(path)) {
-				continue;
-			}
+		async function processPath(
+			path: string,
+			depth: number
+		): Promise<{ sdk: AndroidSDK | null; subdirs: string[] }> {
 			try {
 				const sdk = await AndroidSDK.load(path);
-				sdks.push(sdk);
-				visited.add(sdk.path);
+				return { sdk, subdirs: [] };
 			} catch (err) {
 				if (
 					err instanceof Error &&
@@ -368,26 +362,44 @@ export async function detectAndroidSDKs(
 					(err.code === 'ANDROID_SDK_MISSING_EXECUTABLE' ||
 						err.code === 'ANDROID_SDK_MISSING_DIRECTORY')
 				) {
-					// Not an SDK, check subdirectories
 					if (depth === 0) {
+						const subdirs: string[] = [];
 						for (const name of await readdir(path)) {
 							const dir = join(path, name);
 							if (isDir(dir)) {
-								queue.push({ path: dir, depth: 1 });
+								subdirs.push(dir);
 							}
 						}
-					} else {
-						warn(err);
+						return { sdk: null, subdirs };
 					}
-				} else if (err instanceof Issue) {
+					warn(err);
+					return { sdk: null, subdirs: [] };
+				}
+				if (err instanceof Issue) {
 					warn(err.message);
 					issues.push(err);
-				} else {
-					// ignore all other errors
-					warn(err);
+					return { sdk: null, subdirs: [] };
 				}
-			} finally {
-				visited.add(path);
+				warn(err);
+				return { sdk: null, subdirs: [] };
+			}
+		}
+
+		const level0Results = await Promise.all(searchPaths.map((path) => processPath(path, 0)));
+		const subdirs: string[] = [];
+		for (const { sdk, subdirs: s } of level0Results) {
+			if (sdk && !sdkPaths.has(sdk.path)) {
+				sdkPaths.add(sdk.path);
+				sdks.push(sdk);
+			}
+			subdirs.push(...s);
+		}
+
+		const level1Results = await Promise.all(subdirs.map((path) => processPath(path, 1)));
+		for (const { sdk } of level1Results) {
+			if (sdk && !sdkPaths.has(sdk.path)) {
+				sdkPaths.add(sdk.path);
+				sdks.push(sdk);
 			}
 		}
 

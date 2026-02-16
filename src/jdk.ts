@@ -144,47 +144,56 @@ export async function detectJDKs(
 
 	return tailgate('jdk:detect', async () => {
 		const jdks: JDK[] = [];
+		const jdkPaths = new Set<string>();
 		const issues: Issue[] = [];
-		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({
-			path,
-			depth: 0,
-		}));
-		const visited = new Set<string>();
 
-		while (queue.length > 0) {
-			const { path, depth } = queue.shift()!;
-			if (visited.has(path)) {
-				continue;
-			}
+		async function processPath(
+			path: string,
+			depth: number
+		): Promise<{ jdk: JDK | null; subdirs: string[] }> {
 			try {
 				const jdk = await JDK.load(path);
-				if (visited.has(jdk.path)) {
-					continue;
-				}
-				jdks.push(jdk);
-				visited.add(jdk.path);
+				return { jdk, subdirs: [] };
 			} catch (err) {
 				if (err instanceof Error && 'code' in err && err.code === 'JDK_MISSING_REQUIRED_PROGRAM') {
-					// Not a JDK, check subdirectories
 					if (depth === 0) {
+						const subdirs: string[] = [];
 						for (const name of await readdir(path)) {
 							const dir = join(path, name);
 							if (isDir(dir)) {
-								queue.push({ path: dir, depth: 1 });
+								subdirs.push(dir);
 							}
 						}
-					} else {
-						warn(err);
+						return { jdk: null, subdirs };
 					}
-				} else if (err instanceof Issue) {
+					warn(err);
+					return { jdk: null, subdirs: [] };
+				}
+				if (err instanceof Issue) {
 					warn(err.message);
 					issues.push(err);
-				} else {
-					// ignore all other errors
-					warn(err);
+					return { jdk: null, subdirs: [] };
 				}
-			} finally {
-				visited.add(path);
+				warn(err);
+				return { jdk: null, subdirs: [] };
+			}
+		}
+
+		const level0Results = await Promise.all(searchPaths.map((path) => processPath(path, 0)));
+		const subdirs: string[] = [];
+		for (const { jdk, subdirs: s } of level0Results) {
+			if (jdk && !jdkPaths.has(jdk.path)) {
+				jdkPaths.add(jdk.path);
+				jdks.push(jdk);
+			}
+			subdirs.push(...s);
+		}
+
+		const level1Results = await Promise.all(subdirs.map((path) => processPath(path, 1)));
+		for (const { jdk } of level1Results) {
+			if (jdk && !jdkPaths.has(jdk.path)) {
+				jdkPaths.add(jdk.path);
+				jdks.push(jdk);
 			}
 		}
 

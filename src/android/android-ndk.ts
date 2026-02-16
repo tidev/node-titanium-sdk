@@ -167,22 +167,16 @@ export async function detectAndroidNDKs(
 
 	return tailgate('android:ndk:detect', async () => {
 		const ndks: AndroidNDK[] = [];
+		const ndkPaths = new Set<string>();
 		const issues: Issue[] = [];
-		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({
-			path,
-			depth: 0,
-		}));
-		const visited = new Set<string>();
 
-		while (queue.length > 0) {
-			const { path, depth } = queue.shift()!;
-			if (visited.has(path)) {
-				continue;
-			}
+		async function processPath(
+			path: string,
+			depth: number
+		): Promise<{ ndk: AndroidNDK | null; subdirs: string[] }> {
 			try {
 				const ndk = await AndroidNDK.load(path);
-				ndks.push(ndk);
-				visited.add(ndk.path);
+				return { ndk, subdirs: [] };
 			} catch (err) {
 				if (
 					err instanceof Error &&
@@ -190,26 +184,44 @@ export async function detectAndroidNDKs(
 					(err.code === 'ANDROID_NDK_MISSING_EXECUTABLE' ||
 						err.code === 'ANDROID_NDK_MISSING_DIRECTORY')
 				) {
-					// Not an NDK, check subdirectories
 					if (depth === 0) {
+						const subdirs: string[] = [];
 						for (const name of await readdir(path)) {
 							const dir = join(path, name);
 							if (isDir(dir)) {
-								queue.push({ path: dir, depth: 1 });
+								subdirs.push(dir);
 							}
 						}
-					} else {
-						warn(err);
+						return { ndk: null, subdirs };
 					}
-				} else if (err instanceof Issue) {
+					warn(err);
+					return { ndk: null, subdirs: [] };
+				}
+				if (err instanceof Issue) {
 					warn(err.message);
 					issues.push(err);
-				} else {
-					// ignore all other errors
-					warn(err);
+					return { ndk: null, subdirs: [] };
 				}
-			} finally {
-				visited.add(path);
+				warn(err);
+				return { ndk: null, subdirs: [] };
+			}
+		}
+
+		const level0Results = await Promise.all(searchPaths.map((path) => processPath(path, 0)));
+		const subdirs: string[] = [];
+		for (const { ndk, subdirs: s } of level0Results) {
+			if (ndk && !ndkPaths.has(ndk.path)) {
+				ndkPaths.add(ndk.path);
+				ndks.push(ndk);
+			}
+			subdirs.push(...s);
+		}
+
+		const level1Results = await Promise.all(subdirs.map((path) => processPath(path, 1)));
+		for (const { ndk } of level1Results) {
+			if (ndk && !ndkPaths.has(ndk.path)) {
+				ndkPaths.add(ndk.path);
+				ndks.push(ndk);
 			}
 		}
 
