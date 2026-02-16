@@ -62,9 +62,9 @@ interface AndroidSDKOptions extends AndroidSDKExecutables {
 	addons: Addon[];
 	issues: Issue[];
 	path: string;
-	platforms: Platform[]
-	systemImages: Record<string, SystemImage>
-};
+	platforms: Platform[];
+	systemImages: Record<string, SystemImage>;
+}
 
 export class AndroidSDK {
 	adb!: string;
@@ -346,7 +346,10 @@ export async function detectAndroidSDKs(
 	return tailgate('android:sdk:detect', async () => {
 		const sdks: AndroidSDK[] = [];
 		const issues: Issue[] = [];
-		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({ path, depth: 0 }));
+		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({
+			path,
+			depth: 0,
+		}));
 		const visited = new Set<string>();
 
 		while (queue.length > 0) {
@@ -358,7 +361,12 @@ export async function detectAndroidSDKs(
 			try {
 				sdks.push(await AndroidSDK.load(path));
 			} catch (err) {
-				if (err instanceof Error && 'code' in err && (err.code === 'ANDROID_SDK_MISSING_EXECUTABLE' || err.code === 'ANDROID_SDK_MISSING_DIRECTORY')) {
+				if (
+					err instanceof Error &&
+					'code' in err &&
+					(err.code === 'ANDROID_SDK_MISSING_EXECUTABLE' ||
+						err.code === 'ANDROID_SDK_MISSING_DIRECTORY')
+				) {
 					// Not an SDK, check subdirectories
 					if (depth === 0) {
 						for (const name of await readdir(path)) {

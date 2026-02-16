@@ -1,4 +1,5 @@
 import { config } from './config.js';
+import type { ErrorWithCode } from './types.js';
 import { expand } from './util/expand.js';
 import { isDir } from './util/is-dir.js';
 import { isFile } from './util/is-file.js';
@@ -11,7 +12,6 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import snooplogg from 'snooplogg';
 import which from 'which';
-import type { ErrorWithCode } from './types.js';
 
 const { log, warn } = snooplogg('jdk');
 
@@ -145,7 +145,10 @@ export async function detectJDKs(
 	return tailgate('jdk:detect', async () => {
 		const jdks: JDK[] = [];
 		const issues: Issue[] = [];
-		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({ path, depth: 0 }));
+		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({
+			path,
+			depth: 0,
+		}));
 		const visited = new Set<string>();
 
 		while (queue.length > 0) {

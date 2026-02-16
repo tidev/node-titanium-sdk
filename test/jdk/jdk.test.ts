@@ -212,7 +212,6 @@ describe('JDK', function () {
 			delete process.env.JAVA_HOME;
 			config.jdk.searchPaths[process.platform] = [];
 			const { jdks, issues } = await detectJDKs({
-				bypassCache: true,
 				searchPaths: [path.join(__dirname, 'mocks', 'incomplete-jdk')],
 			});
 			expect(jdks).toEqual([]);

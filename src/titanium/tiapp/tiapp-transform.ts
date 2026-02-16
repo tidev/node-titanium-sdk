@@ -1,7 +1,7 @@
-import { DOMParser } from '@xmldom/xmldom';
 import { parsePlist, stringifyPlist } from '../../util/plist.js';
 import * as xml from '../../util/xml.js';
 import { TiappSchema, type Tiapp } from './tiapp-schema.js';
+import { DOMParser } from '@xmldom/xmldom';
 
 export type TiappData = Record<string, unknown>;
 
@@ -954,11 +954,9 @@ function insertPlistAsXml(
 	const rawXml = extractPlistRoot(plistXml);
 	if (rawXml) {
 		const normalized = normalizePlistIndent(rawXml, indent);
-		const fragment = new DOMParser().parseFromString(
-			`<wrap>${normalized}</wrap>`,
-			'text/xml'
-		);
-		const dictElem = fragment.getElementsByTagName('dict')[0] ?? fragment.getElementsByTagName('array')[0];
+		const fragment = new DOMParser().parseFromString(`<wrap>${normalized}</wrap>`, 'text/xml');
+		const dictElem =
+			fragment.getElementsByTagName('dict')[0] ?? fragment.getElementsByTagName('array')[0];
 		if (dictElem) {
 			const imported = doc.importNode(dictElem, true);
 			parent.appendChild(doc.createTextNode(`\n${indent}`));
@@ -994,7 +992,12 @@ function writeIOS(doc: Document, ios: Record<string, unknown>): void {
 	const innerIndent = indent + indent;
 	const plistIndent = innerIndent + indent;
 
-	if (ios.plist && typeof ios.plist === 'object' && ios.plist !== null && !Array.isArray(ios.plist)) {
+	if (
+		ios.plist &&
+		typeof ios.plist === 'object' &&
+		ios.plist !== null &&
+		!Array.isArray(ios.plist)
+	) {
 		iosElem.appendChild(doc.createTextNode(`\n${innerIndent}`));
 		const plistElem = doc.createElement('plist');
 		iosElem.appendChild(plistElem);
@@ -1035,8 +1038,7 @@ function writeIOS(doc: Document, ios: Record<string, unknown>): void {
 		if (val !== undefined && val !== null) {
 			iosElem.appendChild(doc.createTextNode(`\n${innerIndent}`));
 			const elem = doc.createElement(tag);
-			const strVal =
-				val === true ? 'true' : val === false ? 'false' : String(val);
+			const strVal = val === true ? 'true' : val === false ? 'false' : String(val);
 			elem.appendChild(doc.createTextNode(strVal));
 			iosElem.appendChild(elem);
 		}

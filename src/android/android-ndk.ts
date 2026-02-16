@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import type { ErrorWithCode } from '../types.js';
 import { expand } from '../util/expand.js';
 import { isDir } from '../util/is-dir.js';
 import { isFile } from '../util/is-file.js';
@@ -9,7 +10,6 @@ import { readdir, readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import snooplogg from 'snooplogg';
 import which from 'which';
-import type { ErrorWithCode } from '../types.js';
 
 const { log, warn } = snooplogg('android:ndk');
 
@@ -82,7 +82,9 @@ export class AndroidNDK {
 
 		for (const name of Object.keys(executables)) {
 			if (!isFile(executables[name])) {
-				const err = new Error(`Directory does not contain the "${name}" executable`) as ErrorWithCode;
+				const err = new Error(
+					`Directory does not contain the "${name}" executable`
+				) as ErrorWithCode;
 				err.code = 'ANDROID_NDK_MISSING_EXECUTABLE';
 				throw err;
 			}
@@ -166,7 +168,10 @@ export async function detectAndroidNDKs(
 	return tailgate('android:ndk:detect', async () => {
 		const ndks: AndroidNDK[] = [];
 		const issues: Issue[] = [];
-		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({ path, depth: 0 }));
+		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({
+			path,
+			depth: 0,
+		}));
 		const visited = new Set<string>();
 
 		while (queue.length > 0) {
@@ -178,7 +183,12 @@ export async function detectAndroidNDKs(
 			try {
 				ndks.push(await AndroidNDK.load(path));
 			} catch (err) {
-				if (err instanceof Error && 'code' in err && (err.code === 'ANDROID_NDK_MISSING_EXECUTABLE' || err.code === 'ANDROID_NDK_MISSING_DIRECTORY')) {
+				if (
+					err instanceof Error &&
+					'code' in err &&
+					(err.code === 'ANDROID_NDK_MISSING_EXECUTABLE' ||
+						err.code === 'ANDROID_NDK_MISSING_DIRECTORY')
+				) {
 					// Not an NDK, check subdirectories
 					if (depth === 0) {
 						for (const name of await readdir(path)) {

@@ -318,6 +318,7 @@ describe('TiappXML', () => {
 		it('should preserve existing formatting', () => {
 			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
 			const data = tiapp.data();
+			// eslint-disable-next-line @typescript-eslint/no-self-assign
 			data.name = data.name; // Set to same value
 			tiapp.apply(data);
 
