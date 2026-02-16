@@ -5,7 +5,6 @@ import { isFile } from './util/is-file.js';
 import { Issue } from './util/issue.js';
 import { tailgate } from './util/tailgate.js';
 import { execFile } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { readdir, realpath } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -14,7 +13,7 @@ import snooplogg from 'snooplogg';
 import which from 'which';
 import type { ErrorWithCode } from './types.js';
 
-const { error, log } = snooplogg('jdk');
+const { log, warn } = snooplogg('jdk');
 
 const execFileAsync = promisify(execFile);
 
@@ -41,37 +40,31 @@ export const libjvmLocations: Record<string, string[]> = {
 
 const exe = process.platform === 'win32' ? '.exe' : '';
 
-type JDKExecutables = {
+interface JDKExecutables {
 	java: string;
 	javac: string;
 	keytool: string;
 	jarsigner: string;
-};
+}
+
+interface JDKOptions extends JDKExecutables {
+	path: string;
+	version: string;
+}
 
 /**
  * Detects and organizes JDK information.
  */
 export class JDK {
-	build: number | null;
-	executables: JDKExecutables;
-	path: string;
-	version: string;
+	path!: string;
+	version!: string;
+	java!: string;
+	javac!: string;
+	keytool!: string;
+	jarsigner!: string;
 
-	private constructor({
-		build,
-		executables,
-		path,
-		version,
-	}: {
-		build: number | null;
-		executables: JDKExecutables;
-		path: string;
-		version: string;
-	}) {
-		this.build = build;
-		this.executables = executables;
-		this.path = path;
-		this.version = version;
+	private constructor(options: JDKOptions) {
+		Object.assign(this, options);
 	}
 
 	static async load(path: string): Promise<JDK> {
@@ -125,15 +118,12 @@ export class JDK {
 		if (!version) {
 			throw new Error(`Failed to determine JDK version: ${path}`);
 		}
-		const build = result?.[2] ? Number.parseInt(result[2]) : null;
-
-		log(`Found JDK: ${path} (version: ${version}, build: ${build})`);
+		log(`Found JDK: ${path} (version: ${version})`);
 
 		return new JDK({
-			build,
-			executables,
 			path,
 			version,
+			...executables,
 		});
 	}
 }
@@ -144,30 +134,26 @@ interface JDKs {
 	issues: Issue[];
 }
 
-let jdkCache: JDKs | null = null;
-let jdkSearchPathsHash: string | null = null;
-
 export async function detectJDKs(
 	options: {
-		bypassCache?: boolean;
 		javaHome?: string;
 		searchPaths?: string[];
 	} = {}
 ): Promise<JDKs> {
 	const { home, searchPaths } = await getSearchPaths(options);
-	const searchPathsHash = createHash('sha256').update(searchPaths.toSorted().join()).digest('hex');
-
-	if (jdkCache !== null && !options.bypassCache && jdkSearchPathsHash === searchPathsHash) {
-		return jdkCache;
-	}
 
 	return tailgate('jdk:detect', async () => {
 		const jdks: JDK[] = [];
 		const issues: Issue[] = [];
 		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({ path, depth: 0 }));
+		const visited = new Set<string>();
 
 		while (queue.length > 0) {
 			const { path, depth } = queue.shift()!;
+			if (visited.has(path)) {
+				continue;
+			}
+			visited.add(path);
 			try {
 				jdks.push(await JDK.load(path));
 			} catch (err) {
@@ -181,14 +167,14 @@ export async function detectJDKs(
 							}
 						}
 					} else {
-						error(err);
+						warn(err);
 					}
 				} else if (err instanceof Issue) {
-					error(err.message);
+					warn(err.message);
 					issues.push(err);
 				} else {
 					// ignore all other errors
-					error(err);
+					warn(err);
 				}
 			}
 		}
@@ -220,14 +206,11 @@ or  __https://jdk.java.net/arpathschive/__.`,
 			);
 		}
 
-		jdkCache = {
+		return {
 			home,
 			jdks,
 			issues,
 		};
-		jdkSearchPathsHash = searchPathsHash;
-
-		return jdkCache;
 	});
 }
 

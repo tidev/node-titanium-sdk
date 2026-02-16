@@ -5,19 +5,18 @@ import { isFile } from '../util/is-file.js';
 import { Issue } from '../util/issue.js';
 import { tailgate } from '../util/tailgate.js';
 import { readPropertiesFile } from './util/read-properties-file.js';
-import { createHash } from 'node:crypto';
 import { readdir } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import snooplogg from 'snooplogg';
 
-const { error, log } = snooplogg('android:sdk');
+const { log, warn } = snooplogg('android:sdk');
 
 const exe = process.platform === 'win32' ? '.exe' : '';
 
-type AndroidSDKExecutables = {
+interface AndroidSDKExecutables {
 	adb: string;
 	emulator: string;
-};
+}
 
 type SystemImage = {
 	abi: string;
@@ -59,18 +58,18 @@ type Addon = {
 	version: string | null;
 };
 
-type AndroidSDKOptions = {
+interface AndroidSDKOptions extends AndroidSDKExecutables {
 	addons: Addon[];
-	executables: AndroidSDKExecutables;
 	issues: Issue[];
 	path: string;
-	platforms: Platform[];
-	systemImages: Record<string, SystemImage>;
+	platforms: Platform[]
+	systemImages: Record<string, SystemImage>
 };
 
 export class AndroidSDK {
+	adb!: string;
 	addons!: Addon[];
-	executables!: AndroidSDKExecutables;
+	emulator!: string;
 	issues!: Issue[];
 	path!: string;
 	platforms!: Platform[];
@@ -107,7 +106,7 @@ export class AndroidSDK {
 
 		return new AndroidSDK({
 			addons,
-			executables,
+			...executables,
 			issues,
 			path,
 			platforms,
@@ -330,29 +329,32 @@ interface SDKs {
 	issues: Issue[];
 }
 
-let sdkCache: SDKs | null = null;
-let sdkSearchPathsHash: string | null = null;
-
+/**
+ * Detects installed Android SDKs.
+ *
+ * @param options - The options for the detection.
+ * @param {string[]} [options.searchPaths] - The paths to search for Android SDKs.
+ * @returns {Promise<SDKs>} The detected Android SDKs.
+ */
 export async function detectAndroidSDKs(
 	options: {
-		bypassCache?: boolean;
 		searchPaths?: string[];
 	} = {}
 ): Promise<SDKs> {
 	const searchPaths = await getSearchPaths(options);
-	const searchPathsHash = createHash('sha256').update(searchPaths.toSorted().join()).digest('hex');
-
-	if (sdkCache !== null && !options.bypassCache && sdkSearchPathsHash === searchPathsHash) {
-		return sdkCache;
-	}
 
 	return tailgate('android:sdk:detect', async () => {
 		const sdks: AndroidSDK[] = [];
 		const issues: Issue[] = [];
 		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({ path, depth: 0 }));
+		const visited = new Set<string>();
 
 		while (queue.length > 0) {
 			const { path, depth } = queue.shift()!;
+			if (visited.has(path)) {
+				continue;
+			}
+			visited.add(path);
 			try {
 				sdks.push(await AndroidSDK.load(path));
 			} catch (err) {
@@ -366,14 +368,14 @@ export async function detectAndroidSDKs(
 							}
 						}
 					} else {
-						error(err);
+						warn(err);
 					}
 				} else if (err instanceof Issue) {
-					error(err.message);
+					warn(err.message);
 					issues.push(err);
 				} else {
 					// ignore all other errors
-					error(err);
+					warn(err);
 				}
 			}
 		}
@@ -388,13 +390,10 @@ export async function detectAndroidSDKs(
 			);
 		}
 
-		sdkCache = {
+		return {
 			sdks,
 			issues,
 		};
-		sdkSearchPathsHash = searchPathsHash;
-
-		return sdkCache;
 	});
 }
 

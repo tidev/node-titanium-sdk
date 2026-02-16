@@ -5,14 +5,13 @@ import { isFile } from '../util/is-file.js';
 import { Issue } from '../util/issue.js';
 import { tailgate } from '../util/tailgate.js';
 import { readPropertiesFile } from './util/read-properties-file.js';
-import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import snooplogg from 'snooplogg';
 import which from 'which';
 import type { ErrorWithCode } from '../types.js';
 
-const { error, log } = snooplogg('android:ndk');
+const { log, warn } = snooplogg('android:ndk');
 
 const cmd = process.platform === 'win32' ? '.cmd' : '';
 
@@ -150,35 +149,32 @@ interface NDKs {
 	issues: Issue[];
 }
 
-let ndkCache: NDKs | null = null;
-let ndkSearchPathsHash: string | null = null;
-
 /**
- * Detects installed letAndroid NDKs, then caches and returns the results.
+ * Detects installed Android NDKs.
  *
- * @param {Boolean} [force=false] - When `true`, bypasses cache and forces redetection.
+ * @param {Object} options - The options for the detection.
+ * @param {string[]} [options.searchPaths] - The paths to search for Android NDKs.
  * @returns {Promise<Array.<NDK>>}
  */
 export async function detectAndroidNDKs(
 	options: {
-		bypassCache?: boolean;
 		searchPaths?: string[];
 	} = {}
 ): Promise<NDKs> {
 	const searchPaths = await getSearchPaths(options);
-	const searchPathsHash = createHash('sha256').update(searchPaths.toSorted().join()).digest('hex');
-
-	if (ndkCache !== null && !options.bypassCache && ndkSearchPathsHash === searchPathsHash) {
-		return ndkCache;
-	}
 
 	return tailgate('android:ndk:detect', async () => {
 		const ndks: AndroidNDK[] = [];
 		const issues: Issue[] = [];
 		const queue: { path: string; depth: number }[] = searchPaths.map((path) => ({ path, depth: 0 }));
+		const visited = new Set<string>();
 
 		while (queue.length > 0) {
 			const { path, depth } = queue.shift()!;
+			if (visited.has(path)) {
+				continue;
+			}
+			visited.add(path);
 			try {
 				ndks.push(await AndroidNDK.load(path));
 			} catch (err) {
@@ -192,14 +188,14 @@ export async function detectAndroidNDKs(
 							}
 						}
 					} else {
-						error(err);
+						warn(err);
 					}
 				} else if (err instanceof Issue) {
-					error(err.message);
+					warn(err.message);
 					issues.push(err);
 				} else {
 					// ignore all other errors
-					error(err);
+					warn(err);
 				}
 			}
 		}
@@ -214,13 +210,10 @@ export async function detectAndroidNDKs(
 			);
 		}
 
-		ndkCache = {
+		return {
 			ndks,
 			issues,
 		};
-		ndkSearchPathsHash = searchPathsHash;
-
-		return ndkCache;
 	});
 }
 

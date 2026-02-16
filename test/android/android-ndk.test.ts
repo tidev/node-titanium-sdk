@@ -138,7 +138,6 @@ describe('Android NDK', () => {
 			const dir = join(__dirname, 'mocks', 'ndk', process.platform, 'r29');
 			config.android.ndk.searchPaths[process.platform] = [];
 			const { ndks } = await detectAndroidNDKs({
-				bypassCache: true,
 				searchPaths: [dir],
 			});
 			expect(ndks).toHaveLength(1);
@@ -154,17 +153,9 @@ describe('Android NDK', () => {
 			});
 		});
 
-		it('should cache Android NDKs', async () => {
-			const dir = join(__dirname, 'mocks', 'ndk', process.platform, 'r29');
-			config.android.ndk.searchPaths[process.platform] = [dir];
-			const results1 = await detectAndroidNDKs({ bypassCache: true });
-			const results2 = await detectAndroidNDKs();
-			expect(results1).toBe(results2);
-		});
-
 		it('should return issues if no Android NDKs are found', async () => {
 			config.android.ndk.searchPaths[process.platform] = ['does_not_exist'];
-			const { ndks, issues } = await detectAndroidNDKs({ bypassCache: true });
+			const { ndks, issues } = await detectAndroidNDKs();
 			expect(ndks).toEqual([]);
 			expect(issues.length).toBe(1);
 			expect(issues[0].id).toBe('ANDROID_NDK_NOT_FOUND');
@@ -176,7 +167,7 @@ describe('Android NDK', () => {
 			config.android.ndk.searchPaths[process.platform] = [
 				join(__dirname, 'mocks', 'ndk', process.platform, 'no-ndk-build'),
 			];
-			const { ndks, issues } = await detectAndroidNDKs({ bypassCache: true });
+			const { ndks, issues } = await detectAndroidNDKs();
 			expect(ndks).toEqual([]);
 			expect(issues.length).toBe(1);
 			expect(issues[0].id).toBe('ANDROID_NDK_NOT_FOUND');

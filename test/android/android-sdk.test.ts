@@ -48,10 +48,8 @@ describe('Android SDK', () => {
 			const path = join(__dirname, 'mocks', 'sdk', testPlatform, 'minimal');
 			const sdk = await AndroidSDK.load(path);
 			expect(sdk.addons).to.have.length(0);
-			expect(sdk.executables).to.deep.equal({
-				adb: join(path, 'platform-tools', `adb${exe}`),
-				emulator: join(path, 'emulator', `emulator${exe}`),
-			});
+			expect(sdk.adb).to.equal(join(path, 'platform-tools', `adb${exe}`));
+			expect(sdk.emulator).to.equal(join(path, 'emulator', `emulator${exe}`));
 			expect(sdk.path).to.equal(path);
 			expect(sdk.platforms).to.deep.equal([]);
 			expect(sdk.systemImages).to.deep.equal({});
@@ -70,10 +68,8 @@ describe('Android SDK', () => {
 			);
 			const sdk = await AndroidSDK.load(path);
 			expect(sdk.addons).to.have.length(0);
-			expect(sdk.executables).to.deep.equal({
-				adb: join(path, 'platform-tools', `adb${exe}`),
-				emulator: join(path, 'emulator', `emulator${exe}`),
-			});
+			expect(sdk.adb).to.equal(join(path, 'platform-tools', `adb${exe}`));
+			expect(sdk.emulator).to.equal(join(path, 'emulator', `emulator${exe}`));
 			expect(sdk.path).to.equal(path);
 			expect(sdk.platforms).to.deep.equal([
 				{
@@ -115,16 +111,13 @@ describe('Android SDK', () => {
 			);
 			config.android.sdk.searchPaths[process.platform] = [];
 			const { sdks } = await detectAndroidSDKs({
-				bypassCache: true,
 				searchPaths: [path],
 			});
 			expect(sdks).toEqual([
 				{
 					addons: [],
-					executables: {
-						adb: join(path, 'platform-tools', `adb${exe}`),
-						emulator: join(path, 'emulator', `emulator${exe}`),
-					},
+					adb: join(path, 'platform-tools', `adb${exe}`),
+					emulator: join(path, 'emulator', `emulator${exe}`),
 					issues: [],
 					path,
 					platforms: [
@@ -155,17 +148,9 @@ describe('Android SDK', () => {
 			]);
 		});
 
-		it('should cache Android SDKs', async () => {
-			const dir = join(__dirname, 'mocks', 'sdk', testPlatform, 'r29');
-			config.android.sdk.searchPaths[testPlatform] = [dir];
-			const results1 = await detectAndroidSDKs({ bypassCache: true });
-			const results2 = await detectAndroidSDKs();
-			expect(results1).toBe(results2);
-		});
-
 		it('should return issues if no Android SDKs are found', async () => {
 			config.android.sdk.searchPaths[testPlatform] = ['does_not_exist'];
-			const { sdks, issues } = await detectAndroidSDKs({ bypassCache: true });
+			const { sdks, issues } = await detectAndroidSDKs();
 			expect(sdks).toEqual([]);
 			expect(issues.length).toBe(1);
 			expect(issues[0].id).toBe('ANDROID_SDK_NOT_FOUND');
