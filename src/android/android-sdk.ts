@@ -357,9 +357,10 @@ export async function detectAndroidSDKs(
 			if (visited.has(path)) {
 				continue;
 			}
-			visited.add(path);
 			try {
-				sdks.push(await AndroidSDK.load(path));
+				const sdk = await AndroidSDK.load(path);
+				sdks.push(sdk);
+				visited.add(sdk.path);
 			} catch (err) {
 				if (
 					err instanceof Error &&
@@ -385,6 +386,8 @@ export async function detectAndroidSDKs(
 					// ignore all other errors
 					warn(err);
 				}
+			} finally {
+				visited.add(path);
 			}
 		}
 

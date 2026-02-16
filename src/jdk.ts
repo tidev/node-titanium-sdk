@@ -156,9 +156,13 @@ export async function detectJDKs(
 			if (visited.has(path)) {
 				continue;
 			}
-			visited.add(path);
 			try {
-				jdks.push(await JDK.load(path));
+				const jdk = await JDK.load(path);
+				if (visited.has(jdk.path)) {
+					continue;
+				}
+				jdks.push(jdk);
+				visited.add(jdk.path);
 			} catch (err) {
 				if (err instanceof Error && 'code' in err && err.code === 'JDK_MISSING_REQUIRED_PROGRAM') {
 					// Not a JDK, check subdirectories
@@ -179,6 +183,8 @@ export async function detectJDKs(
 					// ignore all other errors
 					warn(err);
 				}
+			} finally {
+				visited.add(path);
 			}
 		}
 

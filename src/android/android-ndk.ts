@@ -179,9 +179,10 @@ export async function detectAndroidNDKs(
 			if (visited.has(path)) {
 				continue;
 			}
-			visited.add(path);
 			try {
-				ndks.push(await AndroidNDK.load(path));
+				const ndk = await AndroidNDK.load(path);
+				ndks.push(ndk);
+				visited.add(ndk.path);
 			} catch (err) {
 				if (
 					err instanceof Error &&
@@ -207,6 +208,8 @@ export async function detectAndroidNDKs(
 					// ignore all other errors
 					warn(err);
 				}
+			} finally {
+				visited.add(path);
 			}
 		}
 
