@@ -2,7 +2,7 @@ import { isFile } from '../../util/is-file.js';
 import { tiappXmlToJson, applyTiappJsonToXml } from './tiapp-transform.js';
 import { DOMParser, type Options } from '@xmldom/xmldom';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import path from 'node:path';
+import { dirname } from 'node:path';
 
 declare module '@xmldom/xmldom' {
 	interface Options {
@@ -79,7 +79,7 @@ export class TiappXML {
 	save(file: string) {
 		file = this.file ?? file;
 		if (file) {
-			mkdirSync(path.dirname(file), { recursive: true });
+			mkdirSync(dirname(file), { recursive: true });
 			writeFileSync(file, this.toString());
 		}
 		return this;

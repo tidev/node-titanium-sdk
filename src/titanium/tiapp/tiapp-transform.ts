@@ -1,4 +1,4 @@
-import { Plist } from '../../util/plist.js';
+import { parsePlist } from '../../util/plist.js';
 import * as xml from '../../util/xml.js';
 import { TiappSchema, type Tiapp } from './tiapp-schema.js';
 
@@ -381,9 +381,9 @@ function readIOS(doc: Document): Record<string, unknown> | undefined {
 	if (entElem) {
 		const dictElem = entElem.getElementsByTagName('dict')[0];
 		if (dictElem) {
-			const pl = new Plist();
-			pl.parse(`<plist version="1.0">${dictElem.toString()}</plist>`);
-			result.entitlements = { ...pl };
+			result.entitlements = parsePlist<Record<string, unknown>>(
+				`<plist version="1.0">${dictElem.toString()}</plist>`
+			);
 		}
 	}
 
