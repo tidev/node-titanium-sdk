@@ -3,7 +3,6 @@ import { expand } from '../util/expand.js';
 import { isDir } from '../util/is-dir.js';
 import { Issue } from '../util/issue.js';
 import { tailgate } from '../util/tailgate.js';
-import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 
@@ -68,21 +67,12 @@ interface TiSDKs {
 	issues: Issue[];
 }
 
-let tisdkCache: TiSDKs | null = null;
-let tisdkSearchPathsHash: string | null = null;
-
 export async function detectTitaniumSDKs(
 	options: {
-		bypassCache?: boolean;
 		searchPaths?: string[];
 	} = {}
 ): Promise<TiSDKs> {
 	const searchPaths = await getSearchPaths(options);
-	const searchPathsHash = createHash('sha256').update(searchPaths.toSorted().join()).digest('hex');
-
-	if (tisdkCache !== null && !options.bypassCache && tisdkSearchPathsHash === searchPathsHash) {
-		return tisdkCache;
-	}
 
 	return tailgate('titanium:tisdk:detect', async () => {
 		const sdks: TitaniumSDK[] = [];
@@ -123,16 +113,13 @@ export async function detectTitaniumSDKs(
 			);
 		}
 
-		tisdkCache = {
+		return {
 			installPath: config.titanium.sdk.installPath[process.platform],
 			latest: sdks.find((s) => /.GA$/.test(s.name))?.name || sdks[0]?.name || null,
 			sdkPaths: searchPaths,
 			sdks,
 			issues,
 		};
-		tisdkSearchPathsHash = searchPathsHash;
-
-		return tisdkCache;
 	});
 }
 

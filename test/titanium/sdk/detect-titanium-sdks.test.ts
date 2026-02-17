@@ -13,9 +13,7 @@ describe('Titanium SDK', function () {
 		it('should find Titanium SDKs', async () => {
 			config.titanium.sdk.installPath[process.platform] = path.join(__dirname, 'mocks', 'mock-sdk');
 			config.titanium.sdk.searchPaths[process.platform] = [];
-			const { sdks, issues } = await detectTitaniumSDKs({
-				bypassCache: true,
-			});
+			const { sdks, issues } = await detectTitaniumSDKs();
 			expect(sdks).toHaveLength(1);
 			expect(sdks[0].manifest).toEqual({
 				name: '0.0.0.GA',
@@ -46,9 +44,7 @@ describe('Titanium SDK', function () {
 		it('should return issues if no Titanium SDKs are found', async () => {
 			config.titanium.sdk.installPath[process.platform] = path.join(__dirname, 'mocks', 'empty');
 			config.titanium.sdk.searchPaths[process.platform] = [];
-			const { sdks, issues } = await detectTitaniumSDKs({
-				bypassCache: true,
-			});
+			const { sdks, issues } = await detectTitaniumSDKs();
 			expect(sdks).toHaveLength(0);
 			expect(issues).toHaveLength(1);
 			expect(issues[0].id).toBe('TITANIUM_SDK_NOT_FOUND');

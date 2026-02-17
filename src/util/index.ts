@@ -5,5 +5,5 @@ export * from './is-file.js';
 export * from './plist.js';
 export * from './png-info.js';
 export * from './request.js';
-export * from './version.js';
+export * as version from './version.js';
 export * from './xml.js';
