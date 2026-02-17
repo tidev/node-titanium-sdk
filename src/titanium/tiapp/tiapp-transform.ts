@@ -346,10 +346,8 @@ function readIOS(doc: Document): Record<string, unknown> | undefined {
 	const result: Record<string, unknown> = {};
 	const simpleTags = [
 		'enable-launch-screen-storyboard',
-		'use-app-thinning',
-		'enablecoverage',
-		'enablemdfind',
 		'default-background-color',
+		'use-app-thinning',
 		'min-ios-ver',
 		'team-id',
 		'log-server-port',

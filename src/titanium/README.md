@@ -23,9 +23,11 @@ Supported tags:
   - capabilities
   - default-background-color
   - enable-launch-screen-storyboard
+  - entitlements
   - extensions
   - log-server-port
   - min-ios-ver
+  - plist
   - team-id
   - use-app-thinning
   - use-autolayout

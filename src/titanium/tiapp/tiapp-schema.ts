@@ -111,23 +111,19 @@ const IOSExtensionSchema = z.object({
  */
 export const IOSSchema = z
 	.object({
-		excludeDirFromAssetCatalog: BooleanSchema.optional(),
-		enableLaunchScreenStoryboard: BooleanSchema.optional(),
-		enablecoverage: BooleanSchema.optional(),
-		enablemdfind: BooleanSchema.optional(),
-		minIosVer: NumberSchema.optional(),
-		defaultBackgroundColor: OptionalStringSchema,
-		teamId: OptionalStringSchema,
-		useJscoreFramework: BooleanSchema.optional(),
-		runOnMainThread: BooleanSchema.optional(),
-		useAutolayout: BooleanSchema.optional(),
-		useNewBuildSystem: BooleanSchema.optional(),
-		useAppThinning: BooleanSchema.optional(),
-		logServerPort: z.number().optional(),
 		capabilities: IOSCapabilitiesSchema,
+		defaultBackgroundColor: OptionalStringSchema,
+		enableLaunchScreenStoryboard: BooleanSchema.optional(),
 		entitlements: z.record(z.string(), z.any()).optional(),
-		plist: z.record(z.string(), z.any()).optional(),
 		extensions: z.array(IOSExtensionSchema).optional(),
+		logServerPort: z.number().optional(),
+		minIosVer: NumberSchema.optional(),
+		plist: z.record(z.string(), z.any()).optional(),
+		teamId: OptionalStringSchema,
+		useAppThinning: BooleanSchema.optional(),
+		useAutolayout: BooleanSchema.optional(),
+		useJscoreFramework: BooleanSchema.optional(),
+		useNewBuildSystem: BooleanSchema.optional(),
 	})
 	.optional();
 

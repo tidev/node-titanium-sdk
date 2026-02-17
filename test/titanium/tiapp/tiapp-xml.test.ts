@@ -589,17 +589,11 @@ describe('TiappXML', () => {
 					'ti.skipVersionValidation': false,
 				},
 				ios: {
-					enableLaunchScreenStoryboard: true,
-					useAppThinning: true,
-					enablecoverage: true,
-					enablemdfind: true,
-					defaultBackgroundColor: '#FFFFFF',
-					minIosVer: '5.0',
-					teamId: 'foo',
-					logServerPort: 10571,
 					capabilities: {
 						appGroups: ['group.com.appc.foo', 'group.com.appc.bar'],
 					},
+					defaultBackgroundColor: '#FFFFFF',
+					enableLaunchScreenStoryboard: true,
 					entitlements: {
 						'application-identifier': 'XXXXXXXXXX.com.test.app',
 						'aps-environment': 'production',
@@ -607,6 +601,30 @@ describe('TiappXML', () => {
 						'get-task-allow': false,
 						'keychain-access-groups': ['XXXXXXXXXX.com.test.app'],
 					},
+					extensions: [
+						{
+							projectPath: '/path/to/extention',
+							target: 'Some Target',
+							provisioningProfiles: [],
+						},
+						{
+							projectPath: '/path/to/extention2',
+							target: 'Another Target',
+							provisioningProfiles: [
+								{
+									device: 'abc',
+									distAppstore: '123',
+									distAdhoc: true,
+								},
+							],
+						},
+						{
+							projectPath: '/path/to/another/extention',
+							target: 'Test WatchKit Extension',
+						},
+					],
+					logServerPort: 10571,
+					minIosVer: '5.0',
 					plist: {
 						UISupportedInterfaceOrientations: [
 							'UIInterfaceOrientationPortrait',
@@ -651,28 +669,11 @@ describe('TiappXML', () => {
 						UIStatusBarStyle: 'UIStatusBarStyleBlackTranslucent',
 						UIAppFonts: ['/fonts/MyFont_1.otf', '/fonts/MyFont_2.otf'],
 					},
-					extensions: [
-						{
-							projectPath: '/path/to/extention',
-							target: 'Some Target',
-							provisioningProfiles: [],
-						},
-						{
-							projectPath: '/path/to/extention2',
-							target: 'Another Target',
-							provisioningProfiles: [
-								{
-									device: 'abc',
-									distAppstore: '123',
-									distAdhoc: true,
-								},
-							],
-						},
-						{
-							projectPath: '/path/to/another/extention',
-							target: 'Test WatchKit Extension',
-						},
-					],
+					teamId: 'foo',
+					useAppThinning: true,
+					useAutolayout: true,
+					useJscoreFramework: true,
+					useNewBuildSystem: true,
 				},
 				android: {
 					manifest: `<manifest>
