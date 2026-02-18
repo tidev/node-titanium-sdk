@@ -24,7 +24,8 @@ describe('request', () => {
 		assert.strictEqual(res.statusCode, 200);
 	});
 
-	it('should fetch TiDev page via proxy', async () => {
+	it.skipIf(typeof (globalThis as { Deno?: unknown }).Deno !== 'undefined')(
+		'should fetch TiDev page via proxy', async () => {
 		const connections: Record<string, Socket> = {};
 		const server = createServer();
 		server.on('connection', function (conn) {
