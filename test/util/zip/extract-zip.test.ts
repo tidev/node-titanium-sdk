@@ -1,4 +1,6 @@
+import { isFile } from '../../../src/util';
 import { extractZip } from '../../../src/util/extract-zip';
+import { isDir } from '../../../src/util/is-dir';
 import { randomBytes } from 'node:crypto';
 import { existsSync, lstatSync, readlinkSync, statSync } from 'node:fs';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
@@ -6,8 +8,6 @@ import { tmpdir } from 'node:os';
 import { join, posix, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { isDir } from '../../../src/util/is-dir';
-import { isFile } from '../../../src/util';
 
 const fixturesDir = join(fileURLToPath(import.meta.url), '../fixtures');
 
@@ -119,7 +119,9 @@ describe('extractZip()', () => {
 		for (const file of listing) {
 			expect(file).toBe(`${String.fromCharCode(97 + i++)}.txt`);
 			if (file === 'a.txt') {
-				expect(await readFile(join(tmpDir, 'testfiles', file), 'utf8')).toBe(`I will not be overwritten`);
+				expect(await readFile(join(tmpDir, 'testfiles', file), 'utf8')).toBe(
+					`I will not be overwritten`
+				);
 			} else {
 				expect(await readFile(join(tmpDir, 'testfiles', file), 'utf8')).toBe(`This is a test`);
 			}
