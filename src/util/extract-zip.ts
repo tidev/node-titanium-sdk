@@ -2,7 +2,7 @@ import { expand } from './expand';
 import { isFile } from './is-file';
 import fs, { existsSync } from 'node:fs';
 import { mkdir, symlink, unlink } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import yauzl from 'yauzl';
 
 type ExtractZipOptions = {
@@ -97,10 +97,7 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 									.replace(/[\\/]$/, '');
 								console.log('SYMLINK TARGET:', target);
 								console.log('DEST FILE:', destFile);
-								console.log('EXISTS:', existsSync(destFile));
-								if (existsSync(destFile)) {
-									await unlink(destFile);
-								}
+								console.log('EXISTS:', existsSync(join(dirname(destFile), target)));
 								try {
 									await symlink(target, destFile);
 								} catch (err) {

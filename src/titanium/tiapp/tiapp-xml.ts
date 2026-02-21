@@ -11,7 +11,7 @@ declare module '@xmldom/xmldom' {
 }
 
 const defaultDOMParserArgs: Options = {
-	errorHandler: () => {},
+	errorHandler: () => { },
 };
 
 /**
@@ -93,5 +93,3 @@ export class TiappXML {
 		return `<?xml version="1.0" encoding="UTF-8"?>\n${xmlStr}`;
 	}
 }
-
-export default TiappXML;
