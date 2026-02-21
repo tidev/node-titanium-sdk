@@ -96,6 +96,8 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 									.toString('utf8')
 									.replace(/[\\/]$/, '');
 								console.log('SYMLINK TARGET:', target);
+								console.log('JOINED TARGET:', join(dirname(destFile), target));
+								console.log('RESOLVED TARGET:', resolve(target));
 								console.log('DEST FILE:', destFile);
 								console.log('EXISTS:', existsSync(join(dirname(destFile), target)));
 								try {
