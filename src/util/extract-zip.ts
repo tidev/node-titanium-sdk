@@ -92,15 +92,15 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 							readStream.on('data', (chunk: Buffer) => chunks.push(chunk));
 							readStream.on('error', abort);
 							readStream.on('end', async () => {
-								const str = Buffer.concat(chunks).toString('utf8');
-								console.log('SYMLINK CONTENT:', str);
+								const target = Buffer.concat(chunks).toString('utf8').replace(/[\\/]$/, '');
+								console.log('SYMLINK TARGET:', target);
 								console.log('DEST FILE:', destFile);
 								console.log('EXISTS:', existsSync(destFile));
 								if (existsSync(destFile)) {
 									await unlink(destFile);
 								}
 								try {
-									await symlink(str, destFile);
+									await symlink(target, destFile);
 								} catch (err) {
 									console.error('ERROR SYMLINKING:', err);
 									return abort(

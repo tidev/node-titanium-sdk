@@ -2,7 +2,7 @@ import { config, resetConfig } from '../../src/config.js';
 import { detectJDKs, JDK } from '../../src/jdk.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const exe = process.platform === 'win32' ? '.exe' : '';
@@ -19,9 +19,7 @@ describe('JDK', function () {
 		delete process.env.MOCK_STDERR;
 		delete process.env.MOCK_EXITCODE;
 		resetConfig();
-	});
 
-	afterAll(() => {
 		if (javaHome) {
 			process.env.JAVA_HOME = javaHome;
 		} else {
@@ -185,16 +183,21 @@ describe('JDK', function () {
 			} finally {
 				delete process.env.JAVA_HOME;
 			}
-		});
+		}, 60_000);
 
 		it('should find JDKs without JAVA_HOME', async () => {
+			const javaHome = process.env.JAVA_HOME;
 			try {
 				process.env.MOCK_STDOUT = 'javac 9';
 				process.env.JAVA_HOME = 'does_not_exist';
 				const { home } = await detectJDKs();
 				expect(home).toBeNull();
 			} finally {
-				delete process.env.JAVA_HOME;
+				if (javaHome) {
+					process.env.JAVA_HOME = javaHome;
+				} else {
+					delete process.env.JAVA_HOME;
+				}
 			}
 		});
 
