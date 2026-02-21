@@ -99,7 +99,12 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 								if (existsSync(destFile)) {
 									await unlink(destFile);
 								}
-								await symlink(str, destFile);
+								try {
+									await symlink(str, destFile);
+								} catch (err) {
+									console.error('ERROR SYMLINKING:', err);
+									return abort(new Error(`Error symlinking ${destFile}: ${(err as Error).message || err}`));
+								}
 								zipfile.readEntry();
 							});
 						});
