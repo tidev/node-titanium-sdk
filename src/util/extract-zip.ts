@@ -92,7 +92,9 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 							readStream.on('data', (chunk: Buffer) => chunks.push(chunk));
 							readStream.on('error', abort);
 							readStream.on('end', async () => {
-								const target = Buffer.concat(chunks).toString('utf8').replace(/[\\/]$/, '');
+								const target = Buffer.concat(chunks)
+									.toString('utf8')
+									.replace(/[\\/]$/, '');
 								console.log('SYMLINK TARGET:', target);
 								console.log('DEST FILE:', destFile);
 								console.log('EXISTS:', existsSync(destFile));
