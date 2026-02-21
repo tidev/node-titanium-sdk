@@ -25,29 +25,32 @@ describe('request', () => {
 	});
 
 	it.skipIf(typeof (globalThis as { Deno?: unknown }).Deno !== 'undefined')(
-		'should fetch TiDev page via proxy', async () => {
-		const connections: Record<string, Socket> = {};
-		const server = createServer();
-		server.on('connection', function (conn) {
-			const key = `${conn.remoteAddress}:${conn.remotePort}`;
-			connections[key] = conn;
-			conn.on('close', () => {
-				delete connections[key];
+		'should fetch TiDev page via proxy',
+		async () => {
+			const connections: Record<string, Socket> = {};
+			const server = createServer();
+			server.on('connection', function (conn) {
+				const key = `${conn.remoteAddress}:${conn.remotePort}`;
+				connections[key] = conn;
+				conn.on('close', () => {
+					delete connections[key];
+				});
 			});
-		});
-		createProxy(server).listen(9999);
+			createProxy(server).listen(9999);
 
-		try {
-			config.network.httpProxy = 'http://localhost:9999';
+			try {
+				config.network.httpProxy = 'http://localhost:9999';
 
-			const res = await request('https://github.com');
-			await res.body.text();
-			assert.strictEqual(res.statusCode, 200);
-		} finally {
-			for (const conn of Object.values(connections)) {
-				conn.destroy();
+				const res = await request('https://github.com');
+				await res.body.text();
+				assert.strictEqual(res.statusCode, 200);
+			} finally {
+				for (const conn of Object.values(connections)) {
+					conn.destroy();
+				}
+				await new Promise((resolve) => server.close(resolve));
 			}
-			await new Promise((resolve) => server.close(resolve));
-		}
-	}, 10000);
+		},
+		10000
+	);
 });

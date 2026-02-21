@@ -6,7 +6,8 @@ import {
 	writePlistSync,
 } from '../../../src/util/plist.js';
 import { randomBytes } from 'node:crypto';
-import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { existsSync } from 'node:fs';
+import { mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,14 +16,14 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 const fixturesDir = join(fileURLToPath(import.meta.url), '../fixtures');
 
 let tmpDir: string;
-beforeEach(() => {
+beforeEach(async () => {
 	tmpDir = join(tmpdir(), 'node-titanium-sdk', `plist-test-${randomBytes(8).toString('hex')}`);
-	mkdirSync(tmpDir, { recursive: true });
+	await mkdir(tmpDir, { recursive: true });
 });
 
-afterEach(() => {
+afterEach(async () => {
 	if (existsSync(tmpDir)) {
-		rmSync(tmpDir, { force: true, recursive: true });
+		await rm(tmpDir, { force: true, recursive: true });
 	}
 });
 

@@ -51,9 +51,10 @@
   },
   "scripts": {
     "build": "rimraf dist && tsdown -c tsdown.config.ts",
-    "check": "pnpm type-check && pnpm lint",
+    "check": "pnpm type-check && pnpm lint && pnpm fmt:check",
     "coverage": "vitest --coverage",
     "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
     "lint": "oxlint",
     "prepublishOnly": "pnpm run build",
     "test": "cross-env CI=1 vitest",
@@ -75,6 +76,7 @@
     "stream-splitter": "0.3.2",
     "undici": "7.22.0",
     "which": "6.0.1",
+    "yauzl": "3.2.0",
     "zod": "4.3.6"
   },
   "devDependencies": {
