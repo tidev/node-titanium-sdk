@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { existsSync, lstatSync, readlinkSync, statSync } from 'node:fs';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, sep } from 'node:path';
+import { join, posix, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { isDir } from '../../../src/util/is-dir';
@@ -74,7 +74,7 @@ describe('extractZip()', () => {
 		const expectedFiles = [
 			'testfiles/',
 			...Array.from({ length: 26 }, (_, i) =>
-				join('testfiles', `${String.fromCharCode(97 + i)}.txt`)
+				posix.join('testfiles', `${String.fromCharCode(97 + i)}.txt`)
 			),
 		].sort();
 
@@ -101,7 +101,7 @@ describe('extractZip()', () => {
 		const expectedFiles = [
 			'testfiles/',
 			...Array.from({ length: 25 }, (_, i) =>
-				join('testfiles', `${String.fromCharCode(98 + i)}.txt`)
+				posix.join('testfiles', `${String.fromCharCode(98 + i)}.txt`)
 			),
 		].sort();
 
@@ -172,7 +172,7 @@ describe('extractZip()', () => {
 		expect(target).toBe(`folder${sep}`);
 	});
 
-	it('should preserve executable permissions', async () => {
+	it.skipIf(process.platform === 'win32')('should preserve executable permissions', async () => {
 		await extractZip(join(fixturesDir, 'shellscript.zip'), tmpDir);
 
 		const file = join(tmpDir, 'testexe/test.sh');
