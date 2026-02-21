@@ -5,7 +5,7 @@ import { randomBytes } from 'node:crypto';
 import { existsSync, lstatSync, readlinkSync, statSync } from 'node:fs';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, posix, sep } from 'node:path';
+import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -148,7 +148,7 @@ describe('extractZip()', () => {
 		const folderLinkStat = lstatSync(folderLink);
 		expect(folderLinkStat.isSymbolicLink()).toBe(true);
 		const target = readlinkSync(folderLink);
-		expect(target).to.equal(`folder${sep}`);
+		expect(target).to.equal('folder');
 	});
 
 	it('should handle if a symlink already exists', async () => {
@@ -172,7 +172,7 @@ describe('extractZip()', () => {
 		const folderLinkStat = lstatSync(folderLink);
 		expect(folderLinkStat.isSymbolicLink()).toBe(true);
 		const target = readlinkSync(folderLink);
-		expect(target).toBe(`folder${sep}`);
+		expect(target).toBe('folder');
 	});
 
 	it.skipIf(process.platform === 'win32')('should preserve executable permissions', async () => {
