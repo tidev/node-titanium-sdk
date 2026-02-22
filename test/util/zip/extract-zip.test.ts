@@ -21,7 +21,6 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-	delete process.env.SNOOPLOGG;
 	if (existsSync(tmpDir)) {
 		await rm(tmpDir, { force: true, recursive: true });
 	}
@@ -119,9 +118,7 @@ describe('extractZip()', () => {
 		expect(target).to.equal('folder');
 	});
 
-	// it.skipIf(!canSymlink())
-	it.only('should handle if a symlink already exists', async () => {
-		process.env.SNOOPLOGG = '*';
+	it.skipIf(!canSymlink())('should handle if a symlink already exists', async () => {
 		await extractZip(join(fixturesDir, 'symlinks.zip'), tmpDir);
 
 		await extractZip(join(fixturesDir, 'symlinks.zip'), tmpDir);
