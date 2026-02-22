@@ -2,7 +2,7 @@ import { expand } from './expand';
 import { isFile } from './is-file';
 import fs, { existsSync } from 'node:fs';
 import { mkdir, rm, symlink } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 import yauzl from 'yauzl';
 
 type ExtractZipOptions = {
