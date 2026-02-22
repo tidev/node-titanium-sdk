@@ -1,9 +1,5 @@
-import { isFile } from '../../../src/util';
-import { existsSync } from '../../../src/util/exists.js';
-import { extractZip } from '../../../src/util/extract-zip';
-import { isDir } from '../../../src/util/is-dir';
+import { exists, extractZip, isDir, isFile } from '../../../src/util/index.js';
 import { canSymlink } from '../can-symlink.js';
-import { execSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { lstatSync, readlinkSync, statSync } from 'node:fs';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
@@ -21,7 +17,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-	if (existsSync(tmpDir)) {
+	if (await exists(tmpDir)) {
 		await rm(tmpDir, { force: true, recursive: true });
 	}
 });
@@ -107,7 +103,7 @@ describe('extractZip()', () => {
 		expect(isFile(file)).toBe(true);
 
 		const fileLink = join(tmpDir, 'symlinks/link.txt');
-		expect(existsSync(fileLink)).toBe(true);
+		expect(await exists(fileLink)).toBe(true);
 		const fileLinkStat = lstatSync(fileLink);
 		expect(fileLinkStat.isSymbolicLink()).toBe(true);
 
@@ -130,7 +126,7 @@ describe('extractZip()', () => {
 		expect(isFile(file)).toBe(true);
 
 		const fileLink = join(tmpDir, 'symlinks/link.txt');
-		expect(isFile(fileLink)).toBe(true);
+		expect(await exists(fileLink)).toBe(true);
 
 		const folderLink = join(tmpDir, 'symlinks/folderlink');
 		const folderLinkStat = lstatSync(folderLink);

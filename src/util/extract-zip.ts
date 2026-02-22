@@ -1,7 +1,8 @@
+import { execSync } from 'node:child_process';
 import { exists } from './exists';
 import { expand } from './expand';
 import { isFile } from './is-file';
-import fs from 'node:fs';
+import fs, { lstatSync, statSync } from 'node:fs';
 import { mkdir, rm, symlink } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import snooplogg from 'snooplogg';
