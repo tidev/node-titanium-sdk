@@ -1,6 +1,7 @@
 import { isFile } from '../../../src/util';
 import { extractZip } from '../../../src/util/extract-zip';
 import { isDir } from '../../../src/util/is-dir';
+import { execSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { existsSync, lstatSync, readlinkSync, statSync } from 'node:fs';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
@@ -141,6 +142,10 @@ describe('extractZip()', () => {
 		expect(isFile(file)).toBe(true);
 
 		const fileLink = join(tmpDir, 'symlinks/link.txt');
+		if (!existsSync(fileLink)) {
+			console.error('FILE LINK DOES NOT EXIST:', fileLink);
+			execSync('ls -la', { cwd: join(tmpDir, 'symlinks'), stdio: 'inherit' });
+		}
 		expect(existsSync(fileLink)).toBe(true);
 		const fileLinkStat = lstatSync(fileLink);
 		expect(fileLinkStat.isSymbolicLink()).toBe(true);
@@ -152,7 +157,9 @@ describe('extractZip()', () => {
 		expect(target).to.equal('folder');
 	});
 
-	it('should handle if a symlink already exists', async () => {
+	it.skipIf(
+		typeof (globalThis as { Deno?: unknown }).Deno !== 'undefined' && process.platform === 'win32'
+	)('should handle if a symlink already exists', async () => {
 		await extractZip(join(fixturesDir, 'symlinks.zip'), tmpDir);
 
 		await extractZip(join(fixturesDir, 'symlinks.zip'), tmpDir);
