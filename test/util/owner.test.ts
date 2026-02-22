@@ -1,5 +1,5 @@
-import { dirname } from 'node:path';
 import { getOwner, getOwnerSync } from '../../src/util/owner.js';
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 

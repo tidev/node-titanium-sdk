@@ -109,7 +109,7 @@ export function getOwnerSync(path: string): OwnerSync {
 		return {
 			apply() {},
 			gid: 0,
-			origin,
+			origin: dirname(origin),
 			supported,
 			target,
 			uid: 0,
