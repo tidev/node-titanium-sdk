@@ -79,10 +79,6 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 
 					if (isSymlink) {
 						await mkdir(dirname(destFile), { recursive: true });
-						console.log('FOUND SYMLINK!', {
-							destFile,
-							entry,
-						});
 						zipfile.openReadStream(entry, (err, readStream) => {
 							if (err) {
 								return abort(err);
@@ -95,15 +91,9 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 								const target = Buffer.concat(chunks)
 									.toString('utf8')
 									.replace(/[\\/]$/, '');
-								console.log('SYMLINK TARGET:', target);
-								console.log('JOINED TARGET:', join(dirname(destFile), target));
-								console.log('RESOLVED TARGET:', resolve(target));
-								console.log('DEST FILE:', destFile);
-								console.log('EXISTS:', existsSync(join(dirname(destFile), target)));
 								try {
 									await symlink(target, destFile);
 								} catch (err) {
-									console.error('ERROR SYMLINKING:', err);
 									return abort(
 										new Error(`Error symlinking ${destFile}: ${(err as Error).message || err}`)
 									);
