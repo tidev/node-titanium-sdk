@@ -55,7 +55,7 @@ export async function getOwner(path: string): Promise<Owner> {
 		return {
 			async apply() {},
 			gid: 0,
-			origin,
+			origin: dirname(origin),
 			supported,
 			target,
 			uid: 0,
