@@ -139,7 +139,7 @@ describe('extractZip()', () => {
 		await extractZip(join(fixturesDir, 'shellscript.zip'), tmpDir);
 
 		const file = join(tmpDir, 'testexe/test.sh');
-		expect(existsSync(file)).toBe(true);
+		expect(await exists(file)).toBe(true);
 		expect(isFile(file)).toBe(true);
 		expect(statSync(file).mode & 0o777).toBe(0o755);
 	});
