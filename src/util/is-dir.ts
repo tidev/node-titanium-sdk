@@ -1,8 +1,8 @@
-import { statSync } from 'fs';
+import { lstatSync } from 'fs';
 
 export function isDir(dir: string): boolean {
 	try {
-		return statSync(dir).isDirectory();
+		return lstatSync(dir).isDirectory();
 	} catch {
 		return false;
 	}

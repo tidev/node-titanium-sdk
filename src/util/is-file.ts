@@ -1,8 +1,8 @@
-import { statSync } from 'fs';
+import { lstatSync } from 'fs';
 
 export function isFile(file: string): boolean {
 	try {
-		return statSync(file).isFile();
+		return lstatSync(file).isFile();
 	} catch {
 		return false;
 	}
