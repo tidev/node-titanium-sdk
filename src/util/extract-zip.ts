@@ -1,11 +1,11 @@
+import { exists } from './exists';
 import { expand } from './expand';
 import { isFile } from './is-file';
 import fs from 'node:fs';
 import { mkdir, rm, symlink } from 'node:fs/promises';
-import { exists } from './exists';
 import { dirname } from 'node:path';
-import yauzl from 'yauzl';
 import snooplogg from 'snooplogg';
+import yauzl from 'yauzl';
 
 const { error, log } = snooplogg('extract-zip');
 
@@ -75,7 +75,7 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 						}
 
 						if (isSymlink) {
-							if (!await exists(dirname(destFile))) {
+							if (!(await exists(dirname(destFile)))) {
 								log(`Creating directory: ${dirname(destFile)}`);
 								await mkdir(dirname(destFile), { recursive: true });
 							}
@@ -115,14 +115,14 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 								});
 							});
 						} else if (isDir) {
-							if (!await exists(dirname(destFile))) {
+							if (!(await exists(dirname(destFile)))) {
 								log(`Creating directory: ${dirname(destFile)}`);
 								await mkdir(dirname(destFile), { recursive: true });
 							}
 							zipfile.readEntry();
 						} else {
 							const dir = dirname(destFile);
-							if (!await exists(dir)) {
+							if (!(await exists(dir))) {
 								log(`Creating directory: ${dir}`);
 								await mkdir(dir, { recursive: true });
 							}

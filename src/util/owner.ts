@@ -1,7 +1,7 @@
+import { expand } from './expand.js';
 import { lchownSync, lstatSync } from 'node:fs';
 import { lchown, lstat } from 'node:fs/promises';
 import { dirname, parse } from 'node:path';
-import { expand } from './expand.js';
 
 interface OwnerQuery {
 	origin: string;
@@ -32,13 +32,12 @@ function initOwnerQuery(path: string): OwnerQuery {
 	const target = expand(path);
 	const { root } = parse(target);
 	const origin = target;
-	const supported =
-		process.platform !== 'win32' && typeof process.getuid === 'function';
+	const supported = process.platform !== 'win32' && typeof process.getuid === 'function';
 	return {
 		origin,
 		root,
 		supported,
-		target
+		target,
 	};
 }
 
@@ -59,10 +58,11 @@ export async function getOwner(path: string): Promise<Owner> {
 			origin,
 			supported,
 			target,
-			uid: 0
+			uid: 0,
 		};
 	}
 
+	// eslint-disable-next-line no-constant-condition
 	for (; true; origin = dirname(origin)) {
 		try {
 			const st = await lstat(origin);
@@ -86,7 +86,7 @@ export async function getOwner(path: string): Promise<Owner> {
 					origin,
 					supported,
 					target,
-					uid
+					uid,
 				};
 			}
 		} catch {}
@@ -112,10 +112,11 @@ export function getOwnerSync(path: string): OwnerSync {
 			origin,
 			supported,
 			target,
-			uid: 0
+			uid: 0,
 		};
 	}
 
+	// eslint-disable-next-line no-constant-condition
 	for (; true; origin = dirname(origin)) {
 		try {
 			const st = lstatSync(origin);
@@ -139,7 +140,7 @@ export function getOwnerSync(path: string): OwnerSync {
 					origin,
 					supported,
 					target,
-					uid
+					uid,
 				};
 			}
 		} catch {}

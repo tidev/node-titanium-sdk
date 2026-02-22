@@ -1,6 +1,7 @@
 import { isFile } from '../../../src/util';
 import { extractZip } from '../../../src/util/extract-zip';
 import { isDir } from '../../../src/util/is-dir';
+import { canSymlink } from '../can-symlink.js';
 import { execSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { existsSync, lstatSync, readlinkSync, statSync } from 'node:fs';
@@ -9,7 +10,6 @@ import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { canSymlink } from '../can-symlink.js';
 
 const fixturesDir = join(fileURLToPath(import.meta.url), '../fixtures');
 

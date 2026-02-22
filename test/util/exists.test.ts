@@ -1,10 +1,10 @@
 import { exists, existsSync } from '../../src/util/exists.js';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { canSymlink } from './can-symlink.js';
+import { randomBytes } from 'node:crypto';
+import { mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { mkdir, rm, symlink, writeFile } from 'node:fs/promises';
-import { randomBytes } from 'node:crypto';
-import { canSymlink } from './can-symlink.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 let tmpDir: string;
 beforeEach(async () => {

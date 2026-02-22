@@ -1,10 +1,14 @@
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { mkdirSync, writeFileSync, symlinkSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 export function canSymlink(): boolean {
-	const tmpDir = join(tmpdir(), 'node-titanium-sdk', `symlink-test-${randomBytes(8).toString('hex')}`);
+	const tmpDir = join(
+		tmpdir(),
+		'node-titanium-sdk',
+		`symlink-test-${randomBytes(8).toString('hex')}`
+	);
 	mkdirSync(tmpDir, { recursive: true });
 	try {
 		writeFileSync(join(tmpDir, 'test.txt'), 'test');

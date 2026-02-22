@@ -1,5 +1,5 @@
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { expand } from '../../src/util/expand.js';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 let HOME: string | undefined;
 let USERPROFILE: string | undefined;
@@ -32,21 +32,15 @@ describe('expand()', () => {
 		delete process.env.USERPROFILE;
 
 		const p = expand('~/foo');
-		expect(p).to.equal(
-			isWin ? 'C:\\Users\\username\\foo' : '/Users/username/foo'
-		);
+		expect(p).to.equal(isWin ? 'C:\\Users\\username\\foo' : '/Users/username/foo');
 	});
 
 	it('should resolve the home directory using USERPROFILE', () => {
 		delete process.env.HOME;
-		process.env.USERPROFILE = isWin
-			? 'C:\\Users\\username'
-			: '/Users/username';
+		process.env.USERPROFILE = isWin ? 'C:\\Users\\username' : '/Users/username';
 
 		const p = expand('~/foo');
-		expect(p).to.equal(
-			isWin ? 'C:\\Users\\username\\foo' : '/Users/username/foo'
-		);
+		expect(p).to.equal(isWin ? 'C:\\Users\\username\\foo' : '/Users/username/foo');
 	});
 
 	it('should collapse relative segments', () => {
@@ -58,8 +52,6 @@ describe('expand()', () => {
 		process.env.TITANIUMLIB_TEST_PLATFORM = 'win32';
 		process.env.SystemRoot = 'C:\\WINDOWS';
 		const p = expand('%SystemRoot%\\foo');
-		expect(isWin ? p : p.substring(process.cwd().length + 1)).to.equal(
-			'C:\\WINDOWS\\foo'
-		);
+		expect(isWin ? p : p.substring(process.cwd().length + 1)).to.equal('C:\\WINDOWS\\foo');
 	});
 });
