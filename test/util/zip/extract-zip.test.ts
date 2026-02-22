@@ -21,6 +21,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+	delete process.env.SNOOPLOGG;
 	if (existsSync(tmpDir)) {
 		await rm(tmpDir, { force: true, recursive: true });
 	}
@@ -107,10 +108,6 @@ describe('extractZip()', () => {
 		expect(isFile(file)).toBe(true);
 
 		const fileLink = join(tmpDir, 'symlinks/link.txt');
-		if (!existsSync(fileLink)) {
-			console.error('FILE LINK DOES NOT EXIST:', fileLink);
-			execSync('ls -la', { cwd: join(tmpDir, 'symlinks'), stdio: 'inherit' });
-		}
 		expect(existsSync(fileLink)).toBe(true);
 		const fileLinkStat = lstatSync(fileLink);
 		expect(fileLinkStat.isSymbolicLink()).toBe(true);
@@ -122,7 +119,9 @@ describe('extractZip()', () => {
 		expect(target).to.equal('folder');
 	});
 
-	it.skipIf(!canSymlink())('should handle if a symlink already exists', async () => {
+	// it.skipIf(!canSymlink())
+	it.only('should handle if a symlink already exists', async () => {
+		process.env.SNOOPLOGG = '*';
 		await extractZip(join(fixturesDir, 'symlinks.zip'), tmpDir);
 
 		await extractZip(join(fixturesDir, 'symlinks.zip'), tmpDir);

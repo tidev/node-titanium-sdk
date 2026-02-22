@@ -103,6 +103,7 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 										log(`Symlinking: ${destFile} => ${target}`);
 										let destExists = await exists(destFile);
 										if (destExists) {
+											log(`Deleting existing symlink dest: ${destFile}`);
 											await rm(destFile, { force: true, recursive: true });
 										}
 										await symlink(target, destFile);

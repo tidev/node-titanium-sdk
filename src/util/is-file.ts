@@ -1,9 +1,14 @@
-import { lstatSync } from 'fs';
+import { lstatSync, statSync } from 'node:fs';
 
 export function isFile(file: string): boolean {
 	try {
-		return lstatSync(file).isFile();
+		return statSync(file).isFile();
 	} catch {
-		return false;
+		// check if it's a symlink
+		try {
+			return lstatSync(file).isFile();
+		} catch {
+			return false;
+		}
 	}
 }
