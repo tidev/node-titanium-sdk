@@ -48,7 +48,7 @@ describe('expand()', () => {
 		expect(p).to.match(isWin ? /:\\path\\foo/ : /\/path\/foo/);
 	});
 
-	it('should resolve environment paths (Windows)', () => {
+	it.skipIf(!isWin)('should resolve environment paths (Windows)', () => {
 		process.env.TITANIUMLIB_TEST_PLATFORM = 'win32';
 		process.env.SystemRoot = 'C:\\WINDOWS';
 		const p = expand('%SystemRoot%\\foo');
