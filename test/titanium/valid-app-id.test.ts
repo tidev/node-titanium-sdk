@@ -23,7 +23,7 @@ describe('validAppId', () => {
 		expect(validAppId('com.example..app')).toBe(false);
 	});
 
-	it('should return false if the app id doesn\'t contain a period', () => {
+	it("should return false if the app id doesn't contain a period", () => {
 		expect(validAppId('example')).toBe(false);
 	});
 

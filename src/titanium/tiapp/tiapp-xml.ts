@@ -11,7 +11,7 @@ declare module '@xmldom/xmldom' {
 }
 
 const defaultDOMParserArgs: Options = {
-	errorHandler: () => { },
+	errorHandler: () => {},
 };
 
 /**
