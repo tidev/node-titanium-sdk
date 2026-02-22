@@ -1,7 +1,7 @@
 import { expand } from './expand';
 import { isFile } from './is-file';
 import fs, { existsSync } from 'node:fs';
-import { mkdir, symlink, unlink } from 'node:fs/promises';
+import { mkdir, rm, symlink } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import yauzl from 'yauzl';
 
@@ -92,9 +92,7 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 									.toString('utf8')
 									.replace(/[\\/]$/, '');
 								try {
-									if (existsSync(destFile)) {
-										await unlink(destFile);
-									}
+									await rm(destFile, { force: true });
 									await symlink(target, destFile);
 								} catch (err) {
 									return abort(
