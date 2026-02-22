@@ -1,9 +1,13 @@
 import { expand } from './expand';
 import { isFile } from './is-file';
-import fs, { existsSync } from 'node:fs';
+import fs from 'node:fs';
 import { mkdir, rm, symlink } from 'node:fs/promises';
+import { exists } from './exists';
 import { dirname } from 'node:path';
 import yauzl from 'yauzl';
+import snooplogg from 'snooplogg';
+
+const { error, log } = snooplogg('extract-zip');
 
 type ExtractZipOptions = {
 	defaultPerm?: number;
@@ -12,7 +16,6 @@ type ExtractZipOptions = {
 		index: number,
 		total: number
 	) => void | Promise<void> | boolean | Promise<boolean>;
-	overwrite?: boolean;
 };
 
 export async function extractZip(zipFile: string, dest: string, opts?: ExtractZipOptions) {
@@ -20,7 +23,7 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 		throw new TypeError('Expected zip file to be a non-empty string');
 	}
 
-	if (!existsSync(zipFile)) {
+	if (!(await exists(zipFile))) {
 		throw new Error('The specified zip file does not exist');
 	}
 
@@ -40,83 +43,114 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 
 			let idx = -1;
 			const total = zipfile.entryCount;
-			const overwrite = opts?.overwrite !== false;
 			const abort = (err) => {
 				zipfile.removeListener('end', resolve);
 				zipfile.close();
+				error(err);
 				reject(err);
 			};
 
+			log(`Extracting: "${zipFile}" to "${dest}"`);
+
 			zipfile
 				.on('entry', async (entry) => {
-					idx++;
+					try {
+						idx++;
 
-					const destFile = expand(dest, entry.fileName);
-
-					if (entry.fileName.startsWith('__MACOSX/') || (!overwrite && isFile(destFile))) {
-						zipfile.readEntry();
-						return;
-					}
-
-					if (typeof opts?.onEntry === 'function') {
-						try {
+						if (typeof opts?.onEntry === 'function') {
 							if ((await opts.onEntry(entry, idx, total)) === false) {
+								log(`Skipping: "${entry.fileName}" (onEntry callback returned false)`);
 								zipfile.readEntry();
 								return;
 							}
-						} catch (err) {
-							return abort(err);
 						}
-					}
 
-					const mode = (entry.externalFileAttributes >>> 16) & 0xffff || 0o644;
-					const isSymlink = (mode & fs.constants.S_IFMT) === fs.constants.S_IFLNK;
-					let isDir = (mode & fs.constants.S_IFMT) === fs.constants.S_IFDIR;
-					const madeBy = entry.versionMadeBy >> 8;
-					if (!isDir) {
-						isDir = madeBy === 0 && entry.externalFileAttributes === 16;
-					}
+						const destFile = expand(dest, entry.fileName);
+						const mode = (entry.externalFileAttributes >>> 16) & 0xffff || 0o644;
+						const isSymlink = (mode & fs.constants.S_IFMT) === fs.constants.S_IFLNK;
+						let isDir = (mode & fs.constants.S_IFMT) === fs.constants.S_IFDIR;
+						const madeBy = entry.versionMadeBy >> 8;
+						if (!isDir) {
+							isDir = madeBy === 0 && entry.externalFileAttributes === 16;
+						}
 
-					if (isSymlink) {
-						await mkdir(dirname(destFile), { recursive: true });
-						zipfile.openReadStream(entry, (err, readStream) => {
-							if (err) {
-								return abort(err);
+						if (isSymlink) {
+							if (!await exists(dirname(destFile))) {
+								log(`Creating directory: ${dirname(destFile)}`);
+								await mkdir(dirname(destFile), { recursive: true });
 							}
 
-							const chunks: Buffer[] = [];
-							readStream.on('data', (chunk: Buffer) => chunks.push(chunk));
-							readStream.on('error', abort);
-							readStream.on('end', async () => {
-								const target = Buffer.concat(chunks)
-									.toString('utf8')
-									.replace(/[\\/]$/, '');
-								try {
-									await rm(destFile, { force: true });
-									await symlink(target, destFile);
-								} catch (err) {
-									return abort(
-										new Error(`Error symlinking ${destFile}: ${(err as Error).message || err}`)
-									);
+							zipfile.openReadStream(entry, (err, readStream) => {
+								if (err) {
+									return abort(err);
 								}
-								zipfile.readEntry();
+
+								const chunks: Buffer[] = [];
+								const cleanupAndAbort = (err) => {
+									readStream.removeAllListeners();
+									readStream.destroy();
+									abort(err);
+								};
+
+								readStream.on('data', (chunk: Buffer) => chunks.push(chunk));
+								readStream.on('error', cleanupAndAbort);
+								readStream.on('end', async () => {
+									const target = Buffer.concat(chunks)
+										.toString('utf8')
+										.replace(/[\\/]$/, '');
+
+									try {
+										log(`Symlinking: ${destFile} => ${target}`);
+										let destExists = await exists(destFile);
+										if (destExists) {
+											await rm(destFile, { force: true, recursive: true });
+										}
+										await symlink(target, destFile);
+										zipfile.readEntry();
+									} catch (err) {
+										cleanupAndAbort(
+											new Error(`Error symlinking ${destFile}: ${(err as Error).message || err}`)
+										);
+									}
+								});
 							});
-						});
-					} else if (isDir) {
-						await mkdir(destFile, { recursive: true });
-						zipfile.readEntry();
-					} else {
-						await mkdir(dirname(destFile), { recursive: true });
-						zipfile.openReadStream(entry, (err, readStream) => {
-							if (err) {
-								return abort(err);
+						} else if (isDir) {
+							if (!await exists(dirname(destFile))) {
+								log(`Creating directory: ${dirname(destFile)}`);
+								await mkdir(dirname(destFile), { recursive: true });
+							}
+							zipfile.readEntry();
+						} else {
+							const dir = dirname(destFile);
+							if (!await exists(dir)) {
+								log(`Creating directory: ${dir}`);
+								await mkdir(dir, { recursive: true });
 							}
 
-							const writeStream = fs.createWriteStream(destFile, { mode });
-							writeStream.on('close', () => zipfile.readEntry());
-							writeStream.on('error', abort);
-							readStream.pipe(writeStream);
-						});
+							zipfile.openReadStream(entry, (err, readStream) => {
+								if (err) {
+									return abort(err);
+								}
+
+								log(`Extracting file: ${entry.fileName}`);
+								const writeStream = fs.createWriteStream(destFile, { mode });
+								const cleanupAndAbort = (err) => {
+									readStream.removeAllListeners();
+									readStream.unpipe();
+									readStream.destroy();
+									writeStream.removeAllListeners();
+									writeStream.destroy();
+									abort(err);
+								};
+
+								writeStream.on('close', () => zipfile.readEntry());
+								writeStream.on('error', cleanupAndAbort);
+								readStream.on('error', cleanupAndAbort);
+								readStream.pipe(writeStream);
+							});
+						}
+					} catch (err) {
+						return abort(err);
 					}
 				})
 				.on('end', resolve)

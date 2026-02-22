@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { canSymlink } from '../can-symlink.js';
 
 const fixturesDir = join(fileURLToPath(import.meta.url), '../fixtures');
 
@@ -95,50 +96,13 @@ describe('extractZip()', () => {
 		}
 	});
 
-	it('should extract zip file to destination and not overwrite', async () => {
-		await mkdir(join(tmpDir, 'testfiles'), { recursive: true });
-		await writeFile(join(tmpDir, 'testfiles', 'a.txt'), 'I will not be overwritten', 'utf8');
-
-		const files: string[] = [];
-		const expectedFiles = [
-			'testfiles/',
-			...Array.from({ length: 25 }, (_, i) =>
-				posix.join('testfiles', `${String.fromCharCode(98 + i)}.txt`)
-			),
-		].sort();
-
-		await extractZip(join(fixturesDir, 'files.zip'), tmpDir, {
-			onEntry: (entry) => {
-				files.push(entry.fileName);
-			},
-			overwrite: false,
-		});
-
-		expect(files.sort()).toEqual(expectedFiles);
-
-		let i = 0;
-		const listing = (await readdir(join(tmpDir, 'testfiles'))).sort();
-		for (const file of listing) {
-			expect(file).toBe(`${String.fromCharCode(97 + i++)}.txt`);
-			if (file === 'a.txt') {
-				expect(await readFile(join(tmpDir, 'testfiles', file), 'utf8')).toBe(
-					`I will not be overwritten`
-				);
-			} else {
-				expect(await readFile(join(tmpDir, 'testfiles', file), 'utf8')).toBe(`This is a test`);
-			}
-		}
-	});
-
-	it('should extract a file with symlinks', async () => {
+	it.skipIf(!canSymlink())('should extract a file with symlinks', async () => {
 		await extractZip(join(fixturesDir, 'symlinks.zip'), tmpDir);
 
 		const folder = join(tmpDir, 'symlinks/folder');
-		expect(existsSync(folder)).toBe(true);
 		expect(isDir(folder)).toBe(true);
 
 		const file = join(tmpDir, 'symlinks/folder/testfile.txt');
-		expect(existsSync(file)).toBe(true);
 		expect(isFile(file)).toBe(true);
 
 		const fileLink = join(tmpDir, 'symlinks/link.txt');
@@ -157,23 +121,18 @@ describe('extractZip()', () => {
 		expect(target).to.equal('folder');
 	});
 
-	it.skipIf(
-		typeof (globalThis as { Deno?: unknown }).Deno !== 'undefined' && process.platform === 'win32'
-	)('should handle if a symlink already exists', async () => {
+	it.skipIf(!canSymlink())('should handle if a symlink already exists', async () => {
 		await extractZip(join(fixturesDir, 'symlinks.zip'), tmpDir);
 
 		await extractZip(join(fixturesDir, 'symlinks.zip'), tmpDir);
 
 		const folder = join(tmpDir, 'symlinks/folder');
-		expect(existsSync(folder)).toBe(true);
 		expect(isDir(folder)).toBe(true);
 
 		const file = join(tmpDir, 'symlinks/folder/testfile.txt');
-		expect(existsSync(file)).toBe(true);
 		expect(isFile(file)).toBe(true);
 
 		const fileLink = join(tmpDir, 'symlinks/link.txt');
-		expect(existsSync(fileLink)).toBe(true);
 		expect(isFile(fileLink)).toBe(true);
 
 		const folderLink = join(tmpDir, 'symlinks/folderlink');
