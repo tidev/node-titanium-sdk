@@ -1,10 +1,11 @@
 import { isFile } from '../../../src/util';
+import { existsSync } from '../../../src/util/exists.js';
 import { extractZip } from '../../../src/util/extract-zip';
 import { isDir } from '../../../src/util/is-dir';
 import { canSymlink } from '../can-symlink.js';
 import { execSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { existsSync, lstatSync, readlinkSync, statSync } from 'node:fs';
+import { lstatSync, readlinkSync, statSync } from 'node:fs';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
