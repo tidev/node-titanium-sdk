@@ -87,7 +87,8 @@ describe('extractZip()', () => {
 		expect(files.sort()).toEqual(expectedFiles);
 
 		let i = 0;
-		for (const file of await readdir(join(tmpDir, 'testfiles'))) {
+		const listing = (await readdir(join(tmpDir, 'testfiles'))).sort();
+		for (const file of listing) {
 			expect(file).toBe(`${String.fromCharCode(97 + i++)}.txt`);
 			expect(await readFile(join(tmpDir, 'testfiles', file), 'utf8')).toBe(`This is a test`);
 		}
