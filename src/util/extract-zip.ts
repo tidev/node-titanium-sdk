@@ -92,6 +92,9 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 									.toString('utf8')
 									.replace(/[\\/]$/, '');
 								try {
+									if (existsSync(destFile)) {
+										await unlink(destFile);
+									}
 									await symlink(target, destFile);
 								} catch (err) {
 									return abort(
