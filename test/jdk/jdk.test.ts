@@ -86,8 +86,8 @@ describe('JDK', function () {
 			expect(jdk.jarsigner).toBe(path.join(dir, 'bin', `jarsigner${exe}`));
 		});
 
-		(process.platform === 'darwin' ? it : it.skip)(
-			'should detect JDK 1.8 with macOS pathing',
+		it.skipIf(process.platform === 'win32')(
+			'should detect JDK 1.8 with Windows pathing',
 			async () => {
 				process.env.MOCK_STDERR = 'javac 1.8.0_92';
 				const dir = path.join(__dirname, 'mocks', 'mock-jdk-darwin');
@@ -115,21 +115,18 @@ describe('JDK', function () {
 			expect(jdk.jarsigner).toBe(path.join(dir, 'bin', `jarsigner${exe}`));
 		});
 
-		(process.platform === 'darwin' ? it : it.skip)(
-			'should detect JDK 9 with macOS pathing',
-			async () => {
-				const dir = path.join(__dirname, 'mocks', 'mock-jdk-darwin');
-				process.env.MOCK_STDOUT = 'javac 9.0.1';
-				const jdk = await JDK.load(dir);
+		it.skipIf(process.platform === 'win32')('should detect JDK 9 with macOS pathing', async () => {
+			const dir = path.join(__dirname, 'mocks', 'mock-jdk-darwin');
+			process.env.MOCK_STDOUT = 'javac 9.0.1';
+			const jdk = await JDK.load(dir);
 
-				expect(jdk.path).toBe(path.join(dir, 'Contents', 'Home'));
-				expect(jdk.version).toBe('9.0.1');
-				expect(jdk.java).toBe(path.join(dir, 'Contents', 'Home', 'bin', `java${exe}`));
-				expect(jdk.javac).toBe(path.join(dir, 'Contents', 'Home', 'bin', `javac${exe}`));
-				expect(jdk.keytool).toBe(path.join(dir, 'Contents', 'Home', 'bin', `keytool${exe}`));
-				expect(jdk.jarsigner).toBe(path.join(dir, 'Contents', 'Home', 'bin', `jarsigner${exe}`));
-			}
-		);
+			expect(jdk.path).toBe(path.join(dir, 'Contents', 'Home'));
+			expect(jdk.version).toBe('9.0.1');
+			expect(jdk.java).toBe(path.join(dir, 'Contents', 'Home', 'bin', `java${exe}`));
+			expect(jdk.javac).toBe(path.join(dir, 'Contents', 'Home', 'bin', `javac${exe}`));
+			expect(jdk.keytool).toBe(path.join(dir, 'Contents', 'Home', 'bin', `keytool${exe}`));
+			expect(jdk.jarsigner).toBe(path.join(dir, 'Contents', 'Home', 'bin', `jarsigner${exe}`));
+		});
 
 		it('should detect JDK 20.0.1', async () => {
 			const dir = path.join(__dirname, 'mocks', 'mock-jdk');
