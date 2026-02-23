@@ -1,5 +1,5 @@
 import { config, resetConfig } from '../../src/config.js';
-import { detectJDKs, JDK } from '../../src/jdk.js';
+import { detectJDKs, JDK } from '../../src/jdk/index.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
