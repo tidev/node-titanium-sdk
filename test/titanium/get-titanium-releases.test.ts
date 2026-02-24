@@ -1,4 +1,4 @@
-import { getTitaniumReleases } from '../../../src/titanium/index.js';
+import { getTitaniumReleases } from '../../src/titanium/index.js';
 import { describe, expect, it } from 'vitest';
 
 describe('getTitaniumReleases()', () => {
@@ -23,7 +23,7 @@ describe('getTitaniumReleases()', () => {
 					url: 'https://github.com/tidev/titanium-sdk/releases/download/13_1_1_GA/mobilesdk-13.1.1.GA-osx.zip',
 				},
 				{
-					os: 'win3112',
+					os: 'win32',
 					size: 100889320,
 					url: 'https://github.com/tidev/titanium-sdk/releases/download/13_1_1_GA/mobilesdk-13.1.1.GA-win32.zip',
 				},

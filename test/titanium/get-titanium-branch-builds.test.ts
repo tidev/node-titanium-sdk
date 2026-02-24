@@ -1,4 +1,4 @@
-import { getTitaniumBranchBuilds } from '../../../src/titanium/index.js';
+import { getTitaniumBranchBuilds } from '../../src/titanium/index.js';
 import { describe, expect, it } from 'vitest';
 
 describe('getTitaniumBranchBuilds()', () => {

@@ -9,6 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 describe('detectTitaniumModules', () => {
 	it('should detect Titanium modules', async () => {
 		const modules = await detectTitaniumModules();
+		console.log(modules);
 		expect(modules).toBeDefined();
 	});
 });

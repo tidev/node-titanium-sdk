@@ -30,7 +30,16 @@ export async function detectTitaniumModules(
 	const searchPaths = await getSearchPaths(options);
 
 	return tailgate('titanium:modules:detect', async () => {
-		return [];
+		const modules: TitaniumModule[] = [];
+
+		await Promise.all(
+			searchPaths.map(async (path) => {
+				const module = await TitaniumModule.load(path);
+				modules.push(module);
+			})
+		);
+
+		return modules;
 	});
 }
 

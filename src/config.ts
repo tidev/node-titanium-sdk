@@ -229,25 +229,6 @@ export const defaultConfig: Config = {
 	},
 
 	titanium: {
-		modules: {
-			/**
-			 * A list of paths to search for Titanium modules.
-			 * @type {String[]|Object}
-			 */
-			searchPaths: {
-				darwin: [
-					'~/Library/Application Support/Titanium',
-					'/Library/Application Support/Titanium', // legacy
-				],
-				linux: ['~/.titanium'],
-				win32: [
-					'%ProgramData%\\Titanium',
-					'%APPDATA%\\Titanium',
-					'%ALLUSERSPROFILE%\\Application Data\\Titanium',
-				],
-			},
-		},
-
 		sdk: {
 			downloadURLs: {
 				branches: 'https://downloads.titaniumsdk.com/registry/branches.json',

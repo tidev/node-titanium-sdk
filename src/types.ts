@@ -81,9 +81,6 @@ export interface Config {
 	};
 
 	titanium: {
-		modules: {
-			searchPaths: ConfigSearchPaths;
-		};
 		sdk: {
 			downloadURLs: {
 				branches: string;
