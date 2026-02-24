@@ -1,4 +1,4 @@
-import * as i18n from '../../../src/titanium/i18n.js';
+import { i18n } from '../../../src/titanium/index.js';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';

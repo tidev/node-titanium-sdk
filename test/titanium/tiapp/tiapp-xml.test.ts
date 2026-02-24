@@ -699,10 +699,25 @@ describe('TiappXML', () => {
 							type: 'interval',
 							url: 'testservice.js',
 						},
+						{
+							type: 'standard',
+							url: 'testservice2.js',
+						},
+						{
+							url: 'testservice3.js',
+						},
 					],
 					activities: [
 						{
 							url: 'activity.js',
+							extra: 'foo',
+						},
+						{
+							url: 'activity2.js',
+							extra: 'foo',
+						},
+						{
+							url: 'activity3.js',
 						},
 					],
 					abi: ['armeabi', 'armeabi-v7a', 'x86'],
@@ -727,12 +742,6 @@ describe('TiappXML', () => {
 						id: 'ti.iphonetest',
 						version: '9.0',
 						platform: 'iphone',
-					},
-				],
-				plugins: [
-					{
-						id: 'ti_sample_plugin',
-						version: '1.0',
 					},
 				],
 			});

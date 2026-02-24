@@ -1,8 +1,6 @@
 import { config } from '../config.js';
-import { expand } from '../util/expand.js';
-import { isDir } from '../util/is-dir.js';
+import { expand, isDir, tailgate } from '../util/index.js';
 import { Issue } from '../util/issue.js';
-import { tailgate } from '../util/tailgate.js';
 import { readdir, readFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 

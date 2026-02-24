@@ -1,17 +1,17 @@
 import { config, resetConfig } from '../../../src/config.js';
-import { detectTitaniumSDKs } from '../../../src/titanium/detect-titanium-sdks.js';
-import path from 'node:path';
+import { detectTitaniumSDKs } from '../../../src/titanium/index.js';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 describe('Titanium SDK', function () {
 	afterEach(() => resetConfig());
 
 	describe('detectTitaniumSDKs()', () => {
 		it('should find Titanium SDKs', async () => {
-			config.titanium.sdk.installPath[process.platform] = path.join(__dirname, 'mocks', 'mock-sdk');
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'mock-sdk');
 			config.titanium.sdk.searchPaths[process.platform] = [];
 			const { sdks, issues } = await detectTitaniumSDKs();
 			expect(sdks).toHaveLength(1);
@@ -30,7 +30,7 @@ describe('Titanium SDK', function () {
 			expect(sdks[0].path).toBe(config.titanium.sdk.installPath[process.platform]);
 			expect(sdks[0].platforms).toEqual({
 				android: {
-					path: path.join(config.titanium.sdk.installPath[process.platform], 'android'),
+					path: join(config.titanium.sdk.installPath[process.platform], 'android'),
 				},
 			});
 			expect(sdks[0].type).toBe('ga');
@@ -42,7 +42,7 @@ describe('Titanium SDK', function () {
 		});
 
 		it('should return issues if no Titanium SDKs are found', async () => {
-			config.titanium.sdk.installPath[process.platform] = path.join(__dirname, 'mocks', 'empty');
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'empty');
 			config.titanium.sdk.searchPaths[process.platform] = [];
 			const { sdks, issues } = await detectTitaniumSDKs();
 			expect(sdks).toHaveLength(0);

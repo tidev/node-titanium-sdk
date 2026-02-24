@@ -2,6 +2,8 @@ import { config } from '../config.js';
 import { Agent, ProxyAgent, request as req } from 'undici';
 import type { Dispatcher } from 'undici';
 
+const openDispatchers = new Set<Dispatcher>();
+
 type RequestOptions<TOpaque = null> = { dispatcher?: Dispatcher } & Omit<
 	Dispatcher.RequestOptions<TOpaque>,
 	'origin' | 'path' | 'method'
@@ -26,7 +28,9 @@ export async function request<TOpaque = null>(
 				connect: requestTls,
 			});
 
-	return await req(url, {
+	openDispatchers.add(dispatcher);
+
+	const res = await req(url, {
 		dispatcher,
 		reset: true,
 		...opts,
@@ -35,4 +39,18 @@ export async function request<TOpaque = null>(
 			...opts.headers,
 		},
 	});
+
+	let closed = false;
+	const closeDispatcher = () => {
+		if (!closed) {
+			closed = true;
+			openDispatchers.delete(dispatcher);
+			dispatcher.close().catch(() => {});
+		}
+	};
+	res.body.once('end', closeDispatcher);
+	res.body.once('error', closeDispatcher);
+	res.body.once('close', closeDispatcher);
+
+	return res;
 }

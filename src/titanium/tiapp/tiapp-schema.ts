@@ -154,19 +154,6 @@ export const AndroidSchema = z
 	.optional();
 
 /**
- * Plugin schema
- */
-const PluginSchema = z.object({
-	id: z.string(),
-	version: z.union([z.string(), z.number()]).optional(),
-});
-
-/**
- * Plugins schema
- */
-const PluginsSchema = z.array(PluginSchema).optional();
-
-/**
  * Main Tiapp schema
  */
 export const TiappSchema = z
@@ -193,7 +180,6 @@ export const TiappSchema = z
 		properties: PropertiesSchema,
 		deploymentTargets: DeploymentTargetsSchema,
 		modules: ModulesSchema,
-		plugins: PluginsSchema,
 		ios: IOSSchema,
 		android: AndroidSchema,
 	})

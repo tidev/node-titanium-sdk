@@ -39,8 +39,6 @@ Supported tags:
 - navbar-hidden
 - override-permissions
 - persistent-wifi
-- plugins
-  - plugin
 - prerendered-icon
 - properties
   - android.javac.maxMemory
