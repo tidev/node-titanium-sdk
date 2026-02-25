@@ -91,7 +91,7 @@ export class JDK {
 				if (isFile(p)) {
 					executables[cmd] = await realpath(p);
 				} else {
-					const err = new Error(`Directory missing required program: ${path}`) as ErrorWithCode;
+					const err = new Error(`Directory missing required program: ${p}`) as ErrorWithCode;
 					err.code = 'JDK_MISSING_REQUIRED_PROGRAM';
 					throw err;
 				}

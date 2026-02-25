@@ -1,8 +1,8 @@
 import { config, resetConfig } from '../../../src/config.js';
-import { describe, it, expect } from 'vitest';
 import { detectTitaniumModules } from '../../../src/titanium/index.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { describe, it, expect } from 'vitest';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

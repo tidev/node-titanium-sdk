@@ -29,6 +29,6 @@ describe('getTitaniumReleases()', () => {
 				},
 			],
 			type: 'ga',
-		})
+		});
 	});
 });
