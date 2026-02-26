@@ -154,7 +154,7 @@ describe('TiappXML', () => {
 
 			const firstModule = data.modules![0];
 			expect(firstModule).toBeDefined();
-			expect(firstModule.id).toBe('ti.alltest');
+			expect(firstModule.moduleid).toBe('ti.alltest');
 			expect(firstModule.version).toBe('1.2.3');
 		});
 
@@ -167,7 +167,7 @@ describe('TiappXML', () => {
 
 			const data = tiapp.data();
 			data.modules = data.modules || [];
-			data.modules.push({ id: 'ti.test', platform: 'android', version: '1.0' });
+			data.modules.push({ moduleid: 'ti.test', platform: 'android', version: '1.0' });
 			tiapp.apply(data);
 
 			expect(tiapp.data().modules!.length).toBe(1);
@@ -725,21 +725,21 @@ describe('TiappXML', () => {
 				},
 				modules: [
 					{
-						id: 'ti.alltest',
+						moduleid: 'ti.alltest',
 						version: '1.2.3',
 					},
 					{
-						id: 'ti.cjstest',
+						moduleid: 'ti.cjstest',
 						version: '1.2.3',
 						platform: 'commonjs',
 					},
 					{
-						id: 'ti.androidtest',
+						moduleid: 'ti.androidtest',
 						version: '7.8',
 						platform: 'android',
 					},
 					{
-						id: 'ti.iphonetest',
+						moduleid: 'ti.iphonetest',
 						version: '9.0',
 						platform: 'iphone',
 					},

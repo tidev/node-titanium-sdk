@@ -250,7 +250,7 @@ function readProperties(doc: Document): Record<string, unknown> | undefined {
 function readModules(
 	doc: Document
 ):
-	| Array<{ id: string; platform?: string; version?: string | number; deployType?: string }>
+	| Array<{ moduleid: string; platform?: string; version?: string | number; deployType?: string }>
 	| undefined {
 	const container = findElement(doc, 'modules');
 	if (!container) {
@@ -258,7 +258,7 @@ function readModules(
 	}
 
 	const modules: Array<{
-		id: string;
+		moduleid: string;
 		platform?: string;
 		version?: string | number;
 		deployType?: string;
@@ -268,10 +268,10 @@ function readModules(
 		if (child.nodeType === ELEMENT_NODE) {
 			const elem = child as Element;
 			if (elem.tagName === 'module') {
-				const id = xml.getValueString(elem).trim() || elem.getAttribute('id') || '';
-				if (id) {
+				const moduleid = xml.getValueString(elem).trim() || '';
+				if (moduleid) {
 					modules.push({
-						id,
+						moduleid,
 						platform: elem.getAttribute('platform') || undefined,
 						version: elem.getAttribute('version') || undefined,
 						deployType: elem.getAttribute('deploy-type') || undefined,
@@ -850,7 +850,7 @@ function writeModules(
 		if (mod.deployType) {
 			elem.setAttribute('deploy-type', mod.deployType);
 		}
-		elem.appendChild(doc.createTextNode(mod.id));
+		elem.appendChild(doc.createTextNode(mod.moduleid));
 		container!.appendChild(elem);
 	}
 	container!.appendChild(doc.createTextNode(`\n${indent}`));

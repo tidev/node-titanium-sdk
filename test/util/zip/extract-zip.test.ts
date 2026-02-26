@@ -16,11 +16,7 @@ beforeEach(async () => {
 	await mkdir(tmpDir, { recursive: true });
 });
 
-afterEach(async () => {
-	if (await exists(tmpDir)) {
-		await rm(tmpDir, { force: true, recursive: true });
-	}
-});
+afterEach(() => rm(tmpDir, { force: true, recursive: true }));
 
 describe('extractZip()', () => {
 	it('should error if zip file is invalid', async () => {

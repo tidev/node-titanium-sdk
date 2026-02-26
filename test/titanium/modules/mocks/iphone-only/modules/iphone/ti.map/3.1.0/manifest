@@ -6,9 +6,9 @@ version: 3.1.0
 apiversion: 2
 architectures: armv7 arm64 i386 x86_64
 description: External version of Map module
-author: Jeff Haynie, Jon Alter, Pedro Enrique, Hans Knöchel, Vijay Singh
+author: Tester
 license: Apache Public License v2
-copyright: Copyright (c) 2013-present by Axway Appcelerator
+copyright: Copyright (c) 2018 by Your Company
 
 # these should not be edited
 name: map

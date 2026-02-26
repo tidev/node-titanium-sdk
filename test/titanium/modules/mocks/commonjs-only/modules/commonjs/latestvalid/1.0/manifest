@@ -6,7 +6,7 @@ version: 1.0
 description: This is an ambiguous module that will conflict with a native module
 author: Tester
 license: Apache Public License
-copyright: Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
+copyright: Copyright (c) 2018 by Your Company
 
 # these should not be edited
 name: latestvalid

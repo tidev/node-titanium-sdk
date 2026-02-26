@@ -6,11 +6,11 @@ version: 1.0
 description: This is a dummy module
 author: Tester
 license: Apache Public License
-copyright: Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
+copyright: Copyright (c) 2018 by Your Company
 
 # these should not be edited
 name: toonew
 moduleid: ti.toonew
 guid: 8d99922e-7727-4f64-90b9-325992eddb1b
 platform: iphone
-minsdk: 20.0
+minsdk: 999.0

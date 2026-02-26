@@ -56,7 +56,7 @@ export const PropertiesSchema = z
  * Module schema for <module> elements
  */
 export const ModuleSchema = z.object({
-	id: z.string(),
+	moduleid: z.string(),
 	platform: z.string().optional(),
 	version: z.union([z.string(), z.number()]).optional(),
 	deployType: z.string().optional(),
