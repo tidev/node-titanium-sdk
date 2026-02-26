@@ -86,8 +86,8 @@ describe('JDK', function () {
 			expect(jdk.jarsigner).toBe(path.join(dir, 'bin', `jarsigner${exe}`));
 		});
 
-		it.skipIf(process.platform !== 'win32')(
-			'should detect JDK 1.8 with Windows pathing',
+		it.skipIf(process.platform !== 'darwin')(
+			'should detect JDK 1.8 with macOS pathing',
 			async () => {
 				process.env.MOCK_STDERR = 'javac 1.8.0_92';
 				const dir = path.join(__dirname, 'mocks', 'mock-jdk-darwin');
