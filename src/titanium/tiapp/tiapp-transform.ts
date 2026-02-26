@@ -823,7 +823,12 @@ function writeDeploymentTargets(doc: Document, targets: Record<string, boolean |
  */
 function writeModules(
 	doc: Document,
-	modules: Array<{ id: string; platform?: string; version?: string | number; deployType?: string }>
+	modules: Array<{
+		moduleid: string;
+		platform?: string;
+		version?: string | number;
+		deployType?: string;
+	}>
 ): void {
 	const indent = detectIndentation(doc);
 	const root = doc.documentElement;
@@ -1190,7 +1195,7 @@ function applyDiff(doc: Document, before: TiappData, after: TiappData, key: stri
 		writeModules(
 			doc,
 			afterVal as Array<{
-				id: string;
+				moduleid: string;
 				platform?: string;
 				version?: string | number;
 				deployType?: string;

@@ -86,7 +86,7 @@ describe('JDK', function () {
 			expect(jdk.jarsigner).toBe(path.join(dir, 'bin', `jarsigner${exe}`));
 		});
 
-		it.skipIf(process.platform === 'win32')(
+		it.skipIf(process.platform !== 'win32')(
 			'should detect JDK 1.8 with Windows pathing',
 			async () => {
 				process.env.MOCK_STDERR = 'javac 1.8.0_92';
@@ -115,7 +115,7 @@ describe('JDK', function () {
 			expect(jdk.jarsigner).toBe(path.join(dir, 'bin', `jarsigner${exe}`));
 		});
 
-		it.skipIf(process.platform === 'win32')('should detect JDK 9 with macOS pathing', async () => {
+		it.skipIf(process.platform !== 'darwin')('should detect JDK 9 with macOS pathing', async () => {
 			const dir = path.join(__dirname, 'mocks', 'mock-jdk-darwin');
 			process.env.MOCK_STDOUT = 'javac 9.0.1';
 			const jdk = await JDK.load(dir);
