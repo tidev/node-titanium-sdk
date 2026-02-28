@@ -1,9 +1,8 @@
-export * from './detect-titanium-modules.js';
+export * from './modules/index.js';
 export * from './detect-titanium-sdks.js';
 export * from './get-titanium-branch-builds.js';
 export * from './get-titanium-branches.js';
 export * from './get-titanium-releases.js';
-export * from './search-titanium-modules.js';
 export * from './tiapp/tiapp-xml.js';
 export * from './valid-app-id.js';
 

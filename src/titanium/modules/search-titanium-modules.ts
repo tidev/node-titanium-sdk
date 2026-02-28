@@ -1,4 +1,8 @@
-import { detectTitaniumModules, platformAliases, type TitaniumModule } from './detect-titanium-modules.js';
+import {
+	detectTitaniumModules,
+	platformAliases,
+	type TitaniumModule,
+} from './detect-ti-modules.js';
 import snooplogg from 'snooplogg';
 
 const { info, log, warn } = snooplogg('ti:modules');
@@ -43,7 +47,9 @@ export async function searchTitaniumModules(options: {
 	}
 
 	// clean up platforms
-	const platformsSet = new Set<string>(options.platforms?.map(p => platformAliases[p.trim()] || p.trim()));
+	const platformsSet = new Set<string>(
+		options.platforms?.map((p) => platformAliases[p.trim()] || p.trim())
+	);
 	if (!platformsSet.has('commonjs')) {
 		platformsSet.add('commonjs');
 	}
@@ -59,8 +65,13 @@ export async function searchTitaniumModules(options: {
 			throw new Error(`Module ID is required`);
 		}
 
-		const deployTypes = module.deployType?.split(',').map(p => p.trim());
-		if (options.deployType && Array.isArray(deployTypes) && deployTypes.length > 0 && !deployTypes.includes(options.deployType)) {
+		const deployTypes = module.deployType?.split(',').map((p) => p.trim());
+		if (
+			options.deployType &&
+			Array.isArray(deployTypes) &&
+			deployTypes.length > 0 &&
+			!deployTypes.includes(options.deployType)
+		) {
 			continue;
 		}
 
@@ -77,7 +88,9 @@ export async function searchTitaniumModules(options: {
 			platforms.add('commonjs');
 		}
 
-		log(`Looking for moduleid="${moduleid}" version="${version || 'any'}" platforms="${Array.from(platforms).join(',') || 'any'}"`);
+		log(
+			`Looking for moduleid="${moduleid}" version="${version || 'any'}" platforms="${Array.from(platforms).join(',') || 'any'}"`
+		);
 
 		log(installed);
 

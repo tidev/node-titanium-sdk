@@ -1,5 +1,5 @@
 import { config, resetConfig } from '../../../src/config.js';
-import { detectTitaniumModules } from '../../../src/titanium/index.js';
+import { detectTiModules } from '../../../src/titanium/modules/detect-ti-modules.js';
 import { randomBytes } from 'node:crypto';
 import { copyFile, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -16,7 +16,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'good');
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules();
+		const { modules } = await detectTiModules();
 		expect(modules).toEqual({
 			android: {
 				'com.test.module': {
@@ -105,7 +105,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'android-only');
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules();
+		const { modules } = await detectTiModules();
 		expect(modules).toEqual({
 			android: {
 				'ti.map': {
@@ -133,7 +133,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'commonjs-ios');
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules();
+		const { modules } = await detectTiModules();
 		expect(modules).toEqual({
 			commonjs: {
 				'ti.ambiguous': {
@@ -222,7 +222,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'commonjs-only');
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules();
+		const { modules } = await detectTiModules();
 		expect(modules).toEqual({
 			commonjs: {
 				'ti.latestvalid': {
@@ -281,7 +281,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'ios-only');
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules();
+		const { modules } = await detectTiModules();
 		expect(modules).toEqual({
 			ios: {
 				'ti.ambiguous': {
@@ -309,7 +309,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'iphone-only');
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules();
+		const { modules } = await detectTiModules();
 		expect(modules).toEqual({
 			ios: {
 				'ti.map': {
@@ -337,7 +337,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'empty');
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules();
+		const { modules } = await detectTiModules();
 		expect(modules).toEqual({});
 	});
 
@@ -345,7 +345,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'does-not-exist');
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules();
+		const { modules } = await detectTiModules();
 		expect(modules).toEqual({});
 	});
 
@@ -353,7 +353,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = undefined;
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules({
+		const { modules } = await detectTiModules({
 			searchPaths: [join(__dirname, 'mocks', 'cross-platform-native-module')],
 		});
 		expect(modules).toEqual({
@@ -416,7 +416,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = undefined;
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules({
+		const { modules } = await detectTiModules({
 			searchPaths: [join(__dirname, 'mocks', 'cross-platform-native-module-specific-package-json')],
 		});
 		expect(modules).toEqual({
@@ -479,7 +479,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = undefined;
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules({
+		const { modules } = await detectTiModules({
 			searchPaths: [join(__dirname, 'mocks', 'cross-platform-native-module-with-manifest')],
 		});
 		expect(modules).toEqual({
@@ -542,7 +542,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = undefined;
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules({
+		const { modules } = await detectTiModules({
 			searchPaths: [join(__dirname, 'mocks', 'native-module-with-manifest')],
 		});
 		expect(modules).toEqual({
@@ -578,7 +578,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = undefined;
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules({
+		const { modules } = await detectTiModules({
 			searchPaths: [join(__dirname, 'mocks', 'native-module-with-platform-subdir')],
 		});
 		expect(modules).toEqual({
@@ -615,7 +615,7 @@ describe('detectTitaniumModules', () => {
 		config.titanium.sdk.installPath[process.platform] = undefined;
 		config.titanium.sdk.searchPaths[process.platform] = [];
 
-		const modules = await detectTitaniumModules({
+		const { modules } = await detectTiModules({
 			searchPaths: [join(__dirname, 'mocks', 'npm-native-module')],
 		});
 		expect(modules).toEqual({});
@@ -649,7 +649,7 @@ describe('detectTitaniumModules', () => {
 			config.titanium.sdk.installPath[process.platform] = tmpDir;
 			config.titanium.sdk.searchPaths[process.platform] = [];
 
-			const modules = await detectTitaniumModules();
+			const { modules } = await detectTiModules();
 			expect(modules).toEqual({
 				android: {
 					'ti.map': {

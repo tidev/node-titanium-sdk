@@ -1,6 +1,8 @@
-import { config } from '../config.js';
-import { exists, expand, extractZip } from '../util/index.js';
-import { tailgate } from '../util/tailgate.js';
+import { config } from '../../config.js';
+import { exists, expand, extractZip } from '../../util/index.js';
+import { tailgate } from '../../util/tailgate.js';
+import { TiModuleRegistry } from './ti-module-registry.js';
+import type { TiModuleManifest, TiModulePackageManifest } from './types.js';
 import { readdir, readFile, rm } from 'fs/promises';
 import { basename, dirname, join } from 'path';
 import snooplogg from 'snooplogg';
@@ -10,61 +12,6 @@ const { info, log, warn } = snooplogg('ti:modules');
 export const platformAliases = {
 	ipad: 'ios',
 	iphone: 'ios',
-};
-
-type TitaniumModuleManifest = {
-	architectures?: string[];
-	apiversion?: number;
-	author?: string;
-	copyright?: string;
-	description?: string;
-	guid?: string;
-	license?: string;
-	minsdk?: string;
-	moduleid: string;
-	name?: string;
-	platform: string;
-	version: string;
-};
-
-type TitaniumModulePackageManifest = {
-	architectures?: string | string[];
-	apiversion?: number;
-	author?: string;
-	copyright?: string;
-	description?: string;
-	guid?: string;
-	license?: string;
-	minsdk?: string;
-	moduleid: string;
-	name?: string;
-	platform: string | string[] | Record<string, TitaniumModuleManifest>;
-	type: string;
-	version: string;
-};
-
-export interface TitaniumModule {
-	architectures?: string[];
-	apiversion?: number;
-	author?: string;
-	copyright?: string;
-	description?: string;
-	guid?: string;
-	license?: string;
-	minsdk?: string;
-	moduleid: string;
-	name?: string;
-	path: string;
-	platform: string;
-	version: string;
-}
-
-type TitaniumModuleVersion = Record<string, TitaniumModule>;
-
-type TitaniumModulesRegistry = {
-	android?: Record<string, TitaniumModuleVersion>;
-	commonjs?: Record<string, TitaniumModuleVersion>;
-	ios?: Record<string, TitaniumModuleVersion>;
 };
 
 /**
@@ -79,12 +26,12 @@ type TitaniumModulesRegistry = {
  * install locations.
  * @returns a registry of found modules.
  */
-export async function detectTitaniumModules(
+export async function detectTiModules(
 	options: {
 		searchPaths?: string[];
 		skipInstall?: boolean;
 	} = {}
-): Promise<TitaniumModulesRegistry> {
+): Promise<TiModuleRegistry> {
 	// init search paths with Titanium SDK install locations
 	const titaniumInstallDir = config.titanium.sdk.installPath[process.platform];
 	const configPaths = config.titanium.sdk.searchPaths[process.platform];
@@ -156,7 +103,7 @@ export async function detectTitaniumModules(
 	}
 
 	return tailgate('titanium:modules:detect', async () => {
-		const registry: TitaniumModulesRegistry = {};
+		const registry = new TiModuleRegistry();
 
 		await Promise.all([
 			...Array.from(modulesPaths).map((path) => scanPath(path, registry)),
@@ -173,9 +120,8 @@ export async function detectTitaniumModules(
  * @param modulesDir - The path to the `modules` directory.
  * @param registry - The registry to add the found modules to.
  */
-async function scanPath(modulesDir: string, registry: TitaniumModulesRegistry) {
+async function scanPath(modulesDir: string, registry: TiModuleRegistry) {
 	log(`Detecting modules in path: ${modulesDir}`);
-
 	const platformDirs = await readdir(modulesDir);
 	for (const platformName of platformDirs) {
 		const moduleDirs = await readdir(join(modulesDir, platformName)).catch(() => []);
@@ -189,25 +135,11 @@ async function scanPath(modulesDir: string, registry: TitaniumModulesRegistry) {
 
 				try {
 					const manifest = await readManifest(join(path, 'manifest'));
-
 					if (!manifest) {
 						continue;
 					}
-
-					if (!registry[manifest.platform]) {
-						registry[manifest.platform] = {};
-					}
-
-					if (!registry[manifest.platform][manifest.moduleid]) {
-						registry[manifest.platform][manifest.moduleid] = {};
-					}
-
 					info(`Found ${manifest.platform} module: ${manifest.moduleid}@${manifest.version}`);
-
-					registry[manifest.platform][manifest.moduleid][manifest.version] = {
-						...manifest,
-						path,
-					};
+					registry.add(path, manifest);
 				} catch (err) {
 					warn(`Error reading module manifest: ${(err as Error).message}`);
 				}
@@ -216,13 +148,23 @@ async function scanPath(modulesDir: string, registry: TitaniumModulesRegistry) {
 	}
 }
 
+type TiPackageJson = {
+	author?: string | string[];
+	copyright?: string;
+	description?: string;
+	license?: string;
+	name?: string;
+	titanium?: TiModulePackageManifest;
+	version?: string;
+};
+
 /**
  * Scans a `node_modules` directory for Titanium modules.
  *
  * @param nodeModulesDir - The path to a `node_modules` directory.
  * @param registry - The registry to add the found modules to.
  */
-async function scanNodeModules(nodeModulesDir: string, registry: TitaniumModulesRegistry) {
+async function scanNodeModules(nodeModulesDir: string, registry: TiModuleRegistry) {
 	log(`Detecting modules in node_modules: ${nodeModulesDir}`);
 	const packageDirs = await readdir(nodeModulesDir).catch(() => []);
 
@@ -239,27 +181,27 @@ async function scanNodeModules(nodeModulesDir: string, registry: TitaniumModules
 
 		log(`Scanning node package: ${packageDir}`);
 
-		let pkgJson: Record<string, unknown>;
+		let pkgJson: TiPackageJson | undefined;
 		try {
 			const packageJsonContents = await readFile(join(packageDir, 'package.json'), 'utf8');
-			pkgJson = JSON.parse(packageJsonContents);
+			pkgJson = JSON.parse(packageJsonContents) as TiPackageJson;
 		} catch (err) {
 			warn(`Error reading package.json: ${(err as Error).message}`);
 			continue;
 		}
 
-		const tiModule = pkgJson?.titanium as TitaniumModulePackageManifest;
-		if (!tiModule || typeof tiModule !== 'object' || tiModule.type !== 'native-module') {
+		const pkgTiJson = pkgJson?.titanium as TiModulePackageManifest;
+		if (!pkgTiJson || typeof pkgTiJson !== 'object' || pkgTiJson.type !== 'native-module') {
 			continue;
 		}
 
 		const platformNames: string[] =
-			typeof tiModule.platform === 'string'
-				? [tiModule.platform]
-				: Array.isArray(tiModule.platform)
-					? tiModule.platform
-					: typeof tiModule.platform === 'object' && tiModule.platform !== null
-						? Object.keys(tiModule.platform)
+			typeof pkgTiJson.platform === 'string'
+				? [pkgTiJson.platform]
+				: Array.isArray(pkgTiJson.platform)
+					? pkgTiJson.platform
+					: typeof pkgTiJson.platform === 'object' && pkgTiJson.platform !== null
+						? Object.keys(pkgTiJson.platform)
 						: [];
 
 		const platformDirs: Record<string, string | null> = {};
@@ -298,62 +240,66 @@ async function scanNodeModules(nodeModulesDir: string, registry: TitaniumModules
 
 			try {
 				const manifest = await readManifest(join(path, 'manifest')).catch(() => undefined);
-				const architectures = Array.isArray(tiModule.architectures)
-					? tiModule.architectures
-					: tiModule.architectures?.split(' ') || manifest?.architectures;
 				const apiversion =
-					typeof tiModule.apiversion === 'number'
-						? tiModule.apiversion
-						: typeof tiModule.apiversion === 'string'
-							? Number.parseInt(tiModule.apiversion)
+					typeof pkgTiJson.apiversion === 'number'
+						? pkgTiJson.apiversion
+						: typeof pkgTiJson.apiversion === 'string'
+							? Number.parseInt(pkgTiJson.apiversion)
 							: manifest?.apiversion;
 				const author =
-					tiModule.author ||
+					pkgTiJson.author ||
 					(Array.isArray(pkgJson.author) && pkgJson.author[0]) ||
 					(typeof pkgJson.author === 'string' && pkgJson.author) ||
 					manifest?.author;
-				const copyright = tiModule.copyright || pkgJson.copyright || manifest?.copyright;
-				const description = tiModule.description || pkgJson.description || manifest?.description;
-				const guid = tiModule.guid || manifest?.guid;
-				const license = tiModule.license || pkgJson.license || manifest?.license;
-				const minsdk = tiModule.minsdk || manifest?.minsdk;
-				const moduleid = tiModule.moduleid || manifest?.moduleid;
+				const moduleid = pkgTiJson.moduleid || manifest?.moduleid;
 				const name =
-					tiModule.name ||
+					pkgTiJson.name ||
 					(typeof pkgJson.name === 'string' && pkgJson.name.replace(/^@[^/]+\//, '')) ||
 					manifest?.name;
 				const version = pkgJson.version || manifest?.version;
 
+				if (!version) {
+					throw new Error(`Titanium module missing version: ${path}`);
+				}
+
+				if (!moduleid) {
+					throw new Error(`Titanium module missing module id: ${path}`);
+				}
+
 				info(`Found ${platform} module: ${moduleid}@${version}`);
 
-				if (!registry[platform]) {
-					registry[platform] = {};
-				}
-
-				if (!registry[platform][moduleid]) {
-					registry[platform][moduleid] = {};
-				}
-
-				registry[platform][moduleid][version] = {
-					architectures,
+				registry.add(path, {
+					architectures: Array.isArray(pkgTiJson.architectures)
+						? pkgTiJson.architectures
+						: pkgTiJson.architectures?.split(' ') || manifest?.architectures,
 					apiversion: apiversion === undefined || isNaN(apiversion) ? undefined : apiversion,
 					author,
-					copyright,
-					description,
-					guid,
-					license,
-					minsdk,
+					copyright: getPkgJsonProp('copyright', pkgJson, pkgTiJson, manifest),
+					description: getPkgJsonProp('description', pkgJson, pkgTiJson, manifest),
+					guid: pkgTiJson.guid || manifest?.guid,
+					license: getPkgJsonProp('license', pkgJson, pkgTiJson, manifest),
+					minsdk: getPkgJsonProp('minsdk', pkgJson, pkgTiJson, manifest),
 					moduleid,
 					name,
-					path,
 					platform,
 					version,
-				};
+				});
 			} catch (err) {
-				warn(`Error reading module manifest: ${(err as Error).message}`);
+				warn((err as Error).message);
 			}
 		}
 	}
+}
+
+function getPkgJsonProp(
+	prop: string,
+	pkgJson: Record<string, unknown>,
+	pkgTiJson: TiModulePackageManifest,
+	manifest?: TiModuleManifest
+): string | undefined {
+	return (
+		pkgTiJson[prop] || (typeof pkgJson[prop] === 'string' && pkgJson[prop]) || manifest?.[prop]
+	);
 }
 
 const versionRegExp = /^(\d+\.){0,2}(\d+)$/;
@@ -409,5 +355,5 @@ async function readManifest(manifestFile: string) {
 		name: manifest.name,
 		platform,
 		version: manifest.version,
-	} as TitaniumModuleManifest;
+	} as TiModuleManifest;
 }
