@@ -1,18 +1,12 @@
 import { config } from '../../config.js';
-import { exists, expand, extractZip } from '../../util/index.js';
-import { tailgate } from '../../util/tailgate.js';
-import { TiModuleRegistry } from './ti-module-registry.js';
+import { exists, expand, extractZip, tailgate } from '../../util/index.js';
+import { TiModuleRegistry, platformAliases } from './ti-module-registry.js';
 import type { TiModuleManifest, TiModulePackageManifest } from './types.js';
 import { readdir, readFile, rm } from 'fs/promises';
 import { basename, dirname, join } from 'path';
 import snooplogg from 'snooplogg';
 
 const { info, log, warn } = snooplogg('ti:modules');
-
-export const platformAliases = {
-	ipad: 'ios',
-	iphone: 'ios',
-};
 
 /**
  * Detects Titanium modules in the Titanium SDK install locations and user search paths, then
