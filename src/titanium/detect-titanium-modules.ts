@@ -7,7 +7,7 @@ import snooplogg from 'snooplogg';
 
 const { info, log, warn } = snooplogg('ti:modules');
 
-const platformAliases = {
+export const platformAliases = {
 	ipad: 'ios',
 	iphone: 'ios',
 };
@@ -43,7 +43,7 @@ type TitaniumModulePackageManifest = {
 	version: string;
 };
 
-interface TitaniumModule {
+export interface TitaniumModule {
 	architectures?: string[];
 	apiversion?: number;
 	author?: string;
@@ -66,118 +66,6 @@ type TitaniumModulesRegistry = {
 	commonjs?: Record<string, TitaniumModuleVersion>;
 	ios?: Record<string, TitaniumModuleVersion>;
 };
-
-type TitaniumModulesResults = {
-	found: TitaniumModule[];
-	missing: TitaniumModule[];
-	incompatible: TitaniumModule[];
-	conflict: TitaniumModule[];
-};
-
-type TiappModule = {
-	moduleid: string;
-	platform?: string;
-	version?: string | number;
-	deployType?: string;
-};
-
-/**
- * Query installed Titanium modules.
- *
- * @param options - The options for the function.
- * @returns Returns matching modules.
- */
-export async function findTitaniumModules(options: {
-	deployType?: string;
-	modules: TiappModule[];
-	moduleAPIVersion?: string;
-	platforms?: string[];
-	sdkVersion?: string;
-	searchPaths?: string[];
-}): Promise<TitaniumModulesResults> {
-	const result: TitaniumModulesResults = {
-		found: [],
-		missing: [],
-		incompatible: [],
-		conflict: [],
-	};
-
-	if (!Array.isArray(options.modules) || options.modules.length === 0) {
-		return result;
-	}
-
-	const modules = options.modules.map((module) => {
-		const id = module.moduleid?.trim();
-		const version =
-			typeof module.version === 'string' ? module.version.trim() : String(module.version);
-		const deployType = module.deployType?.trim();
-		const platform = new Set(
-			typeof module.platform === 'string'
-				? module.platform
-						.split(',')
-						.map((p) => {
-							p = p.trim();
-							return platformAliases[p] || p;
-						})
-						.filter(Boolean)
-				: []
-		);
-
-		if (typeof id !== 'string' || id === '') {
-			throw new Error(`Module ID is required`);
-		}
-
-		if (!platform.has('commonjs')) {
-			platform.add('commonjs');
-		}
-
-		return {
-			id: id.trim(),
-			version: version?.trim(),
-			platform: platform,
-			deployType: deployType?.trim(),
-		};
-	});
-
-	const installed = await detectTitaniumModules({
-		searchPaths: options.searchPaths,
-	});
-	// const modulesById: Record<string, typeof modules> = {};
-
-	for (const module of modules) {
-		//
-	}
-
-	// detect conflicts
-	// for (const [id, modules] of Object.entries(modulesById)) {
-	// 	if (modules.length <= 1) {
-	// 		continue;
-	// 	}
-
-	// 	// we have a potential conflict...
-	// 	// verify that we have at least one commonjs platform and at least one non-commonjs platform
-
-	// 	let commonJs = 0;
-	// 	let nonCommonJs = 0;
-
-	// 	for (const module of modules) {
-	// 		if (module.platform.has('commonjs')) {
-	// 			commonJs++;
-	// 		} else {
-	// 			nonCommonJs++;
-	// 		}
-	// 	}
-
-	// 	if (commonJs && nonCommonJs) {
-	// 		result.conflict.push({
-	// 			id,
-	// 			modules,
-	// 		});
-	// 	}
-	// }
-
-	return result;
-}
 
 /**
  * Detects Titanium modules in the Titanium SDK install locations and user search paths, then
