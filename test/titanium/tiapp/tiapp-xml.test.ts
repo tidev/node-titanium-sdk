@@ -186,6 +186,29 @@ describe('TiappXML', () => {
 
 			expect(tiapp.data().modules!.length).toBe(initialLength - 1);
 		});
+
+		it('should error if module does not have an id', () => {
+			const tiapp = new TiappXML();
+			expect(() =>
+				tiapp.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module></module>
+	</modules>
+</ti:app>`)
+			).toThrow('Module must have an id');
+		});
+
+		it('should error if module version is invalid', () => {
+			const tiapp = new TiappXML();
+			expect(() => tiapp.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module version="bar">foo</module>
+	</modules>
+</ti:app>`)
+			).toThrow('Module version is invalid');
+		});
 	});
 
 	describe('Properties (Key-Value)', () => {

@@ -1,5 +1,5 @@
 import { isFile } from '../../util/is-file.js';
-import { tiappXmlToJson, applyTiappJsonToXml } from './tiapp-transform.js';
+import { tiappXmlToJson, applyTiappJsonToXml, validateTiappData } from './tiapp-transform.js';
 import { DOMParser, type Options } from '@xmldom/xmldom';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -73,6 +73,7 @@ export class TiappXML {
 		if (errorMsg) {
 			throw new Error(`Invalid XML file: ${errorMsg}`);
 		}
+		validateTiappData(tiappXmlToJson(this.dom));
 		return this;
 	}
 

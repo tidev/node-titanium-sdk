@@ -1,4 +1,4 @@
-import type { TiModule, TiModuleManifest, TiModuleVersion } from './types';
+import type { TiModule, TiModuleManifest } from './types';
 import snooplogg from 'snooplogg';
 
 const { info, log, warn } = snooplogg('ti:module-registry');
@@ -23,18 +23,24 @@ type TiappModule = {
 };
 
 export class TiModuleRegistry {
-	modules: Record<string, Record<string, TiModuleVersion>> = {};
+	// moduleId > platform > version > module
+	modules: Record<string, Record<string, Record<string, TiModule>>> = {};
 
+	/**
+	 * Registers a module from the tiapp.xml `<module>` tag.
+	 * @param path - The path to the module.
+	 * @param manifest - The manifest of the module.
+	 */
 	add(path: string, manifest: TiModuleManifest) {
-		if (!this.modules[manifest.platform]) {
-			this.modules[manifest.platform] = {};
+		if (!this.modules[manifest.moduleid]) {
+			this.modules[manifest.moduleid] = {};
 		}
 
-		if (!this.modules[manifest.platform][manifest.moduleid]) {
-			this.modules[manifest.platform][manifest.moduleid] = {};
+		if (!this.modules[manifest.moduleid][manifest.platform]) {
+			this.modules[manifest.moduleid][manifest.platform] = {};
 		}
 
-		this.modules[manifest.platform][manifest.moduleid][manifest.version] = {
+		this.modules[manifest.moduleid][manifest.platform][manifest.version] = {
 			...manifest,
 			path,
 		};
@@ -85,10 +91,7 @@ export class TiModuleRegistry {
 		}
 		const searchPlatforms = Array.from(platformsSet);
 
-		// this is flawed... we want to loop over searchModules and then loop
-		// over this.modules while checking the module id, version, platform,
-		// sdk versoin, deploy type, and module API version
-
+		// loop through each <module> and make sure it's sane
 		for (const module of searchModules) {
 			const moduleid = module.moduleid?.trim();
 			if (!moduleid) {
@@ -99,8 +102,9 @@ export class TiModuleRegistry {
 			const deployTypes =
 				module.deployType
 					?.toLowerCase()
-					.split(',')
-					.map((p) => p.trim()) || [];
+					.split(/[, ]+/)
+					.map((p) => p.trim())
+					.filter(Boolean) || [];
 			if (options.deployType && !deployTypes.includes(options.deployType.toLowerCase())) {
 				continue;
 			}
@@ -110,8 +114,9 @@ export class TiModuleRegistry {
 				const platforms =
 					module.platform
 						?.toLowerCase()
-						.split(',')
-						.map((p) => p.trim()) || [];
+						.split(/[, ]+/)
+						.map((p) => p.trim())
+						.filter(Boolean) || [];
 				if (!platforms.some((p) => searchPlatforms.includes(p))) {
 					continue;
 				}
@@ -127,23 +132,13 @@ export class TiModuleRegistry {
 				}
 			}
 
-			console.log(module);
-			// 	const version = typeof module.version === 'string' ? module.version.trim() : undefined;
-			// 	const platforms = new Set<string>();
-			// 	if (typeof module.platform === 'string') {
-			// 		for (let p of module.platform.split(',')) {
-			// 			p = p.trim();
-			// 			if (p) {
-			// 				platforms.add(platformAliases[p] || p);
-			// 			}
-			// 		}
-			// 		platforms.add('commonjs');
-			// 	}
-			// 	log(
-			// 		`Looking for moduleid="${moduleid}" version="${version || 'any'}" platforms="${Array.from(platforms).join(',') || 'any'}"`
-			// 	);
-			// 	log(installed);
-			// 	// todo
+			console.log('Searching for:', module);
+
+			for (const module of this.modules) {
+				if (module.moduleid === moduleid) {
+					results.found.push(module);
+				}
+			}
 		}
 
 		// detect conflicts

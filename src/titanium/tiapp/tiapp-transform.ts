@@ -269,14 +269,12 @@ function readModules(
 			const elem = child as Element;
 			if (elem.tagName === 'module') {
 				const moduleid = xml.getValueString(elem).trim() || '';
-				if (moduleid) {
-					modules.push({
-						moduleid,
-						platform: elem.getAttribute('platform') || undefined,
-						version: elem.getAttribute('version') || undefined,
-						deployType: elem.getAttribute('deploy-type') || undefined,
-					});
-				}
+				modules.push({
+					moduleid,
+					platform: elem.getAttribute('platform') || undefined,
+					version: elem.getAttribute('version') || undefined,
+					deployType: elem.getAttribute('deploy-type') || undefined,
+				});
 			}
 		}
 		child = child.nextSibling;

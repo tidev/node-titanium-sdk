@@ -56,10 +56,19 @@ export const PropertiesSchema = z
  * Module schema for <module> elements
  */
 export const ModuleSchema = z.object({
-	moduleid: z.string(),
-	platform: z.string().optional(),
-	version: z.union([z.string(), z.number()]).optional(),
-	deployType: z.string().optional(),
+	moduleid: z.string().min(1, { message: 'Module must have an id' }),
+	platform: z
+		.string()
+		.refine((val) => val === val.toLowerCase(), { message: 'Module "platform" must be lowercase' })
+		.optional(),
+	version: z
+		.union([z.string(), z.number()])
+		.transform((val) => String(val))
+		.refine((val) => /^\d+(\.\d+)?(\.\d+)?$/.test(val), {
+			message: 'Module version is invalid',
+		})
+		.optional(),
+	deployType: z.enum(['production', 'test', 'development']).optional(),
 });
 
 /**

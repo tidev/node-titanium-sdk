@@ -1,5 +1,5 @@
 import { config, resetConfig } from '../../../src/config.js';
-import { detectTiModules, TiappXML } from '../../../src/titanium/index.js';
+import { detectTiModules, TiappXML, TiModuleRegistry } from '../../../src/titanium/index.js';
 import { randomBytes } from 'node:crypto';
 import { copyFile, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -729,11 +729,34 @@ describe('detectTitaniumModules', () => {
 		});
 	});
 
-	describe('search', () => {
-		it.only('should search for Titanium modules', async () => {
-			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'good');
-			config.titanium.sdk.searchPaths[process.platform] = [];
+	describe.only('search', () => {
+		it('should error if modules is invalid', async () => {
+			const registry = new TiModuleRegistry();
+			await expect(registry.search({ modules: undefined as any })).rejects.toThrow('Expected modules to be an array');
+			await expect(registry.search({ modules: 'foo' as any })).rejects.toThrow('Expected modules to be an array');
+		});
 
+		it('should return nothing if modules is empty', async () => {
+			const registry = new TiModuleRegistry();
+			const modules = await registry.search({ modules: [] });
+			expect(modules).toEqual({ found: [], missing: [], incompatible: [], conflict: [] });
+		});
+
+		it('should error if module does not have an id', async () => {
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module>foo</module>
+	</modules>
+</ti:app>`)
+				.data();
+			data.modules[0].moduleid = '';
+			const registry = new TiModuleRegistry();
+			await expect(registry.search({ modules: data.modules })).rejects.toThrow('Module has no module id');
+		});
+
+		it('should search for Titanium modules', async () => {
 			const data = new TiappXML()
 				.parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
@@ -744,8 +767,7 @@ describe('detectTitaniumModules', () => {
 	</modules>
 </ti:app>`)
 				.data();
-			const registry = await detectTiModules();
-
+			const registry = new TiModuleRegistry();
 			const modules = await registry.search({ modules: data.modules });
 			console.log(modules);
 		});
