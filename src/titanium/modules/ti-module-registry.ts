@@ -1,3 +1,4 @@
+import * as version from '../../util/version.js';
 import type { TiModule, TiModuleManifest } from './types';
 import snooplogg from 'snooplogg';
 
@@ -10,7 +11,7 @@ export const platformAliases = {
 
 type TiModuleSearchResults = {
 	found: TiModule[];
-	missing: TiModule[];
+	missing: TiappModule[];
 	incompatible: TiModule[];
 	conflict: TiModule[];
 };
@@ -18,7 +19,7 @@ type TiModuleSearchResults = {
 type TiappModule = {
 	moduleid: string;
 	platform?: string;
-	version?: string | number;
+	version?: string;
 	deployType?: string;
 };
 
@@ -58,7 +59,6 @@ export class TiModuleRegistry {
 		moduleAPIVersion?: string;
 		platforms?: string | string[];
 		sdkVersion?: string;
-		searchPaths?: string[];
 	}): Promise<TiModuleSearchResults> {
 		const results: TiModuleSearchResults = {
 			found: [],
@@ -86,21 +86,20 @@ export class TiModuleRegistry {
 							.filter(Boolean)
 					: []
 		);
-		if (!platformsSet.has('commonjs')) {
+		if (platformsSet.size > 0 && !platformsSet.has('commonjs')) {
 			platformsSet.add('commonjs');
 		}
 		const searchPlatforms = Array.from(platformsSet);
 
 		// loop through each <module> and make sure it's sane
-		for (const module of searchModules) {
-			const moduleid = module.moduleid?.trim();
+		for (const subject of searchModules) {
+			const moduleid = subject.moduleid?.trim();
 			if (!moduleid) {
 				throw new Error('Module has no module id');
 			}
 
-			// deploy type
 			const deployTypes =
-				module.deployType
+				subject.deployType
 					?.toLowerCase()
 					.split(/[, ]+/)
 					.map((p) => p.trim())
@@ -109,65 +108,98 @@ export class TiModuleRegistry {
 				continue;
 			}
 
-			// platforms
-			if (searchPlatforms.length) {
-				const platforms =
-					module.platform
-						?.toLowerCase()
-						.split(/[, ]+/)
-						.map((p) => p.trim())
-						.filter(Boolean) || [];
-				if (!platforms.some((p) => searchPlatforms.includes(p))) {
+			// subject.platform is comma/space separated; any matching registry platform counts
+			const subjectPlatformsSet = new Set<string>(
+				subject.platform
+					? subject.platform
+							.split(/[, ]+/)
+							.map((p) => (platformAliases[p.trim()] || p.trim()).toLowerCase())
+							.filter(Boolean)
+					: searchPlatforms
+			);
+			const subjectPlatforms =
+				subjectPlatformsSet.size > 0 ? Array.from(subjectPlatformsSet) : searchPlatforms;
+
+			const wantVersion =
+				subject.version !== undefined && subject.version !== ''
+					? String(subject.version).trim()
+					: undefined;
+			const isLatest = wantVersion !== undefined && wantVersion.toLowerCase() === 'latest';
+			const wantAllVersions = wantVersion === undefined;
+
+			const byModuleId = this.modules[moduleid];
+			if (!byModuleId) {
+				results.missing.push(subject);
+				continue;
+			}
+
+			// when `searchPlatforms` is empty, search all platforms for this module
+			const platformsToSearch =
+				searchPlatforms.length > 0
+					? subjectPlatforms.filter((p) => searchPlatforms.includes(p))
+					: subjectPlatforms.length > 0
+						? subjectPlatforms
+						: Object.keys(byModuleId);
+
+			let foundForSubject = false;
+			for (const platform of platformsToSearch) {
+				const byVersion = byModuleId[platform];
+				if (!byVersion || typeof byVersion !== 'object') {
 					continue;
 				}
-			}
 
-			// version
-			if (module.version && module.version !== 'latest') {
-				const version = typeof module.version === 'string' ? module.version.trim() : undefined;
-				if (version && version !== 'latest') {
-					if (version !== module.version) {
+				let candidates: TiModule[];
+				if (wantAllVersions) {
+					const versions = Object.keys(byVersion).filter((v) => version.isValid(v));
+					candidates = versions.map((v) => byVersion[v]).filter(Boolean);
+				} else if (isLatest) {
+					const versions = Object.keys(byVersion).filter((v) => version.isValid(v));
+					if (versions.length === 0) {
 						continue;
 					}
+					versions.sort((a, b) => version.compare(a, b));
+					const candidate = byVersion[versions[versions.length - 1]];
+					candidates = candidate ? [candidate] : [];
+				} else {
+					const candidate = byVersion[wantVersion!];
+					candidates = candidate ? [candidate] : [];
+				}
+
+				for (const candidate of candidates) {
+					// moduleAPIVersion and sdkVersion vs TiModule.apiversion and TiModule.minsdk
+					if (options.moduleAPIVersion !== undefined && candidate.apiversion !== undefined) {
+						const wantApi = Number.parseInt(String(options.moduleAPIVersion), 10);
+						const modApi = Number(candidate.apiversion);
+						if (!Number.isNaN(wantApi) && wantApi !== modApi) {
+							results.incompatible.push(candidate);
+							continue;
+						}
+					}
+					if (
+						options.sdkVersion !== undefined &&
+						candidate.minsdk !== undefined &&
+						candidate.minsdk !== ''
+					) {
+						try {
+							if (version.gt(candidate.minsdk, options.sdkVersion)) {
+								results.incompatible.push(candidate);
+								continue;
+							}
+						} catch {
+							results.incompatible.push(candidate);
+							continue;
+						}
+					}
+
+					foundForSubject = true;
+					results.found.push(candidate);
 				}
 			}
 
-			console.log('Searching for:', module);
-
-			for (const module of this.modules) {
-				if (module.moduleid === moduleid) {
-					results.found.push(module);
-				}
+			if (!foundForSubject) {
+				results.missing.push(subject);
 			}
 		}
-
-		// detect conflicts
-		// for (const [id, modules] of Object.entries(modulesById)) {
-		// 	if (modules.length <= 1) {
-		// 		continue;
-		// 	}
-
-		// 	// we have a potential conflict...
-		// 	// verify that we have at least one commonjs platform and at least one non-commonjs platform
-
-		// 	let commonJs = 0;
-		// 	let nonCommonJs = 0;
-
-		// 	for (const module of modules) {
-		// 		if (module.platform.has('commonjs')) {
-		// 			commonJs++;
-		// 		} else {
-		// 			nonCommonJs++;
-		// 		}
-		// 	}
-
-		// 	if (commonJs && nonCommonJs) {
-		// 		result.conflict.push({
-		// 			id,
-		// 			modules,
-		// 		});
-		// 	}
-		// }
 
 		return results;
 	}

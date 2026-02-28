@@ -1,5 +1,11 @@
 import { config, resetConfig } from '../../../src/config.js';
 import { detectTiModules, TiappXML, TiModuleRegistry } from '../../../src/titanium/index.js';
+import {
+	comTestModuleAndroid,
+	comTestModuleCommonjs,
+	comTestModuleCommonjs10,
+	comTestModuleIos,
+} from './good-modules.js';
 import { randomBytes } from 'node:crypto';
 import { copyFile, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -21,82 +27,18 @@ describe('detectTitaniumModules', () => {
 			expect(modules).toEqual({
 				android: {
 					'com.test.module': {
-						'1.0.0': {
-							apiversion: 4,
-							architectures: ['arm64-v8a', 'armeabi-v7a', 'x86'],
-							author: 'Your Name',
-							copyright: 'Copyright (c) 2018 by Your Company',
-							description: 'testModule',
-							guid: 'dcaea77e-2860-42c1-a57b-319f81da10e0',
-							license: 'Specify your license',
-							minsdk: '7.2.0',
-							moduleid: 'com.test.module',
-							name: 'testModule',
-							path: join(__dirname, 'mocks', 'good', 'modules', 'android', 'test-module', '1.0.0'),
-							platform: 'android',
-							version: '1.0.0',
-						},
+						'1.0.0': comTestModuleAndroid,
 					},
 				},
 				commonjs: {
 					'com.test.module': {
-						'1.0': {
-							apiversion: undefined,
-							architectures: undefined,
-							author: 'Your Name',
-							copyright: 'Copyright (c) 2018 by Your Company',
-							description: 'testModule',
-							guid: 'dcaea77e-2860-42c1-a57b-319f81da10e0',
-							license: 'Specify your license',
-							minsdk: '7.2.0',
-							moduleid: 'com.test.module',
-							name: 'testModule',
-							path: join(
-								__dirname,
-								'mocks',
-								'good',
-								'modules',
-								'commonjs',
-								'invalid-version',
-								'1.0.1'
-							),
-							platform: 'commonjs',
-							version: '1.0',
-						},
-						'1.0.0': {
-							apiversion: undefined,
-							architectures: undefined,
-							author: 'Your Name',
-							copyright: 'Copyright (c) 2018 by Your Company',
-							description: 'testModule',
-							guid: 'dcaea77e-2860-42c1-a57b-319f81da10e0',
-							license: 'Specify your license',
-							minsdk: '7.2.0',
-							moduleid: 'com.test.module',
-							name: 'testModule',
-							path: join(__dirname, 'mocks', 'good', 'modules', 'commonjs', 'test-module', '1.0.0'),
-							platform: 'commonjs',
-							version: '1.0.0',
-						},
+						'1.0': comTestModuleCommonjs10,
+						'1.0.0': comTestModuleCommonjs,
 					},
 				},
 				ios: {
 					'com.test.module': {
-						'1.0.0': {
-							apiversion: 2,
-							architectures: ['armv7', 'arm64', 'i386', 'x86_64'],
-							author: 'Your Name',
-							copyright: 'Copyright (c) 2018 by Your Company',
-							description: 'testModule',
-							guid: 'dcaea77e-2860-42c1-a57b-319f81da10e0',
-							license: 'Specify your license',
-							minsdk: '7.2.0',
-							moduleid: 'com.test.module',
-							name: 'testModule',
-							path: join(__dirname, 'mocks', 'good', 'modules', 'iphone', 'test-module', '1.0.0'),
-							platform: 'ios',
-							version: '1.0.0',
-						},
+						'1.0.0': comTestModuleIos,
 					},
 				},
 			});
@@ -732,8 +674,12 @@ describe('detectTitaniumModules', () => {
 	describe.only('search', () => {
 		it('should error if modules is invalid', async () => {
 			const registry = new TiModuleRegistry();
-			await expect(registry.search({ modules: undefined as any })).rejects.toThrow('Expected modules to be an array');
-			await expect(registry.search({ modules: 'foo' as any })).rejects.toThrow('Expected modules to be an array');
+			await expect(registry.search({ modules: undefined as any })).rejects.toThrow(
+				'Expected modules to be an array'
+			);
+			await expect(registry.search({ modules: 'foo' as any })).rejects.toThrow(
+				'Expected modules to be an array'
+			);
 		});
 
 		it('should return nothing if modules is empty', async () => {
@@ -753,23 +699,45 @@ describe('detectTitaniumModules', () => {
 				.data();
 			data.modules[0].moduleid = '';
 			const registry = new TiModuleRegistry();
-			await expect(registry.search({ modules: data.modules })).rejects.toThrow('Module has no module id');
+			await expect(registry.search({ modules: data.modules })).rejects.toThrow(
+				'Module has no module id'
+			);
 		});
 
 		it('should search for Titanium modules', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'good');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
 			const data = new TiappXML()
 				.parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
 	<modules>
-		<module>test-module</module>
-		<module platform="ios">test-module</module>
-		<module platform="android,ios">foo-module</module>
+		<module>com.test.module</module>
 	</modules>
 </ti:app>`)
 				.data();
-			const registry = new TiModuleRegistry();
-			const modules = await registry.search({ modules: data.modules });
-			console.log(modules);
+			const registry = await detectTiModules();
+
+			// match module id only
+			expect(await registry.search({ modules: data.modules })).toEqual({
+				found: [
+					comTestModuleAndroid,
+					comTestModuleCommonjs10,
+					comTestModuleCommonjs,
+					comTestModuleIos,
+				],
+				missing: [],
+				incompatible: [],
+				conflict: [],
+			});
+
+			// match module id and platform
+			expect(await registry.search({ modules: data.modules, platforms: ['android'] })).toEqual({
+				found: [comTestModuleAndroid, comTestModuleCommonjs10, comTestModuleCommonjs],
+				missing: [],
+				incompatible: [],
+				conflict: [],
+			});
 		});
 	});
 });
