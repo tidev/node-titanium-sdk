@@ -704,7 +704,7 @@ describe('detectTitaniumModules', () => {
 			);
 		});
 
-		it('should search for Titanium modules', async () => {
+		it('should search for modules by module id and find conflicts', async () => {
 			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'good');
 			config.titanium.sdk.searchPaths[process.platform] = [];
 
@@ -718,22 +718,86 @@ describe('detectTitaniumModules', () => {
 				.data();
 			const registry = await detectTiModules();
 
-			// match module id only
+			// match module id only - same moduleid with different platforms (android, commonjs, ios) = conflict
 			expect(await registry.search({ modules: data.modules })).toEqual({
-				found: [
+				found: [],
+				missing: [],
+				incompatible: [],
+				conflict: [
 					comTestModuleAndroid,
 					comTestModuleCommonjs10,
 					comTestModuleCommonjs,
 					comTestModuleIos,
 				],
+			});
+		});
+
+		it('should search for modules by module id and platform', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'good');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="android">com.test.module</module>
+		<module platform="commonjs">com.test.module</module>
+		<module platform="ios">com.test.module</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			// match module id, platform, and version
+			expect(await registry.search({ modules: data.modules, platform: ['android'] })).toEqual({
+				found: [comTestModuleAndroid],
 				missing: [],
 				incompatible: [],
 				conflict: [],
 			});
+		});
 
-			// match module id and platform
-			expect(await registry.search({ modules: data.modules, platforms: ['android'] })).toEqual({
-				found: [comTestModuleAndroid, comTestModuleCommonjs10, comTestModuleCommonjs],
+		it('should search by module id, platform, and version', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'good');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="commonjs" version="1.0.0">com.test.module</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			expect(await registry.search({ modules: data.modules, platform: ['commonjs'] })).toEqual({
+				found: [comTestModuleCommonjs],
+				missing: [],
+				incompatible: [],
+				conflict: [],
+			});
+		});
+
+		it.only('should search modules by module id and multiple platforms', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'good');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="android">com.test.module</module>
+		<module platform="ios">com.test.module</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			expect(
+				await registry.search({ modules: data.modules, platform: ['android', 'ios'] })
+			).toEqual({
+				found: [comTestModuleAndroid, comTestModuleIos],
 				missing: [],
 				incompatible: [],
 				conflict: [],

@@ -51,13 +51,19 @@ export class TiModuleRegistry {
 	 * Search for installed Titanium modules.
 	 *
 	 * @param options - The options for the function.
+	 * @param options.deployType - The deploy type to search for.
+	 * @param options.moduleAPIVersion - The module API version to search for.
+	 * @param options.modules - The <modules> found in the `tiapp.xml`.
+	 * @param options.platform - The platform(s) to search for. Generally this
+	 * is either `'android'` or `['ios', 'iphone']`.
+	 * @param options.sdkVersion - The SDK version to search for.
 	 * @returns Returns matching modules.
 	 */
 	async search(options: {
 		deployType?: string;
-		modules: TiappModule[];
 		moduleAPIVersion?: string;
-		platforms?: string | string[];
+		modules: TiappModule[];
+		platform?: string | string[];
 		sdkVersion?: string;
 	}): Promise<TiModuleSearchResults> {
 		const results: TiModuleSearchResults = {
@@ -66,23 +72,26 @@ export class TiModuleRegistry {
 			incompatible: [],
 			conflict: [],
 		};
+		const foundByModuleId = new Map<string, TiModule[]>();
 
-		const searchModules = options.modules;
-		if (searchModules === undefined || !Array.isArray(searchModules)) {
+		const tiappModules = options.modules;
+		if (tiappModules === undefined || !Array.isArray(tiappModules)) {
 			throw new Error('Expected modules to be an array');
 		}
-		if (searchModules.length === 0) {
+		if (tiappModules.length === 0) {
 			return results;
 		}
 
 		// clean up platforms
 		const platformsSet = new Set<string>(
-			Array.isArray(options.platforms)
-				? options.platforms.map((p) => platformAliases[p.trim()] || p.trim()).filter(Boolean)
-				: typeof options.platforms === 'string'
-					? options.platforms
-							.split(',')
-							.map((p) => platformAliases[p.trim()] || p.trim())
+			Array.isArray(options.platform)
+				? options.platform
+						.map((p) => (platformAliases[p.trim()] || p.trim()).toLowerCase())
+						.filter(Boolean)
+				: typeof options.platform === 'string'
+					? options.platform
+							.split(/[, ]+/)
+							.map((p) => (platformAliases[p.trim()] || p.trim()).toLowerCase())
 							.filter(Boolean)
 					: []
 		);
@@ -91,11 +100,17 @@ export class TiModuleRegistry {
 		}
 		const searchPlatforms = Array.from(platformsSet);
 
-		// loop through each <module> and make sure it's sane
-		for (const subject of searchModules) {
+		for (const subject of tiappModules) {
 			const moduleid = subject.moduleid?.trim();
 			if (!moduleid) {
+				// this should never happen
 				throw new Error('Module has no module id');
+			}
+
+			const byModuleId = this.modules[moduleid];
+			if (!byModuleId) {
+				results.missing.push(subject);
+				continue;
 			}
 
 			const deployTypes =
@@ -108,8 +123,7 @@ export class TiModuleRegistry {
 				continue;
 			}
 
-			// subject.platform is comma/space separated; any matching registry platform counts
-			const subjectPlatformsSet = new Set<string>(
+			const platformsSet = new Set<string>(
 				subject.platform
 					? subject.platform
 							.split(/[, ]+/)
@@ -117,31 +131,27 @@ export class TiModuleRegistry {
 							.filter(Boolean)
 					: searchPlatforms
 			);
-			const subjectPlatforms =
-				subjectPlatformsSet.size > 0 ? Array.from(subjectPlatformsSet) : searchPlatforms;
+			const wantPlatforms = platformsSet.size > 0 ? Array.from(platformsSet) : searchPlatforms;
 
 			const wantVersion =
 				subject.version !== undefined && subject.version !== ''
 					? String(subject.version).trim()
-					: undefined;
+					: 'latest';
 			const isLatest = wantVersion !== undefined && wantVersion.toLowerCase() === 'latest';
 			const wantAllVersions = wantVersion === undefined;
-
-			const byModuleId = this.modules[moduleid];
-			if (!byModuleId) {
-				results.missing.push(subject);
-				continue;
-			}
 
 			// when `searchPlatforms` is empty, search all platforms for this module
 			const platformsToSearch =
 				searchPlatforms.length > 0
-					? subjectPlatforms.filter((p) => searchPlatforms.includes(p))
-					: subjectPlatforms.length > 0
-						? subjectPlatforms
+					? wantPlatforms.filter((p) => searchPlatforms.includes(p))
+					: wantPlatforms.length > 0
+						? wantPlatforms
 						: Object.keys(byModuleId);
 
+			log(`${moduleid} platform=${platformsToSearch.join(',')} version=${wantVersion}`);
+
 			let foundForSubject = false;
+
 			for (const platform of platformsToSearch) {
 				const byVersion = byModuleId[platform];
 				if (!byVersion || typeof byVersion !== 'object') {
@@ -193,6 +203,9 @@ export class TiModuleRegistry {
 
 					foundForSubject = true;
 					results.found.push(candidate);
+					const list = foundByModuleId.get(candidate.moduleid) ?? [];
+					list.push(candidate);
+					foundByModuleId.set(candidate.moduleid, list);
 				}
 			}
 
@@ -200,6 +213,17 @@ export class TiModuleRegistry {
 				results.missing.push(subject);
 			}
 		}
+
+		// detect conflicts: same moduleid with different platforms
+		const conflictingModuleIds = new Set<string>();
+		for (const [moduleid, mods] of foundByModuleId) {
+			const platforms = new Set(mods.map((m) => m.platform));
+			if (platforms.size > 1) {
+				conflictingModuleIds.add(moduleid);
+				results.conflict.push(...mods);
+			}
+		}
+		results.found = results.found.filter((mod) => !conflictingModuleIds.has(mod.moduleid));
 
 		return results;
 	}

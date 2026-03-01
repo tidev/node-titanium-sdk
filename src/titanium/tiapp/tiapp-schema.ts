@@ -68,7 +68,7 @@ export const ModuleSchema = z.object({
 			message: 'Module version is invalid',
 		})
 		.optional(),
-	deployType: z.enum(['production', 'test', 'development']).optional(),
+	deployType: z.string().optional(),
 });
 
 /**
