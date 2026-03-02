@@ -2,7 +2,7 @@ import * as version from '../../util/version.js';
 import type { TiModule, TiModuleManifest } from './types';
 import snooplogg from 'snooplogg';
 
-const { info, log, warn } = snooplogg('ti:module-registry');
+const { log } = snooplogg('ti:module-registry');
 
 export const platformAliases = {
 	ipad: 'ios',
@@ -40,6 +40,9 @@ export class TiModuleRegistry {
 		if (!this.modules[manifest.moduleid][manifest.platform]) {
 			this.modules[manifest.moduleid][manifest.platform] = {};
 		}
+		log(
+			`Adding module "${manifest.moduleid}" on platform="${manifest.platform}" version="${manifest.version}" path="${path}"`
+		);
 
 		this.modules[manifest.moduleid][manifest.platform][manifest.version] = {
 			...manifest,
@@ -98,7 +101,7 @@ export class TiModuleRegistry {
 		if (platformsSet.size > 0 && !platformsSet.has('commonjs')) {
 			platformsSet.add('commonjs');
 		}
-		const searchPlatforms = Array.from(platformsSet);
+		const wantedPlatforms = Array.from(platformsSet);
 
 		for (const subject of tiappModules) {
 			const moduleid = subject.moduleid?.trim();
@@ -106,8 +109,19 @@ export class TiModuleRegistry {
 				// this should never happen
 				throw new Error('Module has no module id');
 			}
+			const wantedVersion =
+				subject.version === undefined
+					? 'latest'
+					: typeof subject.version !== 'string' ||
+						  !/^((\d+\.){0,2}(\d+))|latest$/i.test(subject.version.trim())
+						? null
+						: subject.version.trim().toLowerCase();
+			if (wantedVersion === null) {
+				throw new Error(`Module "${moduleid}" has invalid version "${subject.version}"`);
+			}
 
 			const byModuleId = this.modules[moduleid];
+			console.log('!!', moduleid, byModuleId);
 			if (!byModuleId) {
 				results.missing.push(subject);
 				continue;
@@ -129,88 +143,84 @@ export class TiModuleRegistry {
 							.split(/[, ]+/)
 							.map((p) => (platformAliases[p.trim()] || p.trim()).toLowerCase())
 							.filter(Boolean)
-					: searchPlatforms
+					: wantedPlatforms
 			);
-			const wantPlatforms = platformsSet.size > 0 ? Array.from(platformsSet) : searchPlatforms;
+			const modulePlatforms = platformsSet.size > 0 ? Array.from(platformsSet) : wantedPlatforms;
 
-			const wantVersion =
-				subject.version !== undefined && subject.version !== ''
-					? String(subject.version).trim()
-					: 'latest';
-			const isLatest = wantVersion !== undefined && wantVersion.toLowerCase() === 'latest';
-			const wantAllVersions = wantVersion === undefined;
-
-			// when `searchPlatforms` is empty, search all platforms for this module
 			const platformsToSearch =
-				searchPlatforms.length > 0
-					? wantPlatforms.filter((p) => searchPlatforms.includes(p))
-					: wantPlatforms.length > 0
-						? wantPlatforms
+				wantedPlatforms.length > 0
+					? modulePlatforms.filter((p) => wantedPlatforms.includes(p))
+					: modulePlatforms.length > 0
+						? modulePlatforms
 						: Object.keys(byModuleId);
 
-			log(`${moduleid} platform=${platformsToSearch.join(',')} version=${wantVersion}`);
+			if (platformsToSearch.length === 0) {
+				continue;
+			}
 
-			let foundForSubject = false;
+			const isLatest = wantedVersion.toLowerCase() === 'latest';
+
+			log(
+				`moduleid="${moduleid}" searching="${platformsToSearch.join(',')}" version="${wantedVersion}" isLatest=${isLatest}"`
+			);
 
 			for (const platform of platformsToSearch) {
 				const byVersion = byModuleId[platform];
-				if (!byVersion || typeof byVersion !== 'object') {
+				if (!byVersion || typeof byVersion !== 'object' || Object.keys(byVersion).length === 0) {
+					log(`No versions found for "${moduleid}" on platform="${platform}"`);
+					results.missing.push(subject);
 					continue;
 				}
 
-				let candidates: TiModule[];
-				if (wantAllVersions) {
-					const versions = Object.keys(byVersion).filter((v) => version.isValid(v));
-					candidates = versions.map((v) => byVersion[v]).filter(Boolean);
-				} else if (isLatest) {
-					const versions = Object.keys(byVersion).filter((v) => version.isValid(v));
-					if (versions.length === 0) {
+				log(
+					`Found "${moduleid}" on platform="${platform}" versions="${Object.keys(byVersion).join(',')}" isLatest=${isLatest} wantedVersion=${wantedVersion}`
+				);
+				log(byVersion);
+
+				const ver = isLatest
+					? (Object.keys(byVersion)
+							.sort((a, b) => version.compare(a, b))
+							.at(-1) as string)
+					: wantedVersion;
+
+				const candidate = byVersion[ver];
+				log(`${moduleid} candidate="${candidate.version}" path="${candidate.path}"`);
+
+				// moduleAPIVersion and sdkVersion vs TiModule.apiversion and TiModule.minsdk
+				if (options.moduleAPIVersion !== undefined && candidate.apiversion !== undefined) {
+					const wantApi = Number.parseInt(String(options.moduleAPIVersion), 10);
+					const moduleApi = Number(candidate.apiversion);
+					if (!Number.isNaN(wantApi) && wantApi !== moduleApi) {
+						results.incompatible.push(candidate);
 						continue;
 					}
-					versions.sort((a, b) => version.compare(a, b));
-					const candidate = byVersion[versions[versions.length - 1]];
-					candidates = candidate ? [candidate] : [];
-				} else {
-					const candidate = byVersion[wantVersion!];
-					candidates = candidate ? [candidate] : [];
 				}
 
-				for (const candidate of candidates) {
-					// moduleAPIVersion and sdkVersion vs TiModule.apiversion and TiModule.minsdk
-					if (options.moduleAPIVersion !== undefined && candidate.apiversion !== undefined) {
-						const wantApi = Number.parseInt(String(options.moduleAPIVersion), 10);
-						const modApi = Number(candidate.apiversion);
-						if (!Number.isNaN(wantApi) && wantApi !== modApi) {
+				if (
+					options.sdkVersion !== undefined &&
+					candidate.minsdk !== undefined &&
+					candidate.minsdk !== ''
+				) {
+					try {
+						log(
+							`${moduleid} candidate.minsdk="${candidate.minsdk}" options.sdkVersion="${options.sdkVersion}"`
+						);
+						if (version.gt(candidate.minsdk, options.sdkVersion)) {
 							results.incompatible.push(candidate);
 							continue;
 						}
+					} catch (err) {
+						log(`${moduleid} error="${err}"`);
+						// one of the versions is invalid?
+						results.incompatible.push(candidate);
+						continue;
 					}
-					if (
-						options.sdkVersion !== undefined &&
-						candidate.minsdk !== undefined &&
-						candidate.minsdk !== ''
-					) {
-						try {
-							if (version.gt(candidate.minsdk, options.sdkVersion)) {
-								results.incompatible.push(candidate);
-								continue;
-							}
-						} catch {
-							results.incompatible.push(candidate);
-							continue;
-						}
-					}
-
-					foundForSubject = true;
-					results.found.push(candidate);
-					const list = foundByModuleId.get(candidate.moduleid) ?? [];
-					list.push(candidate);
-					foundByModuleId.set(candidate.moduleid, list);
 				}
-			}
 
-			if (!foundForSubject) {
-				results.missing.push(subject);
+				results.found.push(candidate);
+				const list = foundByModuleId.get(candidate.moduleid) ?? [];
+				list.push(candidate);
+				foundByModuleId.set(candidate.moduleid, list);
 			}
 		}
 

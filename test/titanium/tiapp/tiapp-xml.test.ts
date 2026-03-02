@@ -201,7 +201,8 @@ describe('TiappXML', () => {
 
 		it('should error if module version is invalid', () => {
 			const tiapp = new TiappXML();
-			expect(() => tiapp.parse(`<?xml version="1.0"?>
+			expect(() =>
+				tiapp.parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
 	<modules>
 		<module version="bar">foo</module>
