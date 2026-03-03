@@ -6,7 +6,7 @@ import { readdir, readFile, rm } from 'fs/promises';
 import { basename, dirname, join } from 'path';
 import snooplogg from 'snooplogg';
 
-const { info, log, warn } = snooplogg('ti:modules');
+const { log, warn } = snooplogg('ti:modules');
 
 /**
  * Detects Titanium modules in the Titanium SDK install locations and user search paths, then
@@ -55,7 +55,7 @@ export async function detectTiModules(
 						if (file.endsWith('.zip')) {
 							try {
 								const zipFile = join(titaniumDir, file);
-								info(`Installing Titanium module: ${zipFile}`);
+								log(`Installing Titanium module: ${zipFile}`);
 								await extractZip(zipFile, titaniumInstallDir || titaniumDir);
 								await rm(zipFile);
 							} catch (err) {
@@ -132,7 +132,7 @@ async function scanPath(modulesDir: string, registry: TiModuleRegistry) {
 					if (!manifest) {
 						continue;
 					}
-					info(`Found ${manifest.platform} module: ${manifest.moduleid}@${manifest.version}`);
+					log(`Found ${manifest.platform} module: ${manifest.moduleid}@${manifest.version}`);
 					registry.add(path, manifest);
 				} catch (err) {
 					warn(`Error reading module manifest: ${(err as Error).message}`);
@@ -260,7 +260,7 @@ async function scanNodeModules(nodeModulesDir: string, registry: TiModuleRegistr
 					throw new Error(`Titanium module missing module id: ${path}`);
 				}
 
-				info(`Found ${platform} module: ${moduleid}@${version}`);
+				log(`Found ${platform} module: ${moduleid}@${version}`);
 
 				registry.add(path, {
 					architectures: Array.isArray(pkgTiJson.architectures)

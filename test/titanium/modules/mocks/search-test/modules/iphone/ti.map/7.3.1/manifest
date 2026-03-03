@@ -9,7 +9,7 @@ architectures: arm64 x86_64
 description: External version of Map module
 author: Your name
 license: Apache Public License v2
-copyright: Copyright (c) 2018 by Your Company
+copyright: Copyright (c) 2022 by Your Company
 
 # these should not be edited
 name: map
@@ -17,4 +17,4 @@ mac: true
 moduleid: ti.map
 guid: f0d8fd44-86d2-4730-b67d-bd454577aeee
 platform: iphone
-minsdk: 10.0.0.GA
+minsdk: 10.0.0

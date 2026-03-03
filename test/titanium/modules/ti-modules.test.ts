@@ -5,6 +5,9 @@ import {
 	TestModuleCommonjs,
 	TestModuleCommonjs10,
 	TestModuleIos,
+	CJSModule1,
+	CJSModule2,
+	TiMapAndroid,
 	TiMapIos,
 } from './search-modules.js';
 import { randomBytes } from 'node:crypto';
@@ -26,19 +29,15 @@ describe('detectTitaniumModules', () => {
 
 			const { modules } = await detectTiModules();
 			expect(modules).toEqual({
-				android: {
-					'com.test.module': {
+				'com.test.module': {
+					android: {
 						'1.0.0': TestModuleAndroid,
 					},
-				},
-				commonjs: {
-					'com.test.module': {
+					commonjs: {
 						'1.0': TestModuleCommonjs10,
 						'1.0.0': TestModuleCommonjs,
 					},
-				},
-				ios: {
-					'com.test.module': {
+					ios: {
 						'1.0.0': TestModuleIos,
 					},
 				},
@@ -51,8 +50,8 @@ describe('detectTitaniumModules', () => {
 
 			const { modules } = await detectTiModules();
 			expect(modules).toEqual({
-				android: {
-					'ti.map': {
+				'ti.map': {
+					android: {
 						'3.1.0': {
 							apiversion: 2,
 							architectures: ['arm64-v8a', 'armeabi-v7a', 'x86'],
@@ -87,13 +86,13 @@ describe('detectTitaniumModules', () => {
 
 			const { modules } = await detectTiModules();
 			expect(modules).toEqual({
-				commonjs: {
-					'ti.ambiguous': {
+				'ti.ambiguous': {
+					commonjs: {
 						'1.0': {
 							apiversion: undefined,
 							architectures: undefined,
 							author: 'Tester',
-							copyright: 'Copyright (c) 2018 by Your Company',
+							copyright: 'Copyright (c) 2022 by Your Company',
 							description: 'This is an ambiguous module that will conflict with a native module',
 							guid: '8d99922e-7727-4f64-90b9-325992eddb1c',
 							license: 'Apache Public License',
@@ -113,31 +112,12 @@ describe('detectTitaniumModules', () => {
 							version: '1.0',
 						},
 					},
-				},
-				ios: {
-					baz: {
+					ios: {
 						'1.0': {
 							apiversion: undefined,
 							architectures: undefined,
 							author: 'Tester',
-							copyright: 'Copyright (c) 2018 by Your Company',
-							description: 'This is an ambiguous module that will conflict with a commonjs module',
-							guid: '8d99922e-7727-4f64-90b9-325992eddb1c',
-							license: 'Apache Public License',
-							minsdk: '3.0',
-							moduleid: 'baz',
-							name: 'baz',
-							path: join(__dirname, 'mocks', 'commonjs-ios', 'modules', 'ios', 'baz', '2.0.1'),
-							platform: 'ios',
-							version: '1.0',
-						},
-					},
-					'ti.ambiguous': {
-						'1.0': {
-							apiversion: undefined,
-							architectures: undefined,
-							author: 'Tester',
-							copyright: 'Copyright (c) 2018 by Your Company',
+							copyright: 'Copyright (c) 2022 by Your Company',
 							description: 'This is an ambiguous module that will conflict with a commonjs module',
 							guid: '8d99922e-7727-4f64-90b9-325992eddb1c',
 							license: 'Apache Public License',
@@ -149,12 +129,33 @@ describe('detectTitaniumModules', () => {
 							version: '1.0',
 						},
 					},
-					'ti.toonew': {
+				},
+				baz: {
+					ios: {
 						'1.0': {
 							apiversion: undefined,
 							architectures: undefined,
 							author: 'Tester',
-							copyright: 'Copyright (c) 2018 by Your Company',
+							copyright: 'Copyright (c) 2022 by Your Company',
+							description: 'This is an ambiguous module that will conflict with a commonjs module',
+							guid: '8d99922e-7727-4f64-90b9-325992eddb1c',
+							license: 'Apache Public License',
+							minsdk: '3.0',
+							moduleid: 'baz',
+							name: 'baz',
+							path: join(__dirname, 'mocks', 'commonjs-ios', 'modules', 'ios', 'baz', '2.0.1'),
+							platform: 'ios',
+							version: '1.0',
+						},
+					},
+				},
+				'ti.toonew': {
+					ios: {
+						'1.0': {
+							apiversion: undefined,
+							architectures: undefined,
+							author: 'Tester',
+							copyright: 'Copyright (c) 2022 by Your Company',
 							description: 'This is a dummy module',
 							guid: '8d99922e-7727-4f64-90b9-325992eddb1b',
 							license: 'Apache Public License',
@@ -176,13 +177,13 @@ describe('detectTitaniumModules', () => {
 
 			const { modules } = await detectTiModules();
 			expect(modules).toEqual({
-				commonjs: {
-					'ti.latestvalid': {
+				'ti.latestvalid': {
+					commonjs: {
 						'1.0': {
 							apiversion: undefined,
 							architectures: undefined,
 							author: 'Tester',
-							copyright: 'Copyright (c) 2018 by Your Company',
+							copyright: 'Copyright (c) 2022 by Your Company',
 							description: 'This is an ambiguous module that will conflict with a native module',
 							guid: '8d99922e-7727-4f64-90b9-325992eddb1c',
 							license: 'Apache Public License',
@@ -205,7 +206,7 @@ describe('detectTitaniumModules', () => {
 							apiversion: undefined,
 							architectures: undefined,
 							author: 'Tester',
-							copyright: 'Copyright (c) 2018 by Your Company',
+							copyright: 'Copyright (c) 2022 by Your Company',
 							description: 'This is an ambiguous module that will conflict with a native module',
 							guid: '8d99922e-7727-4f64-90b9-325992eddb1c',
 							license: 'Apache Public License',
@@ -235,13 +236,13 @@ describe('detectTitaniumModules', () => {
 
 			const { modules } = await detectTiModules();
 			expect(modules).toEqual({
-				ios: {
-					'ti.ambiguous': {
+				'ti.ambiguous': {
+					ios: {
 						'1.0': {
 							apiversion: undefined,
 							architectures: undefined,
 							author: 'Tester',
-							copyright: 'Copyright (c) 2018 by Your Company',
+							copyright: 'Copyright (c) 2022 by Your Company',
 							description: 'This is an ambiguous module that will conflict with a commonjs module',
 							guid: '8d99922e-7727-4f64-90b9-325992eddb1c',
 							license: 'Apache Public License',
@@ -263,13 +264,13 @@ describe('detectTitaniumModules', () => {
 
 			const { modules } = await detectTiModules();
 			expect(modules).toEqual({
-				ios: {
-					'ti.map': {
+				'ti.map': {
+					ios: {
 						'3.1.0': {
 							apiversion: 2,
 							architectures: ['armv7', 'arm64', 'i386', 'x86_64'],
 							author: 'Tester',
-							copyright: 'Copyright (c) 2018 by Your Company',
+							copyright: 'Copyright (c) 2022 by Your Company',
 							description: 'External version of Map module',
 							guid: 'fee93b77-8eb3-418c-8f04-013664c4af83',
 							license: 'Apache Public License v2',
@@ -313,8 +314,8 @@ describe('detectTitaniumModules', () => {
 				searchPaths: [join(__dirname, 'mocks', 'cross-platform-native-module')],
 			});
 			expect(modules).toEqual({
-				android: {
-					'cross-platform': {
+				'cross-platform': {
+					android: {
 						'2.0.1': {
 							apiversion: undefined,
 							architectures: undefined,
@@ -338,9 +339,7 @@ describe('detectTitaniumModules', () => {
 							version: '2.0.1',
 						},
 					},
-				},
-				ios: {
-					'cross-platform': {
+					ios: {
 						'2.0.1': {
 							apiversion: undefined,
 							architectures: undefined,
@@ -378,8 +377,8 @@ describe('detectTitaniumModules', () => {
 				],
 			});
 			expect(modules).toEqual({
-				android: {
-					'cross-platform': {
+				'cross-platform': {
+					android: {
 						'2.0.1': {
 							apiversion: 6,
 							architectures: ['armeabi-v7a', 'x86'],
@@ -403,9 +402,7 @@ describe('detectTitaniumModules', () => {
 							version: '2.0.1',
 						},
 					},
-				},
-				ios: {
-					'cross-platform': {
+					ios: {
 						'2.0.1': {
 							apiversion: 1,
 							architectures: ['armv7', 'i386'],
@@ -441,8 +438,8 @@ describe('detectTitaniumModules', () => {
 				searchPaths: [join(__dirname, 'mocks', 'cross-platform-native-module-with-manifest')],
 			});
 			expect(modules).toEqual({
-				android: {
-					'cross-platform-with-manifest': {
+				'cross-platform-with-manifest': {
+					android: {
 						'2.0.1': {
 							apiversion: 6,
 							architectures: ['armeabi-v7a', 'x86'],
@@ -466,9 +463,7 @@ describe('detectTitaniumModules', () => {
 							version: '2.0.1',
 						},
 					},
-				},
-				ios: {
-					'cross-platform-with-manifest': {
+					ios: {
 						'2.0.1': {
 							apiversion: 1,
 							architectures: ['armv7', 'i386'],
@@ -504,8 +499,8 @@ describe('detectTitaniumModules', () => {
 				searchPaths: [join(__dirname, 'mocks', 'native-module-with-manifest')],
 			});
 			expect(modules).toEqual({
-				ios: {
-					'native-module-with-manifest': {
+				'native-module-with-manifest': {
+					ios: {
 						'2.0.1': {
 							apiversion: 2,
 							architectures: ['armv7', 'arm64', 'i386', 'x86_64'],
@@ -540,8 +535,8 @@ describe('detectTitaniumModules', () => {
 				searchPaths: [join(__dirname, 'mocks', 'native-module-with-platform-subdir')],
 			});
 			expect(modules).toEqual({
-				ios: {
-					'native-module': {
+				'native-module': {
+					ios: {
 						'2.0.1': {
 							apiversion: undefined,
 							architectures: undefined,
@@ -609,8 +604,8 @@ describe('detectTitaniumModules', () => {
 
 				const { modules } = await detectTiModules();
 				expect(modules).toEqual({
-					android: {
-						'ti.map': {
+					'ti.map': {
+						android: {
 							'3.1.0': {
 								apiversion: 2,
 								architectures: ['arm64-v8a', 'armeabi-v7a', 'x86'],
@@ -628,8 +623,8 @@ describe('detectTitaniumModules', () => {
 							},
 						},
 					},
-					ios: {
-						'ti.ambiguous': {
+					'ti.ambiguous': {
+						ios: {
 							'1.0': {
 								apiversion: undefined,
 								architectures: undefined,
@@ -647,7 +642,9 @@ describe('detectTitaniumModules', () => {
 								version: '1.0',
 							},
 						},
-						'ti.dummy': {
+					},
+					'ti.dummy': {
+						ios: {
 							'1.2.3': {
 								apiversion: undefined,
 								architectures: undefined,
@@ -672,7 +669,7 @@ describe('detectTitaniumModules', () => {
 		});
 	});
 
-	describe.only('search', () => {
+	describe('search', () => {
 		it('should error if modules is invalid', async () => {
 			const registry = new TiModuleRegistry();
 			await expect(registry.search({ modules: undefined as any })).rejects.toThrow(
@@ -680,6 +677,24 @@ describe('detectTitaniumModules', () => {
 			);
 			await expect(registry.search({ modules: 'foo' as any })).rejects.toThrow(
 				'Expected modules to be an array'
+			);
+		});
+
+		it('should error if module has invalid version', async () => {
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module version="1.0.0">ti.map</module>
+	</modules>
+</ti:app>`)
+				.data();
+			data.modules[0].version = 'foo';
+
+			const registry = await detectTiModules();
+
+			await expect(registry.search({ modules: data.modules })).rejects.toThrow(
+				'Module "ti.map" has invalid version "foo"'
 			);
 		});
 
@@ -705,7 +720,7 @@ describe('detectTitaniumModules', () => {
 			);
 		});
 
-		it('should search for modules by module id and find conflicts', async () => {
+		it('should search for modules by module id and find conflicts with different platforms', async () => {
 			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
 			config.titanium.sdk.searchPaths[process.platform] = [];
 
@@ -713,7 +728,7 @@ describe('detectTitaniumModules', () => {
 				.parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
 	<modules>
-		<module>com.test.module</module>
+		<module>ti.map</module>
 	</modules>
 </ti:app>`)
 				.data();
@@ -724,7 +739,30 @@ describe('detectTitaniumModules', () => {
 				found: [],
 				missing: [],
 				incompatible: [],
-				conflict: [TestModuleAndroid, TestModuleCommonjs10, TestModuleCommonjs, TestModuleIos],
+				conflict: [TiMapAndroid, TiMapIos],
+			});
+		});
+
+		it('should search for modules by module id without version and choose latest', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module>cjs-module</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			// match module id only - same moduleid with different platforms (android, commonjs, ios) = conflict
+			expect(await registry.search({ modules: data.modules })).toEqual({
+				found: [CJSModule2],
+				missing: [],
+				incompatible: [],
+				conflict: [],
 			});
 		});
 
@@ -736,9 +774,8 @@ describe('detectTitaniumModules', () => {
 				.parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
 	<modules>
-		<module platform="android">com.test.module</module>
-		<module platform="commonjs">com.test.module</module>
-		<module platform="ios">com.test.module</module>
+		<module platform="android">ti.map</module>
+		<module platform="ios">ti.map</module>
 	</modules>
 </ti:app>`)
 				.data();
@@ -746,7 +783,30 @@ describe('detectTitaniumModules', () => {
 
 			// match module id, platform, and version
 			expect(await registry.search({ modules: data.modules, platform: ['android'] })).toEqual({
-				found: [TestModuleAndroid],
+				found: [TiMapAndroid],
+				missing: [],
+				incompatible: [],
+				conflict: [],
+			});
+		});
+
+		it('should search for modules by module id and multiple platforms', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="android,ios">ti.map</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			// match module id, platform, and version
+			expect(await registry.search({ modules: data.modules, platform: ['android'] })).toEqual({
+				found: [TiMapAndroid],
 				missing: [],
 				incompatible: [],
 				conflict: [],
@@ -761,21 +821,21 @@ describe('detectTitaniumModules', () => {
 				.parse(`<?xml version="1.0"?>
 <ti:app xmlns:ti="http://ti.tidev.io">
 	<modules>
-		<module platform="commonjs" version="1.0.0">com.test.module</module>
+		<module platform="commonjs" version="1.0.0">cjs-module</module>
 	</modules>
 </ti:app>`)
 				.data();
 			const registry = await detectTiModules();
 
 			expect(await registry.search({ modules: data.modules, platform: ['commonjs'] })).toEqual({
-				found: [TestModuleCommonjs],
+				found: [CJSModule1],
 				missing: [],
 				incompatible: [],
 				conflict: [],
 			});
 		});
 
-		it('should search modules by module id and multiple platforms', async () => {
+		it('should search modules by module id and array of multiple platforms', async () => {
 			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
 			config.titanium.sdk.searchPaths[process.platform] = [];
 
@@ -794,10 +854,209 @@ describe('detectTitaniumModules', () => {
 				await registry.search({
 					modules: data.modules,
 					platform: ['iphone', 'ios'],
-					sdkVersion: '10.0.0',
+					sdkVersion: '12.8.0',
 				})
 			).toEqual({
 				found: [TiMapIos],
+				missing: [],
+				incompatible: [],
+				conflict: [],
+			});
+		});
+
+		it('should search modules by module id and string of multiple platforms', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="android">ti.map</module>
+		<module platform="ios">ti.map</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			expect(
+				await registry.search({
+					modules: data.modules,
+					platform: 'iphone,ios',
+					sdkVersion: '12.8.0',
+				})
+			).toEqual({
+				found: [TiMapIos],
+				missing: [],
+				incompatible: [],
+				conflict: [],
+			});
+		});
+
+		it('should search and find a missing module', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="android">ti.missing</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			// match module id, platform, and version
+			expect(await registry.search({ modules: data.modules, platform: ['android'] })).toEqual({
+				found: [],
+				missing: [
+					{
+						moduleid: 'ti.missing',
+						platform: 'android',
+						version: undefined,
+						deployType: undefined,
+					},
+				],
+				incompatible: [],
+				conflict: [],
+			});
+		});
+
+		it('should search for module with deploy type', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="android" deploy-type="test">ti.map</module>
+		<module platform="ios" deploy-type="production">ti.map</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			expect(await registry.search({ modules: data.modules, deployType: 'test' })).toEqual({
+				found: [TiMapAndroid],
+				missing: [],
+				incompatible: [],
+				conflict: [],
+			});
+		});
+
+		it('should search for module with no versions', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="commonjs">ti.map</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			expect(await registry.search({ modules: data.modules })).toEqual({
+				found: [],
+				missing: [
+					{
+						moduleid: 'ti.map',
+						platform: 'commonjs',
+						version: undefined,
+						deployType: undefined,
+					},
+				],
+				incompatible: [],
+				conflict: [],
+			});
+		});
+
+		it('should search for module with incompatible API version', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="android">ti.map</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			expect(await registry.search({ modules: data.modules, moduleAPIVersion: '2' })).toEqual({
+				found: [],
+				missing: [],
+				incompatible: [TiMapAndroid],
+				conflict: [],
+			});
+		});
+
+		it('should search for module with compatible API version', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="android">ti.map</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			expect(await registry.search({ modules: data.modules, moduleAPIVersion: '4' })).toEqual({
+				found: [TiMapAndroid],
+				missing: [],
+				incompatible: [],
+				conflict: [],
+			});
+		});
+
+		it('should search for module with incompatible SDK version', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="android">ti.map</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			expect(await registry.search({ modules: data.modules, sdkVersion: '10.0.0' })).toEqual({
+				found: [],
+				missing: [],
+				incompatible: [TiMapAndroid],
+				conflict: [],
+			});
+		});
+
+		it('should search for module with compatible SDK version', async () => {
+			config.titanium.sdk.installPath[process.platform] = join(__dirname, 'mocks', 'search-test');
+			config.titanium.sdk.searchPaths[process.platform] = [];
+
+			const data = new TiappXML()
+				.parse(`<?xml version="1.0"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+	<modules>
+		<module platform="android">ti.map</module>
+	</modules>
+</ti:app>`)
+				.data();
+			const registry = await detectTiModules();
+
+			expect(await registry.search({ modules: data.modules, sdkVersion: '12.8.0' })).toEqual({
+				found: [TiMapAndroid],
 				missing: [],
 				incompatible: [],
 				conflict: [],

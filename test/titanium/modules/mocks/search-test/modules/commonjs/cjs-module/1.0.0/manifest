@@ -3,14 +3,14 @@
 # during compilation, packaging, distribution, etc.
 #
 version: 1.0.0
-description: testModule
+description: CommonJS Module
 author: Your Name
 license: Specify your license
-copyright: Copyright (c) 2018 by Your Company
+copyright: Copyright (c) 2022 by Your Company
 
 # these should not be edited
-name: testModule
-moduleid: com.test.module
+name: CJS Module
+moduleid: cjs-module
 guid: dcaea77e-2860-42c1-a57b-319f81da10e0
 platform: commonjs
 minsdk: 7.2.0

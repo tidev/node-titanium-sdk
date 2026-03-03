@@ -8,7 +8,7 @@ architectures: armv7 arm64 i386 x86_64
 description: testModule
 author: Your Name
 license: Specify your license
-copyright: Copyright (c) 2018 by Your Company
+copyright: Copyright (c) 2022 by Your Company
 
 # these should not be edited
 name: testModule

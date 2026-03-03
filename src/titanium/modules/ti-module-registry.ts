@@ -121,7 +121,6 @@ export class TiModuleRegistry {
 			}
 
 			const byModuleId = this.modules[moduleid];
-			console.log('!!', moduleid, byModuleId);
 			if (!byModuleId) {
 				results.missing.push(subject);
 				continue;
@@ -134,6 +133,7 @@ export class TiModuleRegistry {
 					.map((p) => p.trim())
 					.filter(Boolean) || [];
 			if (options.deployType && !deployTypes.includes(options.deployType.toLowerCase())) {
+				log(`Deploy type "${options.deployType}" not found for "${moduleid}"`);
 				continue;
 			}
 
@@ -155,27 +155,21 @@ export class TiModuleRegistry {
 						: Object.keys(byModuleId);
 
 			if (platformsToSearch.length === 0) {
+				log(
+					`No platforms found for "${moduleid}" wanted="${wantedPlatforms.join(',')}" available="${modulePlatforms.join(',')}"`
+				);
 				continue;
 			}
 
 			const isLatest = wantedVersion.toLowerCase() === 'latest';
 
-			log(
-				`moduleid="${moduleid}" searching="${platformsToSearch.join(',')}" version="${wantedVersion}" isLatest=${isLatest}"`
-			);
-
 			for (const platform of platformsToSearch) {
 				const byVersion = byModuleId[platform];
 				if (!byVersion || typeof byVersion !== 'object' || Object.keys(byVersion).length === 0) {
-					log(`No versions found for "${moduleid}" on platform="${platform}"`);
+					log(`Found "${moduleid}", but no versions found on platform="${platform}"`);
 					results.missing.push(subject);
 					continue;
 				}
-
-				log(
-					`Found "${moduleid}" on platform="${platform}" versions="${Object.keys(byVersion).join(',')}" isLatest=${isLatest} wantedVersion=${wantedVersion}`
-				);
-				log(byVersion);
 
 				const ver = isLatest
 					? (Object.keys(byVersion)
@@ -184,39 +178,38 @@ export class TiModuleRegistry {
 					: wantedVersion;
 
 				const candidate = byVersion[ver];
-				log(`${moduleid} candidate="${candidate.version}" path="${candidate.path}"`);
 
 				// moduleAPIVersion and sdkVersion vs TiModule.apiversion and TiModule.minsdk
 				if (options.moduleAPIVersion !== undefined && candidate.apiversion !== undefined) {
 					const wantApi = Number.parseInt(String(options.moduleAPIVersion), 10);
 					const moduleApi = Number(candidate.apiversion);
 					if (!Number.isNaN(wantApi) && wantApi !== moduleApi) {
+						log(
+							`Found "${moduleid}", but requires API version "${wantApi}" (current=${moduleApi})`
+						);
 						results.incompatible.push(candidate);
 						continue;
 					}
 				}
 
+				const minsdk =
+					typeof candidate.minsdk === 'string'
+						? candidate.minsdk.replace(/^\.|[^\d.]|\.$/g, '')
+						: undefined;
 				if (
 					options.sdkVersion !== undefined &&
-					candidate.minsdk !== undefined &&
-					candidate.minsdk !== ''
+					minsdk !== undefined &&
+					version.isValid(minsdk) &&
+					version.gte(minsdk, options.sdkVersion)
 				) {
-					try {
-						log(
-							`${moduleid} candidate.minsdk="${candidate.minsdk}" options.sdkVersion="${options.sdkVersion}"`
-						);
-						if (version.gt(candidate.minsdk, options.sdkVersion)) {
-							results.incompatible.push(candidate);
-							continue;
-						}
-					} catch (err) {
-						log(`${moduleid} error="${err}"`);
-						// one of the versions is invalid?
-						results.incompatible.push(candidate);
-						continue;
-					}
+					log(
+						`Found "${moduleid}", but requires SDK version "${minsdk}" (current=${options.sdkVersion})`
+					);
+					results.incompatible.push(candidate);
+					continue;
 				}
 
+				log(`Found "${moduleid}" platform="${platform}" version="${ver}"`);
 				results.found.push(candidate);
 				const list = foundByModuleId.get(candidate.moduleid) ?? [];
 				list.push(candidate);

@@ -8,7 +8,7 @@ architectures: armv7 arm64 i386 x86_64
 description: External version of Map module
 author: Tester
 license: Apache Public License v2
-copyright: Copyright (c) 2018 by Your Company
+copyright: Copyright (c) 2022 by Your Company
 
 # these should not be edited
 name: map
