@@ -34,11 +34,16 @@ class TitaniumSDK {
 
 	private constructor(options: TitaniumSDKOptions) {
 		Object.assign(this, options);
+
+		if (typeof this.name !== 'string' || !this.name) {
+			throw new TypeError('Expected Titanium SDK name to be a valid string');
+		}
 	}
 
 	static async load(path: string): Promise<TitaniumSDK> {
 		const manifestFile = await readFile(join(path, 'manifest.json'), 'utf8');
 		const manifest = JSON.parse(manifestFile);
+
 		return new TitaniumSDK({
 			name: manifest.name,
 			manifest,
@@ -57,14 +62,23 @@ class TitaniumSDK {
 	}
 }
 
+type TitaniumSDKMap = Record<string, TitaniumSDK>;
+
 interface TiSDKs {
 	installPath: string;
 	latest: string | null;
 	sdkPaths: string[];
-	sdks: TitaniumSDK[];
+	sdks: TitaniumSDKMap;
 	issues: Issue[];
 }
 
+/**
+ * Detects installed Titanium SDKs.
+ *
+ * @param options - The options for the detection.
+ * @param options.searchPaths - The paths to search for Titanium SDKs.
+ * @returns The detected Titanium SDKs.
+ */
 export async function detectTitaniumSDKs(
 	options: {
 		searchPaths?: string[];
@@ -73,14 +87,15 @@ export async function detectTitaniumSDKs(
 	const searchPaths = await getSearchPaths(options);
 
 	return tailgate('titanium:tisdk:detect', async () => {
-		const sdks: TitaniumSDK[] = [];
+		const sdks: TitaniumSDKMap = {};
 
 		await Promise.all(
 			searchPaths.map(async (path) => {
 				// path could be an actual SDK or it could be a Titanium install
 				// directory with the mobilesdk/<os> subdir
 				try {
-					sdks.push(await TitaniumSDK.load(path));
+					const sdk = await TitaniumSDK.load(path);
+					sdks[sdk.name] = sdk;
 				} catch {
 					// Not an SDK, check subdirectories
 					if (basename(path) !== os && basename(dirname(path)) !== 'mobilesdk') {
@@ -89,7 +104,8 @@ export async function detectTitaniumSDKs(
 					if (isDir(path)) {
 						for (const dir of await readdir(path)) {
 							try {
-								sdks.push(await TitaniumSDK.load(join(path, dir)));
+								const sdk = await TitaniumSDK.load(join(path, dir));
+								sdks[sdk.name] = sdk;
 							} catch {
 								// Not an SDK
 							}
@@ -101,7 +117,7 @@ export async function detectTitaniumSDKs(
 
 		const issues: Issue[] = [];
 
-		if (!sdks.length) {
+		if (Object.keys(sdks).length === 0) {
 			issues.push(
 				new Issue('No Titanium SDKs found', {
 					id: 'TITANIUM_SDK_NOT_FOUND',
@@ -113,7 +129,7 @@ export async function detectTitaniumSDKs(
 
 		return {
 			installPath: config.titanium.sdk.installPath[process.platform],
-			latest: sdks.find((s) => /.GA$/.test(s.name))?.name || sdks[0]?.name || null,
+			latest: Object.keys(sdks).find((s) => /.GA$/.test(s)) || null,
 			sdkPaths: searchPaths,
 			sdks,
 			issues,
@@ -132,7 +148,9 @@ function getSearchPaths(options: { searchPaths?: string[] }) {
 		}
 	}
 
-	searchPaths.add(expand(config.titanium.sdk.installPath[process.platform]));
+	if (config.titanium.sdk.installPath[process.platform]) {
+		searchPaths.add(expand(config.titanium.sdk.installPath[process.platform]));
+	}
 
 	const configPaths = config.titanium.sdk.searchPaths[process.platform];
 	if (Array.isArray(configPaths)) {

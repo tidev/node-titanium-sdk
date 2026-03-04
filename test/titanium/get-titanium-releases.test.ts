@@ -31,4 +31,16 @@ describe('getTitaniumReleases()', () => {
 			type: 'ga',
 		});
 	});
+
+	it('should return the list of releases including unstable builds', async () => {
+		const releases = await getTitaniumReleases(true);
+		expect(releases).toBeDefined();
+		const unstableReleases = releases.filter((release) => release.type !== 'ga');
+		for (const unstableRelease of unstableReleases) {
+			expect(unstableRelease.type).toBeOneOf(['beta', 'rc', 'nightly']);
+			expect(unstableRelease.assets.some((asset) => asset.os === 'linux')).toBe(true);
+			expect(unstableRelease.assets.some((asset) => asset.os === 'osx')).toBe(true);
+			expect(unstableRelease.assets.some((asset) => asset.os === 'win32')).toBe(true);
+		}
+	});
 });
