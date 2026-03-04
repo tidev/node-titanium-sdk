@@ -166,10 +166,11 @@ describe('JDK', function () {
 				const dir = path.join(__dirname, 'mocks', 'mock-jdk');
 				process.env.MOCK_STDOUT = 'javac 9';
 				process.env.JAVA_HOME = dir;
-				const { home, jdks } = await detectJDKs();
+				const { defaultVersion, home, jdks } = await detectJDKs();
 				expect(home).toBe(dir);
+				expect(defaultVersion).toBe('9');
 
-				const jdk = jdks.find((jdk) => jdk.path === dir);
+				const jdk = jdks['9'];
 				expect(jdk).toBeDefined();
 				expect(jdk!.path).toBe(dir);
 				expect(jdk!.version).toBe('9');
@@ -202,7 +203,7 @@ describe('JDK', function () {
 			delete process.env.JAVA_HOME;
 			config.jdk.searchPaths[process.platform] = ['does_not_exist'];
 			const { jdks, issues } = await detectJDKs();
-			expect(jdks).toEqual([]);
+			expect(jdks).toEqual({});
 			expect(issues.length).toBe(1);
 			expect(issues[0].id).toBe('JDK_NOT_FOUND');
 			expect(issues[0].type).toBe('error');
@@ -214,7 +215,7 @@ describe('JDK', function () {
 			const { jdks, issues } = await detectJDKs({
 				searchPaths: [path.join(__dirname, 'mocks', 'incomplete-jdk')],
 			});
-			expect(jdks).toEqual([]);
+			expect(jdks).toEqual({});
 			expect(issues.length).toBe(1);
 			expect(issues[0].id).toBe('JDK_NOT_FOUND');
 			expect(issues[0].type).toBe('error');
@@ -227,10 +228,8 @@ describe('JDK', function () {
 			delete process.env.JAVA_HOME;
 			const { jdks, issues } = await detectJDKs();
 
-			expect(jdks).toHaveLength(1);
-			const jdk = jdks[0];
+			const jdk = jdks['25'];
 			expect(jdk).toBeDefined();
-
 			expect(jdk.path).toBe(dir);
 			expect(jdk.version).toBe('25');
 			expect(jdk.java).toBe(path.join(dir, 'bin', `java${exe}`));

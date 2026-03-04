@@ -2,6 +2,7 @@ import { config } from '../config.js';
 import { exists, expand, isDir } from '../util/index.js';
 import { Issue } from '../util/issue.js';
 import { tailgate } from '../util/tailgate.js';
+import * as version from '../util/version.js';
 import { JDK } from './jdk.js';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -10,9 +11,12 @@ import which from 'which';
 
 const { warn } = snooplogg('jdk:detect');
 
+type JDKMap = Record<string, JDK>;
+
 interface JDKs {
+	defaultVersion: string | undefined;
 	home: string | null;
-	jdks: JDK[];
+	jdks: JDKMap;
 	issues: Issue[];
 }
 
@@ -25,9 +29,10 @@ export async function detectJDKs(
 	const { home, searchPaths } = await getSearchPaths(options);
 
 	return tailgate('jdk:detect', async () => {
-		const jdks: JDK[] = [];
+		const jdks: JDKMap = {};
 		const jdkPaths = new Set<string>();
 		const issues: Issue[] = [];
+		let defaultVersion: string | undefined = undefined;
 
 		async function processPath(
 			path: string,
@@ -66,7 +71,10 @@ export async function detectJDKs(
 		for (const { jdk, subdirs: s } of level0Results) {
 			if (jdk && !jdkPaths.has(jdk.path)) {
 				jdkPaths.add(jdk.path);
-				jdks.push(jdk);
+				jdks[jdk.version] = jdk;
+				if (jdk.path === home) {
+					defaultVersion = jdk.version;
+				}
 			}
 			subdirs.push(...s);
 		}
@@ -75,12 +83,15 @@ export async function detectJDKs(
 		for (const { jdk } of level1Results) {
 			if (jdk && !jdkPaths.has(jdk.path)) {
 				jdkPaths.add(jdk.path);
-				jdks.push(jdk);
+				jdks[jdk.version] = jdk;
+				if (jdk.path === home) {
+					defaultVersion = jdk.version;
+				}
 			}
 		}
 
 		if (process.platform === 'win32') {
-			for (const jdk of jdks) {
+			for (const jdk of Object.values(jdks)) {
 				if (jdk.path.includes('&')) {
 					issues.push(
 						new Issue(`JDK path contains ampersand: ${jdk.path}`, {
@@ -93,7 +104,7 @@ export async function detectJDKs(
 			}
 		}
 
-		if (!jdks.length) {
+		if (Object.keys(jdks).length === 0) {
 			issues.push(
 				new Issue('No JDKs found', {
 					id: 'JDK_NOT_FOUND',
@@ -106,7 +117,12 @@ or  __https://jdk.java.net/arpathschive/__.`,
 			);
 		}
 
+		if (defaultVersion === undefined) {
+			defaultVersion = Object.keys(jdks).sort(version.compare)[-1];
+		}
+
 		return {
+			defaultVersion,
 			home,
 			jdks,
 			issues,
