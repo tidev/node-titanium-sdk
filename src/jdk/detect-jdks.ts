@@ -117,8 +117,15 @@ or  __https://jdk.java.net/arpathschive/__.`,
 			);
 		}
 
-		if (defaultVersion === undefined) {
-			defaultVersion = Object.keys(jdks).sort(version.compare)[-1];
+		if (Object.keys(jdks).length > 1 && defaultVersion === undefined) {
+			issues.push(
+				new Issue('No default JDK set', {
+					id: 'JDK_DEFAULT_NOT_FOUND',
+					type: 'warning',
+					details: `Multiple JDKs found, but no default JDK set. To set a default JDK, set the
+__JAVA_HOME__ environment variable to the preferred JDK\'s path.`,
+				})
+			);
 		}
 
 		return {

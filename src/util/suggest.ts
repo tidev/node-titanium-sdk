@@ -1,4 +1,4 @@
-export function recommend(subject: string, choices: string[]) {
+export function suggest(subject: string, choices: string[]) {
 	const bestMatch = choices.reduce(
 		(best, choice) => {
 			const score = levenshtein(subject, choice);
