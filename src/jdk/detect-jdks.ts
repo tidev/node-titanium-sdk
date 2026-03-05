@@ -2,7 +2,6 @@ import { config } from '../config.js';
 import { exists, expand, isDir } from '../util/index.js';
 import { Issue } from '../util/issue.js';
 import { tailgate } from '../util/tailgate.js';
-import * as version from '../util/version.js';
 import { JDK } from './jdk.js';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -123,7 +122,7 @@ or  __https://jdk.java.net/arpathschive/__.`,
 					id: 'JDK_DEFAULT_NOT_FOUND',
 					type: 'warning',
 					details: `Multiple JDKs found, but no default JDK set. To set a default JDK, set the
-__JAVA_HOME__ environment variable to the preferred JDK\'s path.`,
+__JAVA_HOME__ environment variable to the preferred JDK's path.`,
 				})
 			);
 		}
