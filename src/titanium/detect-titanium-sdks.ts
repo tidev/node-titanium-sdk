@@ -1,5 +1,5 @@
 import { config } from '../config.js';
-import { expand, isDir, tailgate } from '../util/index.js';
+import { expand, isDir, tailgate, version } from '../util/index.js';
 import { Issue } from '../util/issue.js';
 import { readdir, readFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
@@ -127,9 +127,15 @@ export async function detectTitaniumSDKs(
 			);
 		}
 
+		const latest =
+			Object.keys(sdks)
+				.filter((s) => /.GA$/.test(s))
+				.sort(version.compare)
+				.at(-1) || null;
+
 		return {
 			installPath: config.titanium.sdk.installPath[process.platform],
-			latest: Object.keys(sdks).find((s) => /.GA$/.test(s)) || null,
+			latest,
 			sdkPaths: searchPaths,
 			sdks,
 			issues,
