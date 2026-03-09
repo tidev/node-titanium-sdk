@@ -108,10 +108,7 @@ export async function detectJDKs(
 				new Issue('No JDKs found', {
 					id: 'JDK_NOT_FOUND',
 					type: 'error',
-					details: `JDK (Java Development Kit) not installed.
-If you already have installed the JDK, verify your __JAVA_HOME__ environment variable is correctly set.
-The JDK is required for Titanium and must be manually downloaded and installed from __https://www.oracle.com/java/technologies/downloads/__
-or  __https://jdk.java.net/arpathschive/__.`,
+					details: `JDK (Java Development Kit) not found. The JDK is required for Titanium and must be manually downloaded and installed from __https://openjdk.org/__. If you already have installed the JDK, verify your __JAVA_HOME__ environment variable is correctly set.`,
 				})
 			);
 		}
