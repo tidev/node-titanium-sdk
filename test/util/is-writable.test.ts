@@ -1,9 +1,24 @@
 import { isWritable, isWritableSync } from '../../src/util/is-writable.js';
+import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { chmod, mkdir, rm, writeFile } from 'node:fs/promises';
+import { chmodSync, mkdirSync } from 'node:fs';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+function makeReadOnly(path: string): () => void {
+	if (process.platform === 'win32') {
+		// icacls can deny write via ACLs; chmod 0o444 doesn't prevent directory
+		// writes on Windows (read-only attribute behaves differently)
+		execFileSync('icacls', [path, '/deny', 'Everyone:(OI)(CI)(W)'], { windowsHide: true });
+		return () => {
+			execFileSync('icacls', [path, '/remove:d', 'Everyone'], { windowsHide: true });
+		};
+	}
+	chmodSync(path, 0o444);
+	return () => chmodSync(path, 0o755);
+}
 
 let tmpDir: string;
 beforeEach(async () => {
@@ -33,13 +48,13 @@ describe('isWritable()', () => {
 	it('should return false if the path is not writable', async () => {
 		const readOnlyDir = join(tmpDir, 'readonly');
 		await mkdir(readOnlyDir, { recursive: true });
+		const restore = makeReadOnly(readOnlyDir);
 		try {
-			await chmod(readOnlyDir, 0o444);
 			await expect(isWritable(readOnlyDir)).resolves.toBe(false);
 			await expect(isWritable(join(readOnlyDir, 'test.txt'))).resolves.toBe(false);
 			await expect(isWritable(join(readOnlyDir, 'dir', 'test.txt'))).resolves.toBe(false);
 		} finally {
-			await chmod(readOnlyDir, 0o755);
+			restore();
 		}
 	});
 });
@@ -57,16 +72,16 @@ describe('isWritableSync()', () => {
 		expect(isWritableSync(join(tmpDir, 'dir'))).toBe(true);
 	});
 
-	it('should return false if the path is not writable', async () => {
+	it('should return false if the path is not writable', () => {
 		const readOnlyDir = join(tmpDir, 'readonly');
-		await mkdir(readOnlyDir, { recursive: true });
+		mkdirSync(readOnlyDir, { recursive: true });
+		const restore = makeReadOnly(readOnlyDir);
 		try {
-			await chmod(readOnlyDir, 0o444);
 			expect(isWritableSync(readOnlyDir)).toBe(false);
 			expect(isWritableSync(join(readOnlyDir, 'test.txt'))).toBe(false);
 			expect(isWritableSync(join(readOnlyDir, 'dir', 'test.txt'))).toBe(false);
 		} finally {
-			await chmod(readOnlyDir, 0o755);
+			restore();
 		}
 	});
 });
