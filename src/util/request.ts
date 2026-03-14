@@ -10,6 +10,12 @@ type RequestOptions<TOpaque = null> = { dispatcher?: Dispatcher } & Omit<
 > &
 	Partial<Pick<Dispatcher.RequestOptions, 'method'>> & { responseType?: 'json' };
 
+/**
+ * Makes a request to the given URL.
+ * @param url - The URL to request.
+ * @param opts - The options for the request.
+ * @returns The response data.
+ */
 export async function request<TOpaque = null>(
 	url: string,
 	opts: RequestOptions<TOpaque> = {}

@@ -4,6 +4,7 @@ export * from './expand.js';
 export * from './extract-zip.js';
 export * from './is-dir.js';
 export * from './is-file.js';
+export * from './is-writable.js';
 export * as owner from './owner.js';
 export * from './plist.js';
 export * from './png-info.js';
