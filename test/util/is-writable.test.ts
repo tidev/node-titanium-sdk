@@ -21,12 +21,13 @@ describe('isWritable()', () => {
 	it('should return true if the path is writable', async () => {
 		await expect(isWritable(tmpDir)).resolves.toBe(true);
 		await expect(isWritable(join(tmpDir, 'test.txt'))).resolves.toBe(true);
+		await expect(isWritable(join(tmpDir, 'dir'))).resolves.toBe(true);
 		await expect(isWritable(join(tmpDir, 'dir', 'test.txt'))).resolves.toBe(true);
 
 		await writeFile(join(tmpDir, 'test.txt'), 'test');
 		await expect(isWritable(join(tmpDir, 'test.txt'))).resolves.toBe(true);
 		await mkdir(join(tmpDir, 'dir'), { recursive: true });
-		await expect(isWritable(join(tmpDir, 'dir', 'test.txt'))).resolves.toBe(true);
+		await expect(isWritable(join(tmpDir, 'dir'))).resolves.toBe(true);
 	});
 
 	it.skipIf(process.getuid?.() === 0)(
@@ -49,12 +50,13 @@ describe('isWritableSync()', () => {
 	it('should return true if the path is writable', async () => {
 		expect(isWritableSync(tmpDir)).toBe(true);
 		expect(isWritableSync(join(tmpDir, 'test.txt'))).toBe(true);
+		expect(isWritableSync(join(tmpDir, 'dir'))).toBe(true);
 		expect(isWritableSync(join(tmpDir, 'dir', 'test.txt'))).toBe(true);
 
 		await writeFile(join(tmpDir, 'test.txt'), 'test');
 		expect(isWritableSync(join(tmpDir, 'test.txt'))).toBe(true);
 		await mkdir(join(tmpDir, 'dir'), { recursive: true });
-		expect(isWritableSync(join(tmpDir, 'dir', 'test.txt'))).toBe(true);
+		expect(isWritableSync(join(tmpDir, 'dir'))).toBe(true);
 	});
 
 	it.skipIf(process.getuid?.() === 0)('should return false if the path is not writable', () => {
