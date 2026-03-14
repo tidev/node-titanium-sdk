@@ -1,6 +1,4 @@
-# Titanium
-
-## `tiapp.xml`
+# `tiapp.xml`
 
 Supported tags:
 
