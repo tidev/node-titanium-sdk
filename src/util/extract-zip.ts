@@ -1,6 +1,6 @@
-import { exists } from './exists';
-import { expand } from './expand';
-import { isFile } from './is-file';
+import { exists } from './exists.js';
+import { expand } from './expand.js';
+import { isFile } from './is-file.js';
 import fs from 'node:fs';
 import { mkdir, rm, symlink } from 'node:fs/promises';
 import { dirname } from 'node:path';
