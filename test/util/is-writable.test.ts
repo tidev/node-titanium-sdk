@@ -1,24 +1,9 @@
 import { isWritable, isWritableSync } from '../../src/util/is-writable.js';
-import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { chmodSync, mkdirSync } from 'node:fs';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-
-function makeReadOnly(path: string): () => void {
-	if (process.platform === 'win32') {
-		// icacls can deny write via ACLs; chmod 0o444 doesn't prevent directory
-		// writes on Windows (read-only attribute behaves differently)
-		execFileSync('icacls', [path, '/deny', 'Everyone:(OI)(CI)(W)'], { windowsHide: true });
-		return () => {
-			execFileSync('icacls', [path, '/remove:d', 'Everyone'], { windowsHide: true });
-		};
-	}
-	chmodSync(path, 0o444);
-	return () => chmodSync(path, 0o755);
-}
 
 let tmpDir: string;
 beforeEach(async () => {
@@ -45,18 +30,21 @@ describe('isWritable()', () => {
 		await expect(isWritable(join(tmpDir, 'dir'))).resolves.toBe(true);
 	});
 
-	it('should return false if the path is not writable', async () => {
-		const readOnlyDir = join(tmpDir, 'readonly');
-		await mkdir(readOnlyDir, { recursive: true });
-		const restore = makeReadOnly(readOnlyDir);
-		try {
-			await expect(isWritable(readOnlyDir)).resolves.toBe(false);
-			await expect(isWritable(join(readOnlyDir, 'test.txt'))).resolves.toBe(false);
-			await expect(isWritable(join(readOnlyDir, 'dir', 'test.txt'))).resolves.toBe(false);
-		} finally {
-			restore();
+	it.skipIf(process.getuid?.() === 0)(
+		'should return false if the path is not writable',
+		async () => {
+			if (process.platform === 'darwin' || process.platform === 'linux') {
+				await chmod(tmpDir, 0o444);
+				await expect(isWritable(join(tmpDir, 'test.txt'))).resolves.toBe(false);
+				await expect(isWritable(join(tmpDir, 'dir', 'test.txt'))).resolves.toBe(false);
+			} else if (process.platform === 'win32') {
+				const system32 = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'config');
+				await expect(isWritable(system32)).resolves.toBe(false);
+				await expect(isWritable(join(system32, 'test.txt'))).resolves.toBe(false);
+				await expect(isWritable(join(system32, 'dir', 'test.txt'))).resolves.toBe(false);
+			}
 		}
-	});
+	);
 });
 
 describe('isWritableSync()', () => {
@@ -72,16 +60,19 @@ describe('isWritableSync()', () => {
 		expect(isWritableSync(join(tmpDir, 'dir'))).toBe(true);
 	});
 
-	it('should return false if the path is not writable', () => {
-		const readOnlyDir = join(tmpDir, 'readonly');
-		mkdirSync(readOnlyDir, { recursive: true });
-		const restore = makeReadOnly(readOnlyDir);
-		try {
-			expect(isWritableSync(readOnlyDir)).toBe(false);
-			expect(isWritableSync(join(readOnlyDir, 'test.txt'))).toBe(false);
-			expect(isWritableSync(join(readOnlyDir, 'dir', 'test.txt'))).toBe(false);
-		} finally {
-			restore();
+	it.skipIf(process.getuid?.() === 0)(
+		'should return false if the path is not writable',
+		async () => {
+			if (process.platform === 'darwin' || process.platform === 'linux') {
+				await chmod(tmpDir, 0o444);
+				await expect(isWritable(join(tmpDir, 'test.txt'))).resolves.toBe(false);
+				await expect(isWritable(join(tmpDir, 'dir', 'test.txt'))).resolves.toBe(false);
+			} else if (process.platform === 'win32') {
+				const system32 = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'config');
+				expect(isWritableSync(system32)).toBe(false);
+				expect(isWritableSync(join(system32, 'test.txt'))).toBe(false);
+				expect(isWritableSync(join(system32, 'dir', 'test.txt'))).toBe(false);
+			}
 		}
-	});
+	);
 });
