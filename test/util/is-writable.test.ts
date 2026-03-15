@@ -38,10 +38,10 @@ describe('isWritable()', () => {
 				await expect(isWritable(join(tmpDir, 'test.txt'))).resolves.toBe(false);
 				await expect(isWritable(join(tmpDir, 'dir', 'test.txt'))).resolves.toBe(false);
 			} else if (process.platform === 'win32') {
-				const system32 = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'config');
-				await expect(isWritable(system32)).resolves.toBe(false);
-				await expect(isWritable(join(system32, 'test.txt'))).resolves.toBe(false);
-				await expect(isWritable(join(system32, 'dir', 'test.txt'))).resolves.toBe(false);
+				const winSxS = join(process.env.SystemRoot ?? 'C:\\Windows', 'WinSxS');
+				await expect(isWritable(winSxS)).resolves.toBe(false);
+				await expect(isWritable(join(winSxS, 'test.txt'))).resolves.toBe(false);
+				await expect(isWritable(join(winSxS, 'dir', 'test.txt'))).resolves.toBe(false);
 			}
 		}
 	);
@@ -68,10 +68,10 @@ describe('isWritableSync()', () => {
 				await expect(isWritable(join(tmpDir, 'test.txt'))).resolves.toBe(false);
 				await expect(isWritable(join(tmpDir, 'dir', 'test.txt'))).resolves.toBe(false);
 			} else if (process.platform === 'win32') {
-				const system32 = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'config');
-				expect(isWritableSync(system32)).toBe(false);
-				expect(isWritableSync(join(system32, 'test.txt'))).toBe(false);
-				expect(isWritableSync(join(system32, 'dir', 'test.txt'))).toBe(false);
+				const winSxS = join(process.env.SystemRoot ?? 'C:\\Windows', 'WinSxS');
+				expect(isWritableSync(winSxS)).toBe(false);
+				expect(isWritableSync(join(winSxS, 'test.txt'))).toBe(false);
+				expect(isWritableSync(join(winSxS, 'dir', 'test.txt'))).toBe(false);
 			}
 		}
 	);
