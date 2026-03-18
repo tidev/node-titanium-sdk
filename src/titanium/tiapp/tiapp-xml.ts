@@ -1,4 +1,5 @@
 import { isFile } from '../../util/is-file.js';
+import { mergeDeep } from '../../util/merge-deep.js';
 import { tiappXmlToJson, applyTiappJsonToXml, validateTiappData } from './tiapp-transform.js';
 import { DOMParser, type Options } from '@xmldom/xmldom';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -61,6 +62,11 @@ export class TiappXML {
 		this.file ??= file;
 		const content = readFileSync(file, 'utf8');
 		return this.parse(content);
+	}
+
+	merge(data: Record<string, any>) {
+		this.apply(mergeDeep(this.data(), data));
+		return this;
 	}
 
 	parse(content: string) {

@@ -416,6 +416,25 @@ describe('TiappXML', () => {
 		});
 	});
 
+	describe('Merge', () => {
+		it('should merge an object into the tiapp', () => {
+			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
+			tiapp.merge({ id: 'com.example.app' });
+			expect(tiapp.data().id).toBe('com.example.app');
+			expect(tiapp.toString()).toContain('<id>com.example.app</id>');
+		});
+
+		it('should merge an object into the tiapp and overwrite the existing properties', () => {
+			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
+			tiapp.merge({ id: 'com.example.app', name: 'new name' });
+			expect(tiapp.data().id).toBe('com.example.app');
+			expect(tiapp.data().name).toBe('new name');
+			const str = tiapp.toString();
+			expect(str).toContain('<id>com.example.app</id>');
+			expect(str).toContain('<name>new name</name>');
+		});
+	});
+
 	describe('toString()', () => {
 		it('should output XML format', () => {
 			const tiapp = new TiappXML().load(join(fixturesDir, 'tiapp1.xml'));
