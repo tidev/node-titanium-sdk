@@ -13,6 +13,30 @@ describe('createTempDirName', () => {
 	it('should create a temporary directory name', () => {
 		expect(createTempDirName()).toMatch(/^[0-9a-f]{32}$/);
 	});
+
+	it('should create a temporary directory name with a name', () => {
+		expect(createTempDirName({ name: 'test' })).toBe('test');
+	});
+
+	it('should create a temporary directory name with a prefix', () => {
+		expect(createTempDirName({ prefix: 'prefix' })).toMatch(/^prefix-[0-9a-f]{32}$/);
+	});
+
+	it('should create a temporary directory name with a suffix', () => {
+		expect(createTempDirName({ suffix: 'suffix' })).toMatch(/^[0-9a-f]{32}-suffix$/);
+	});
+
+	it('should create a temporary directory name with a prefix and suffix', () => {
+		expect(createTempDirName({ prefix: 'prefix', suffix: 'suffix' })).toMatch(
+			/^prefix-[0-9a-f]{32}-suffix$/
+		);
+	});
+
+	it('should create a temporary directory name with a name, prefix, and suffix', () => {
+		expect(createTempDirName({ name: 'test', prefix: 'prefix', suffix: 'suffix' })).toBe(
+			'prefix-test-suffix'
+		);
+	});
 });
 
 describe('createTempDirPath', () => {
@@ -22,22 +46,46 @@ describe('createTempDirPath', () => {
 		expect(basename(path)).toMatch(/^[0-9a-f]{32}$/);
 	});
 
-	it('should create a temporary directory path with a prefix', () => {
-		const path = createTempDirPath({ prefix: 'test' });
+	it('should create a temporary directory path with a name', () => {
+		const path = createTempDirPath({ name: 'test' });
 		expect(isAbsolute(path)).toBe(true);
-		expect(basename(path)).toMatch(/^test-[0-9a-f]{32}$/);
+		expect(basename(path)).toBe('test');
+	});
+
+	it('should create a temporary directory path with a prefix', () => {
+		const path = createTempDirPath({ prefix: 'prefix' });
+		expect(isAbsolute(path)).toBe(true);
+		expect(basename(path)).toMatch(/^prefix-[0-9a-f]{32}$/);
+	});
+
+	it('should create a temporary directory path with a name and prefix', () => {
+		const path = createTempDirPath({ name: 'test', prefix: 'prefix' });
+		expect(isAbsolute(path)).toBe(true);
+		expect(basename(path)).toBe('prefix-test');
 	});
 
 	it('should create a temporary directory path with a suffix', () => {
-		const path = createTempDirPath({ suffix: 'test' });
+		const path = createTempDirPath({ suffix: 'suffix' });
 		expect(isAbsolute(path)).toBe(true);
-		expect(basename(path)).toMatch(/^[0-9a-f]{32}-test$/);
+		expect(basename(path)).toMatch(/^[0-9a-f]{32}-suffix$/);
+	});
+
+	it('should create a temporary directory path with a name and suffix', () => {
+		const path = createTempDirPath({ name: 'test', suffix: 'suffix' });
+		expect(isAbsolute(path)).toBe(true);
+		expect(basename(path)).toBe('test-suffix');
 	});
 
 	it('should create a temporary directory path with a prefix and suffix', () => {
-		const path = createTempDirPath({ prefix: 'test', suffix: 'test' });
+		const path = createTempDirPath({ prefix: 'prefix', suffix: 'suffix' });
 		expect(isAbsolute(path)).toBe(true);
-		expect(basename(path)).toMatch(/^test-[0-9a-f]{32}-test$/);
+		expect(basename(path)).toMatch(/^prefix-[0-9a-f]{32}-suffix$/);
+	});
+
+	it('should create a temporary directory path with a name, prefix, and suffix', () => {
+		const path = createTempDirPath({ name: 'test', prefix: 'prefix', suffix: 'suffix' });
+		expect(isAbsolute(path)).toBe(true);
+		expect(basename(path)).toBe('prefix-test-suffix');
 	});
 });
 
@@ -57,22 +105,40 @@ describe('createTempDir', () => {
 		expect(basename(tmpDir)).toMatch(/^[0-9a-f]{32}$/);
 	});
 
-	it('should create a temporary directory with a prefix', async () => {
-		tmpDir = await createTempDir({ prefix: 'test' });
+	it('should create a temporary directory with a name', async () => {
+		tmpDir = await createTempDir({ name: 'test' });
 		expect(isDir(tmpDir)).toBe(true);
-		expect(basename(tmpDir)).toMatch(/^test-[0-9a-f]{32}$/);
+		expect(basename(tmpDir)).toBe('test');
+	});
+
+	it('should create a temporary directory with a prefix', async () => {
+		tmpDir = await createTempDir({ prefix: 'prefix' });
+		expect(isDir(tmpDir)).toBe(true);
+		expect(basename(tmpDir)).toMatch(/^prefix-[0-9a-f]{32}$/);
+	});
+
+	it('should create a temporary directory with a name and prefix', async () => {
+		tmpDir = await createTempDir({ name: 'test', prefix: 'prefix' });
+		expect(isDir(tmpDir)).toBe(true);
+		expect(basename(tmpDir)).toBe('prefix-test');
 	});
 
 	it('should create a temporary directory with a suffix', async () => {
-		tmpDir = await createTempDir({ suffix: 'test' });
+		tmpDir = await createTempDir({ suffix: 'suffix' });
 		expect(isDir(tmpDir)).toBe(true);
-		expect(basename(tmpDir)).toMatch(/^[0-9a-f]{32}-test$/);
+		expect(basename(tmpDir)).toMatch(/^[0-9a-f]{32}-suffix$/);
 	});
 
-	it('should create a temporary directory with a prefix and suffix', async () => {
-		tmpDir = await createTempDir({ prefix: 'test', suffix: 'test' });
+	it('should create a temporary directory with a name and suffix', async () => {
+		tmpDir = await createTempDir({ name: 'test', suffix: 'suffix' });
 		expect(isDir(tmpDir)).toBe(true);
-		expect(basename(tmpDir)).toMatch(/^test-[0-9a-f]{32}-test$/);
+		expect(basename(tmpDir)).toBe('test-suffix');
+	});
+
+	it('should create a temporary directory with a name and prefix and suffix', async () => {
+		tmpDir = await createTempDir({ name: 'test', prefix: 'prefix', suffix: 'suffix' });
+		expect(isDir(tmpDir)).toBe(true);
+		expect(basename(tmpDir)).toBe('prefix-test-suffix');
 	});
 });
 
@@ -90,21 +156,45 @@ describe('createTempDirSync', () => {
 		expect(basename(tmpDir)).toMatch(/^[0-9a-f]{32}$/);
 	});
 
-	it('should create a temporary directory with a prefix synchronously', () => {
-		tmpDir = createTempDirSync({ prefix: 'test' });
+	it('should create a temporary directory with a name synchronously', () => {
+		tmpDir = createTempDirSync({ name: 'test' });
 		expect(isDir(tmpDir)).toBe(true);
-		expect(basename(tmpDir)).toMatch(/^test-[0-9a-f]{32}$/);
+		expect(basename(tmpDir)).toBe('test');
+	});
+
+	it('should create a temporary directory with a prefix synchronously', () => {
+		tmpDir = createTempDirSync({ prefix: 'prefix' });
+		expect(isDir(tmpDir)).toBe(true);
+		expect(basename(tmpDir)).toMatch(/^prefix-[0-9a-f]{32}$/);
+	});
+
+	it('should create a temporary directory with a name and prefix synchronously', () => {
+		tmpDir = createTempDirSync({ name: 'test', prefix: 'prefix' });
+		expect(isDir(tmpDir)).toBe(true);
+		expect(basename(tmpDir)).toBe('prefix-test');
 	});
 
 	it('should create a temporary directory with a suffix synchronously', () => {
-		tmpDir = createTempDirSync({ suffix: 'test' });
+		tmpDir = createTempDirSync({ suffix: 'suffix' });
 		expect(isDir(tmpDir)).toBe(true);
-		expect(basename(tmpDir)).toMatch(/^[0-9a-f]{32}-test$/);
+		expect(basename(tmpDir)).toMatch(/^[0-9a-f]{32}-suffix$/);
+	});
+
+	it('should create a temporary directory with a name and suffix synchronously', () => {
+		tmpDir = createTempDirSync({ name: 'test', suffix: 'suffix' });
+		expect(isDir(tmpDir)).toBe(true);
+		expect(basename(tmpDir)).toBe('test-suffix');
 	});
 
 	it('should create a temporary directory with a prefix and suffix synchronously', () => {
-		tmpDir = createTempDirSync({ prefix: 'test', suffix: 'test' });
+		tmpDir = createTempDirSync({ prefix: 'prefix', suffix: 'suffix' });
 		expect(isDir(tmpDir)).toBe(true);
-		expect(basename(tmpDir)).toMatch(/^test-[0-9a-f]{32}-test$/);
+		expect(basename(tmpDir)).toMatch(/^prefix-[0-9a-f]{32}-suffix$/);
+	});
+
+	it('should create a temporary directory with a name, prefix, and suffix synchronously', () => {
+		tmpDir = createTempDirSync({ name: 'test', prefix: 'prefix', suffix: 'suffix' });
+		expect(isDir(tmpDir)).toBe(true);
+		expect(basename(tmpDir)).toBe('prefix-test-suffix');
 	});
 });

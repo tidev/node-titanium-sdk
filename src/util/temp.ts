@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 interface TempNameOptions {
+	name?: string;
 	prefix?: string;
 	suffix?: string;
 }
@@ -14,8 +15,8 @@ interface TempNameOptions {
  * @param options - The options for the temporary directory name.
  * @returns The name of the temporary directory.
  */
-export function createTempDirName({ prefix, suffix }: TempNameOptions = {}): string {
-	const name = randomBytes(16).toString('hex');
+export function createTempDirName({ name, prefix, suffix }: TempNameOptions = {}): string {
+	name = name ?? randomBytes(16).toString('hex');
 	return `${prefix ? `${prefix}-` : ''}${name}${suffix ? `-${suffix}` : ''}`;
 }
 
