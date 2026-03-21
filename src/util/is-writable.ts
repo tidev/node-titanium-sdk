@@ -1,4 +1,4 @@
-import { createTempDirName } from './temp.js';
+import { createTempName } from './temp.js';
 import { accessSync, constants, statSync, unlinkSync, writeFileSync, type Stats } from 'node:fs';
 import { access, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -18,7 +18,7 @@ export async function isWritable(path: string): Promise<boolean> {
 			return true;
 		} else if (stat.isDirectory()) {
 			// try writing a file
-			const tmpFile = join(path, createTempDirName('tmp'));
+			const tmpFile = join(path, createTempName({ prefix: 'tmp' }));
 			try {
 				await access(path, constants.W_OK);
 				await writeFile(tmpFile, '', 'utf-8');
@@ -47,7 +47,7 @@ export function isWritableSync(path: string): boolean {
 			return true;
 		} else if (stat.isDirectory()) {
 			// try writing a file
-			const tmpFile = join(path, createTempDirName('tmp'));
+			const tmpFile = join(path, createTempName({ prefix: 'tmp' }));
 			try {
 				accessSync(path, constants.W_OK);
 				writeFileSync(tmpFile, '', 'utf-8');

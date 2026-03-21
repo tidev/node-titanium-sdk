@@ -1,18 +1,12 @@
 import { isWritable, isWritableSync } from '../../src/util/is-writable.js';
-import { randomBytes } from 'node:crypto';
+import { createTempDir } from '../../src/util/temp.js';
 import { chmod, mkdir, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 let tmpDir: string;
 beforeEach(async () => {
-	tmpDir = join(
-		tmpdir(),
-		'node-titanium-sdk',
-		`is-writable-test-${randomBytes(8).toString('hex')}`
-	);
-	await mkdir(tmpDir, { recursive: true });
+	tmpDir = await createTempDir({ prefix: 'node-titanium-sdk' });
 });
 
 afterEach(() => rm(tmpDir, { force: true, recursive: true }));
