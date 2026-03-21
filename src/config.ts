@@ -229,6 +229,7 @@ export const defaultConfig: Config = {
 	},
 
 	titanium: {
+		downloadsDir: '~/.titanium/downloads',
 		sdk: {
 			downloadURLs: {
 				branches: 'https://downloads.titaniumsdk.com/registry/branches.json',

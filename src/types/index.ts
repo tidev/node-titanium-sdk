@@ -81,6 +81,7 @@ export interface Config {
 	};
 
 	titanium: {
+		downloadsDir: string;
 		sdk: {
 			downloadURLs: {
 				branches: string;
