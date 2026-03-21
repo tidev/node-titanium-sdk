@@ -1,5 +1,6 @@
 export * from './modules/index.js';
 export * from './detect-titanium-sdks.js';
+export * from './downloads-path.js';
 export * from './get-titanium-branch-builds.js';
 export * from './get-titanium-branches.js';
 export * from './get-titanium-releases.js';
