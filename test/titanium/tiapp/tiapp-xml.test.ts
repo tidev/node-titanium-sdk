@@ -549,7 +549,9 @@ describe('TiappXML', () => {
 
 		it('should error if file is not a valid XML file', () => {
 			const tiapp = new TiappXML();
-			expect(() => tiapp.load(join(fixturesDir, 'invalid.xml'))).toThrow('Invalid XML file');
+			expect(() => tiapp.load(join(fixturesDir, 'invalid.xml'))).toThrow(
+				'unclosed xml tag(s): ti:app'
+			);
 		});
 	});
 

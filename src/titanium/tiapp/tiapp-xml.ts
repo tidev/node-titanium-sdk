@@ -1,19 +1,9 @@
 import { isFile } from '../../util/is-file.js';
 import { mergeDeep } from '../../util/merge-deep.js';
 import { tiappXmlToJson, applyTiappJsonToXml, validateTiappData } from './tiapp-transform.js';
-import { DOMParser, type DOMParserOptions, type Document } from '@xmldom/xmldom';
+import { DOMParser, type Document } from '@xmldom/xmldom';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-
-declare module '@xmldom/xmldom' {
-	interface Options {
-		xmlns?: { [key: string]: string };
-	}
-}
-
-const defaultDOMParserArgs: DOMParserOptions = {
-	errorHandler: () => {},
-};
 
 /**
  * Factory function to create a TiappXML proxy
@@ -39,7 +29,7 @@ export class TiappXML {
 			this.load(file);
 		} else {
 			// Initialize with empty document
-			this.dom = new DOMParser(defaultDOMParserArgs).parseFromString(
+			this.dom = new DOMParser().parseFromString(
 				'<?xml version="1.0" encoding="UTF-8"?>\n<ti:app xmlns:ti="http://ti.tidev.io"></ti:app>',
 				'text/xml'
 			);
@@ -70,15 +60,7 @@ export class TiappXML {
 	}
 
 	parse(content: string) {
-		let errorMsg: string | undefined = undefined;
-		this.dom = new DOMParser({
-			errorHandler(err) {
-				errorMsg = err;
-			},
-		}).parseFromString(content, 'text/xml');
-		if (errorMsg) {
-			throw new Error(`Invalid XML file: ${errorMsg}`);
-		}
+		this.dom = new DOMParser().parseFromString(content, 'text/xml');
 		validateTiappData(tiappXmlToJson(this.dom));
 		return this;
 	}
