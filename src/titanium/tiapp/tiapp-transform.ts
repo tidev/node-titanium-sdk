@@ -1,7 +1,7 @@
 import { parsePlist, stringifyPlist } from '../../util/plist.js';
 import * as xml from '../../util/xml.js';
 import { TiappSchema, type Tiapp } from './tiapp-schema.js';
-import { DOMParser } from '@xmldom/xmldom';
+import { DOMParser, type Document, type Element, type Text } from '@xmldom/xmldom';
 
 export type TiappData = Record<string, unknown>;
 
@@ -26,7 +26,7 @@ export function toXmlTag(camelCase: string): string {
  */
 export function findElement(doc: Document, tagName: string, platform?: string): Element | null {
 	const root = doc.documentElement;
-	let child = root.firstChild;
+	let child = root?.firstChild;
 
 	while (child) {
 		if (child.nodeType === xml.ELEMENT_NODE) {
@@ -53,7 +53,7 @@ export function findElement(doc: Document, tagName: string, platform?: string): 
 export function findElements(doc: Document, tagName: string): Element[] {
 	const elements: Element[] = [];
 	const root = doc.documentElement;
-	let child = root.firstChild;
+	let child = root?.firstChild;
 
 	while (child) {
 		if (child.nodeType === xml.ELEMENT_NODE) {
@@ -73,7 +73,7 @@ export function findElements(doc: Document, tagName: string): Element[] {
  */
 export function detectIndentation(doc: Document): string {
 	const root = doc.documentElement;
-	let child = root.firstChild;
+	let child = root?.firstChild;
 
 	while (child) {
 		if (child.nodeType === 3) {
@@ -123,6 +123,10 @@ export function createElement(
 	platform?: string
 ): Element {
 	const root = doc.documentElement;
+	if (!root) {
+		throw new Error('Document root element not found');
+	}
+
 	const indent = detectIndentation(doc);
 
 	// Add whitespace before new element
@@ -160,7 +164,7 @@ export function updateElement(elem: Element, value: any): void {
 	// Set new value
 	if (value !== undefined && value !== null) {
 		if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-			elem.appendChild(elem.ownerDocument.createTextNode(String(value)));
+			elem.appendChild(elem.ownerDocument!.createTextNode(String(value)));
 		}
 	}
 }
@@ -376,7 +380,9 @@ function readIOS(doc: Document): Record<string, unknown> | undefined {
 
 	const entElem = iosElem.getElementsByTagName('entitlements')[0];
 	if (entElem) {
-		const entRoot = entElem.firstElementChild ?? entElem.getElementsByTagName('dict')[0];
+		const entRoot =
+			(entElem as Element & { firstElementChild: Element | null }).firstElementChild ??
+			entElem.getElementsByTagName('dict')[0];
 		if (entRoot) {
 			result.entitlements = parsePlist<Record<string, unknown>>(
 				`<plist version="1.0">${entRoot.toString()}</plist>`
@@ -386,7 +392,9 @@ function readIOS(doc: Document): Record<string, unknown> | undefined {
 
 	const plistElem = iosElem.getElementsByTagName('plist')[0];
 	if (plistElem) {
-		const plistRoot = plistElem.firstElementChild ?? plistElem.getElementsByTagName('dict')[0];
+		const plistRoot =
+			(plistElem as Element & { firstElementChild: Element | null }).firstElementChild ??
+			plistElem.getElementsByTagName('dict')[0];
 		if (plistRoot) {
 			result.plist = parsePlist<Record<string, unknown>>(
 				`<plist version="1.0">${plistRoot.toString()}</plist>`
@@ -596,12 +604,11 @@ const SIMPLE_TAGS = [
  * Convert tiapp XML document to JSON object
  */
 export function tiappXmlToJson(doc: Document): TiappData {
-	const result: TiappData = {};
 	const root = doc.documentElement;
 
 	// Track which tags have platform variants
 	const platformTags = new Set<string>();
-	let child = root.firstChild;
+	let child = root?.firstChild;
 	while (child) {
 		if (child.nodeType === ELEMENT_NODE) {
 			const elem = child as Element;
@@ -613,7 +620,8 @@ export function tiappXmlToJson(doc: Document): TiappData {
 	}
 
 	// Process each direct child
-	child = root.firstChild;
+	const result: TiappData = {};
+	child = root?.firstChild;
 	while (child) {
 		if (child.nodeType === ELEMENT_NODE) {
 			const elem = child as Element;
@@ -748,6 +756,10 @@ function normalizePropertyValue(pv: unknown): { type: string; value: unknown } {
  */
 function writeProperties(doc: Document, properties: Record<string, unknown>): void {
 	const root = doc.documentElement;
+	if (!root) {
+		throw new Error('Document root element not found');
+	}
+
 	const indent = detectIndentation(doc);
 	const existing = findElements(doc, 'property');
 	const existingNames = new Set(existing.map((e) => e.getAttribute('name')).filter(Boolean));
@@ -792,8 +804,12 @@ function writeProperties(doc: Document, properties: Record<string, unknown>): vo
  * Write deployment targets to XML
  */
 function writeDeploymentTargets(doc: Document, targets: Record<string, boolean | string>): void {
-	const indent = detectIndentation(doc);
 	const root = doc.documentElement;
+	if (!root) {
+		throw new Error('Document root element not found');
+	}
+
+	const indent = detectIndentation(doc);
 	let container = findElement(doc, 'deployment-targets');
 	if (!container) {
 		root.appendChild(doc.createTextNode(`\n${indent}`));
@@ -828,8 +844,12 @@ function writeModules(
 		deployType?: string;
 	}>
 ): void {
-	const indent = detectIndentation(doc);
 	const root = doc.documentElement;
+	if (!root) {
+		throw new Error('Document root element not found');
+	}
+
+	const indent = detectIndentation(doc);
 	let container = findElement(doc, 'modules');
 	if (!container) {
 		root.appendChild(doc.createTextNode(`\n${indent}`));
@@ -866,8 +886,12 @@ function writePlugins(
 	doc: Document,
 	plugins: Array<{ id: string; version?: string | number }>
 ): void {
-	const existing = findElements(doc, 'plugin');
 	const root = doc.documentElement;
+	if (!root) {
+		throw new Error('Document root element not found');
+	}
+
+	const existing = findElements(doc, 'plugin');
 	const indent = detectIndentation(doc);
 
 	for (const p of existing) {
@@ -971,8 +995,12 @@ function insertPlistAsXml(
  * Write iOS config to XML
  */
 function writeIOS(doc: Document, ios: Record<string, unknown>): void {
-	const indent = detectIndentation(doc);
 	const root = doc.documentElement;
+	if (!root) {
+		throw new Error('Document root element not found');
+	}
+
+	const indent = detectIndentation(doc);
 	let iosElem = findElement(doc, 'ios');
 	if (!iosElem) {
 		const last = root.lastChild;

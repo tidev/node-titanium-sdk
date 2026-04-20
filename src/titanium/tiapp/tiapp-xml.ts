@@ -1,7 +1,7 @@
 import { isFile } from '../../util/is-file.js';
 import { mergeDeep } from '../../util/merge-deep.js';
 import { tiappXmlToJson, applyTiappJsonToXml, validateTiappData } from './tiapp-transform.js';
-import { DOMParser, type Options } from '@xmldom/xmldom';
+import { DOMParser, type DOMParserOptions, type Document } from '@xmldom/xmldom';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
@@ -11,7 +11,7 @@ declare module '@xmldom/xmldom' {
 	}
 }
 
-const defaultDOMParserArgs: Options = {
+const defaultDOMParserArgs: DOMParserOptions = {
 	errorHandler: () => {},
 };
 

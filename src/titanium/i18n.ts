@@ -69,15 +69,17 @@ export async function load(projectDir: string, opts: LoadOptions = {}): Promise<
 				}
 				const obj = strings[dest];
 				const dom = new DOMParser().parseFromString(await readFile(file, 'utf8'), 'text/xml');
-
-				xml.forEachElement(dom.documentElement, (elem) => {
-					if (elem.nodeType === xml.ELEMENT_NODE && elem.tagName === 'string') {
-						const name = xml.getAttrString(elem, 'name');
-						if (name !== null) {
-							obj[name] = xml.getValueString(elem);
+				const root = dom.documentElement;
+				if (root) {
+					xml.forEachElement(root, (elem) => {
+						if (elem.nodeType === xml.ELEMENT_NODE && elem.tagName === 'string') {
+							const name = xml.getAttrString(elem, 'name');
+							if (name !== null) {
+								obj[name] = xml.getValueString(elem);
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 		}
 	}

@@ -1,3 +1,5 @@
+import type { Element } from '@xmldom/xmldom';
+
 /**
  * @constant {Number} Node type constant for an element node.
  */
