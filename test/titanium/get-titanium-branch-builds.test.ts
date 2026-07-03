@@ -1,7 +1,34 @@
+import { config, resetConfig } from '../../src/config.js';
 import { getTitaniumBranchBuilds } from '../../src/titanium/index.js';
-import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { createServer, type Server } from 'node:http';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const branchBuildsJson = readFileSync(join(__dirname, 'branch-builds.json'));
 
 describe('getTitaniumBranchBuilds()', () => {
+	let server: Server;
+
+	beforeEach(async () => {
+		server = createServer((_req, res) => {
+			res.writeHead(200, { 'Content-Type': 'application/json' });
+			res.end(branchBuildsJson);
+		});
+
+		await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+
+		const { port } = server.address() as { port: number };
+		config.titanium.sdk.downloadURLs.branchBuilds = `http://127.0.0.1:${port}/\${branch}.json`;
+	});
+
+	afterEach(async () => {
+		await new Promise<void>((resolve) => server.close(() => resolve()));
+		resetConfig();
+	});
+
 	it('should return the list of builds for Linux', async () => {
 		const builds = await getTitaniumBranchBuilds('13_1_X', 'linux');
 		expect(builds).toBeDefined();
