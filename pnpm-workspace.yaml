@@ -1,0 +1,7 @@
+allowBuilds:
+  core-js: true
+  esbuild: true
+  lefthook: true
+minimumReleaseAgeExclude:
+  - snooplogg@9.0.0
+  - undici@8.6.0
