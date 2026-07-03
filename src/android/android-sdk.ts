@@ -7,7 +7,7 @@ import { tailgate } from '../util/tailgate.js';
 import { readPropertiesFile } from './util/read-properties-file.js';
 import { readdir } from 'node:fs/promises';
 import { join, relative } from 'node:path';
-import snooplogg from 'snooplogg';
+import { snooplogg } from 'snooplogg';
 
 const { log, warn } = snooplogg('android:sdk');
 

@@ -5,7 +5,7 @@ import { tailgate } from '../util/tailgate.js';
 import { JDK } from './jdk.js';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import snooplogg from 'snooplogg';
+import { snooplogg } from 'snooplogg';
 import which from 'which';
 
 const { warn } = snooplogg('jdk:detect');

@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process';
 import { realpath } from 'node:fs/promises';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import snooplogg from 'snooplogg';
+import { snooplogg } from 'snooplogg';
 
 const { log } = snooplogg('jdk');
 

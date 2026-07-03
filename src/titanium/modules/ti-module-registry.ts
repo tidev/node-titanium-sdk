@@ -1,6 +1,6 @@
 import * as version from '../../util/version.js';
 import type { TiModule, TiModuleManifest } from './types.js';
-import snooplogg from 'snooplogg';
+import { snooplogg } from 'snooplogg';
 
 const { log } = snooplogg('ti:module-registry');
 

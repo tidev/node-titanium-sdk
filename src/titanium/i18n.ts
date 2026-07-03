@@ -5,7 +5,7 @@ import * as xml from '../util/xml.js';
 import { DOMParser } from '@xmldom/xmldom';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import snooplogg from 'snooplogg';
+import { snooplogg } from 'snooplogg';
 
 const { debug } = snooplogg('titanium')('i18n');
 

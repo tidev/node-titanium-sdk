@@ -4,7 +4,7 @@ import { isFile } from './is-file.js';
 import fs from 'node:fs';
 import { mkdir, rm, symlink } from 'node:fs/promises';
 import { dirname } from 'node:path';
-import snooplogg from 'snooplogg';
+import { snooplogg } from 'snooplogg';
 import yauzl from 'yauzl';
 
 const { error, log } = snooplogg('extract-zip');

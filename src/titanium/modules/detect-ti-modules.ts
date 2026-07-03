@@ -4,7 +4,7 @@ import { TiModuleRegistry, platformAliases } from './ti-module-registry.js';
 import type { TiModuleManifest, TiModulePackageManifest } from './types.js';
 import { readdir, readFile, rm } from 'fs/promises';
 import { basename, dirname, join } from 'path';
-import snooplogg from 'snooplogg';
+import { snooplogg } from 'snooplogg';
 
 const { log, warn } = snooplogg('ti:modules');
 
