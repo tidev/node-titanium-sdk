@@ -1,14 +1,14 @@
 export class Issue extends Error {
 	id: string;
 	type: 'error' | 'warning';
-	details: string;
+	details?: string;
 
 	constructor(
 		message: string,
 		options: {
 			id: string;
 			type: 'error' | 'warning';
-			details: string;
+			details?: string;
 		}
 	) {
 		super(message);
