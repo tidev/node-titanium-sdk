@@ -1,5 +1,5 @@
 import { config } from '../config.js';
-import type { ErrorWithCode } from '../types/index.js';
+import type { ErrorWithCode } from '../util/error.js';
 import { expand } from '../util/expand.js';
 import { isDir } from '../util/is-dir.js';
 import { isFile } from '../util/is-file.js';

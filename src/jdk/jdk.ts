@@ -1,4 +1,4 @@
-import type { ErrorWithCode } from '../types/index.js';
+import type { ErrorWithCode } from '../util/error.js';
 import { isDir } from '../util/is-dir.js';
 import { isFile } from '../util/is-file.js';
 import { execFile } from 'node:child_process';

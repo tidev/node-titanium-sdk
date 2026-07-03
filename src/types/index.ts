@@ -101,7 +101,3 @@ export interface Config {
 		};
 	};
 }
-
-export interface ErrorWithCode extends Error {
-	code: string;
-}
