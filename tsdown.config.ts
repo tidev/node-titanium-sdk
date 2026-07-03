@@ -8,7 +8,7 @@ const config: UserConfig = defineConfig({
 		'titanium/index': './src/titanium/index.ts',
 		'util/index': './src/util/index.ts',
 	},
-	format: ['es', 'cjs'],
+	format: ['es'],
 	platform: 'node',
 	tsconfig: './tsconfig.build.json',
 });

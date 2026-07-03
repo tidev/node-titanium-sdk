@@ -21,32 +21,33 @@
     "dist"
   ],
   "type": "module",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.js",
+      "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "default": "./dist/index.mjs"
     },
     "./android": {
-      "types": "./dist/android/index.d.js",
+      "types": "./dist/android/index.d.mts",
       "import": "./dist/android/index.mjs",
-      "require": "./dist/android/index.cjs"
+      "default": "./dist/android/index.mjs"
     },
     "./jdk": {
-      "types": "./dist/jdk/index.d.js",
+      "types": "./dist/jdk/index.d.mts",
       "import": "./dist/jdk/index.mjs",
-      "require": "./dist/jdk/index.cjs"
+      "default": "./dist/jdk/index.mjs"
     },
     "./titanium": {
-      "types": "./dist/titanium/index.d.js",
+      "types": "./dist/titanium/index.d.mts",
       "import": "./dist/titanium/index.mjs",
-      "require": "./dist/titanium/index.cjs"
+      "default": "./dist/titanium/index.mjs"
     },
     "./util": {
-      "types": "./dist/util/index.d.js",
+      "types": "./dist/util/index.d.mts",
       "import": "./dist/util/index.mjs",
-      "require": "./dist/util/index.cjs"
+      "default": "./dist/util/index.mjs"
     }
   },
   "scripts": {
