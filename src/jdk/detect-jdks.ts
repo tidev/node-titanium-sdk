@@ -103,7 +103,8 @@ export async function detectJDKs(
 			}
 		}
 
-		if (Object.keys(jdks).length === 0) {
+		const jdkCount = Object.keys(jdks).length;
+		if (jdkCount === 0) {
 			issues.push(
 				new Issue('No JDKs found', {
 					id: 'JDK_NOT_FOUND',
@@ -111,9 +112,9 @@ export async function detectJDKs(
 					details: `JDK (Java Development Kit) not found. The JDK is required for Titanium and must be manually downloaded and installed from __https://openjdk.org/__. If you already have installed the JDK, verify your __JAVA_HOME__ environment variable is correctly set.`,
 				})
 			);
-		}
-
-		if (Object.keys(jdks).length > 1 && defaultVersion === undefined) {
+		} else if (jdkCount === 1) {
+			defaultVersion = Object.keys(jdks)[0];
+		} else if (defaultVersion === undefined) {
 			issues.push(
 				new Issue('No default JDK set', {
 					id: 'JDK_DEFAULT_NOT_FOUND',
