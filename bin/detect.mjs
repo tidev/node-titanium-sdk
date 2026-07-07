@@ -1,5 +1,7 @@
+#!/usr/bin/env node
+
 import { detectAndroidSDKs, detectAndroidNDKs } from '../dist/android/index.mjs';
-import { detectJDKs } from '../dist/jdk.mjs';
+import { detectJDKs } from '../dist/jdk/index.mjs';
 import { detectTitaniumSDKs } from '../dist/titanium/index.mjs';
 
 const type = process.argv[2];
