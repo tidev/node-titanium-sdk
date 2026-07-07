@@ -1,5 +1,5 @@
 import { config } from '../config.js';
-import type { ErrorWithCode } from '../util/error.js';
+import { ErrorWithCode } from '../util/error.js';
 import { expand } from '../util/expand.js';
 import { isDir } from '../util/is-dir.js';
 import { isFile } from '../util/is-file.js';
@@ -82,11 +82,10 @@ export class AndroidNDK {
 
 		for (const name of Object.keys(executables)) {
 			if (!isFile(executables[name])) {
-				const err = new Error(
-					`Directory does not contain the "${name}" executable`
-				) as ErrorWithCode;
-				err.code = 'ANDROID_NDK_MISSING_EXECUTABLE';
-				throw err;
+				throw new ErrorWithCode(
+					`Directory does not contain the "${name}" executable`,
+					'ANDROID_NDK_MISSING_EXECUTABLE'
+				);
 			}
 		}
 

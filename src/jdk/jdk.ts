@@ -1,4 +1,4 @@
-import type { ErrorWithCode } from '../util/error.js';
+import { ErrorWithCode } from '../util/error.js';
 import { isDir } from '../util/is-dir.js';
 import { isFile } from '../util/is-file.js';
 import { execFile } from 'node:child_process';
@@ -91,9 +91,10 @@ export class JDK {
 				if (isFile(p)) {
 					executables[cmd] = await realpath(p);
 				} else {
-					const err = new Error(`Directory missing required program: ${p}`) as ErrorWithCode;
-					err.code = 'JDK_MISSING_REQUIRED_PROGRAM';
-					throw err;
+					throw new ErrorWithCode(
+						`Directory missing required program: ${p}`,
+						'JDK_MISSING_REQUIRED_PROGRAM'
+					);
 				}
 			})
 		);
