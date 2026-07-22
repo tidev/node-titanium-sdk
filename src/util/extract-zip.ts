@@ -35,20 +35,31 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 		throw new TypeError('Expected destination directory to be a non-empty string');
 	}
 
-	await new Promise((resolve, reject) => {
-		yauzl.open(zipFile, { lazyEntries: true }, (err, zipfile) => {
+	await new Promise<void>((resolve, reject) => {
+		yauzl.open(zipFile, { lazyEntries: true, autoClose: false }, (err, zipfile) => {
 			if (err) {
 				return reject(new Error(`Invalid zip file: ${err.message || err}`));
 			}
 
 			let idx = -1;
+			let settled = false;
 			const total = zipfile.entryCount;
-			const abort = (err) => {
-				zipfile.removeListener('end', resolve);
+
+			const finish = (err?: unknown) => {
+				if (settled) {
+					return;
+				}
+				settled = true;
 				zipfile.close();
-				error(err);
-				reject(err);
+				if (err) {
+					error(err);
+					reject(err);
+				} else {
+					resolve();
+				}
 			};
+
+			const abort = (err: unknown) => finish(err);
 
 			log(`Extracting: "${zipFile}" to "${dest}"`);
 
@@ -86,7 +97,7 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 								}
 
 								const chunks: Buffer[] = [];
-								const cleanupAndAbort = (err) => {
+								const cleanupAndAbort = (err: unknown) => {
 									readStream.removeAllListeners();
 									readStream.destroy();
 									abort(err);
@@ -135,7 +146,7 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 
 								log(`Extracting file: ${entry.fileName}`);
 								const writeStream = fs.createWriteStream(destFile, { mode });
-								const cleanupAndAbort = (err) => {
+								const cleanupAndAbort = (err: unknown) => {
 									readStream.removeAllListeners();
 									readStream.unpipe();
 									readStream.destroy();
@@ -151,11 +162,11 @@ export async function extractZip(zipFile: string, dest: string, opts?: ExtractZi
 							});
 						}
 					} catch (err) {
-						return abort(err);
+						abort(err);
 					}
 				})
-				.on('end', resolve)
-				.on('error', reject)
+				.on('end', finish)
+				.on('error', abort)
 				.readEntry();
 		});
 	});
