@@ -14,6 +14,7 @@
   <statusbar-hidden>false</statusbar-hidden>
   <guid>088dc83c-64af-4a81-b57c-7407649453f0</guid>
   <property name="ti.ui.defaultunit">system</property>
+  <encryption>ti.crypt</encryption>
   <android xmlns:android="http://schemas.android.com/apk/res/android" />
   <modules />
 </ti:app>

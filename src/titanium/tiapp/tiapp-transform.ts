@@ -581,23 +581,23 @@ function readWebpack(doc: Document): Record<string, unknown> | undefined {
  * Simple scalar tags at root level (with optional platform attribute)
  */
 const SIMPLE_TAGS = [
+	'copyright',
+	'description',
+	'encryption',
+	'fullscreen',
+	'guid',
+	'icon',
 	'id',
 	'name',
-	'version',
-	'publisher',
-	'url',
-	'description',
-	'copyright',
-	'icon',
-	'fullscreen',
 	'navbar-hidden',
-	'analytics',
-	'guid',
 	'persistent-wifi',
 	'prerendered-icon',
-	'statusbar-style',
-	'statusbar-hidden',
+	'publisher',
 	'sdk-version',
+	'statusbar-hidden',
+	'statusbar-style',
+	'version',
+	'url',
 ];
 
 /**
