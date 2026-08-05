@@ -578,6 +578,7 @@ describe('TiappXML', () => {
 				publisher: 'tester',
 				url: 'https://titaniumsdk.com',
 				description: 'not specified',
+				encryption: 'ti.crypt',
 				copyright: '2022 by tester',
 				icon: 'appicon.png',
 				persistentWifi: false,
