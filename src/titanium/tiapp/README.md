@@ -6,6 +6,7 @@ Supported tags:
   - abi
   - activities
   - manifest
+  - merge-module-maven-repositories
   - services
   - tool-api-level
 - copyright

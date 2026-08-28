@@ -508,6 +508,14 @@ function readAndroid(doc: Document): Record<string, unknown> | undefined {
 		result.abi = abiVal.includes(',') ? abiVal.split(',').map((s) => s.trim()) : abiVal;
 	}
 
+	const mergeModuleMavenRepositoriesElem = androidElem.getElementsByTagName(
+		'merge-module-maven-repositories'
+	)[0];
+	if (mergeModuleMavenRepositoriesElem) {
+		result.mergeModuleMavenRepositories =
+			xml.getValueString(mergeModuleMavenRepositoriesElem) === 'true';
+	}
+
 	const activitiesElem = androidElem.getElementsByTagName('activities')[0];
 	if (activitiesElem) {
 		const activities: Array<Record<string, unknown>> = [];

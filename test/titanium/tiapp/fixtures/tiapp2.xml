@@ -204,6 +204,7 @@
       </application>
     </manifest>
     <tool-api-level>10</tool-api-level>
+    <merge-module-maven-repositories>false</merge-module-maven-repositories>
     <abi>armeabi,armeabi-v7a,x86</abi> <!-- or "all" -->
     <activities>
       <activity url="activity.js" extra="foo" />

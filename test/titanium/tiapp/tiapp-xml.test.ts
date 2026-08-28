@@ -301,6 +301,7 @@ describe('TiappXML', () => {
 			expect(data.android!.abi).toBeDefined();
 			expect(Array.isArray(data.android!.abi)).toBe(true);
 			expect(data.android!.abi!.length).toBeGreaterThan(0);
+			expect(data.android!.mergeModuleMavenRepositories).toBe(false);
 		});
 
 		it('should read Android manifest', () => {
@@ -767,6 +768,7 @@ describe('TiappXML', () => {
 						},
 					],
 					abi: ['armeabi', 'armeabi-v7a', 'x86'],
+					mergeModuleMavenRepositories: false,
 					toolAPILevel: 10,
 				},
 				modules: [

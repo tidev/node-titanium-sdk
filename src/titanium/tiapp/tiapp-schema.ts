@@ -154,11 +154,12 @@ const AndroidActivityServiceSchema = z.union([
  */
 export const AndroidSchema = z
 	.object({
-		manifest: OptionalStringSchema,
-		toolAPILevel: NumberSchema.optional(),
 		abi: z.union([z.array(z.string()), z.string()]).optional(),
 		activities: AndroidActivityServiceSchema.optional(),
+		manifest: OptionalStringSchema,
+		mergeModuleMavenRepositories: BooleanSchema.optional(),
 		services: AndroidActivityServiceSchema.optional(),
+		toolAPILevel: NumberSchema.optional(),
 	})
 	.optional();
 
