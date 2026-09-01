@@ -9,6 +9,28 @@ import { snooplogg } from 'snooplogg';
 const { log, warn } = snooplogg('ti:modules');
 
 /**
+ * The `license` values the module scaffolding writes, which mean the author
+ * never filled one in.
+ *
+ * The SDK's module templates seed `Specify your license`, and nothing prompts
+ * anyone to replace it. Three modules under tidev have shipped releases with it
+ * still in place — `titanium-identity`, `titanium-onboarding` and
+ * `ti.previewinteraction` — and it reaches anywhere the manifest is surfaced.
+ */
+const PLACEHOLDER_LICENSES = new Set(['specify your license', 'your license here']);
+
+/**
+ * Whether a manifest's `license` is a scaffolding default rather than a licence.
+ *
+ * Exported so a packaging or release step can reject what this only warns about:
+ * failing an app build because a *dependency's* metadata is unfilled would
+ * punish the wrong person.
+ */
+export function isPlaceholderLicense(license: string | undefined): boolean {
+	return license !== undefined && PLACEHOLDER_LICENSES.has(license.trim().toLowerCase());
+}
+
+/**
  * Detects Titanium modules in the Titanium SDK install locations and user search paths, then
  * returns a registry of found modules.
  *
@@ -332,6 +354,12 @@ async function readManifest(manifestFile: string) {
 
 	if (!versionRegExp.test(manifest.version)) {
 		throw new Error(`Module manifest has invalid version: ${manifest.version}`);
+	}
+
+	if (isPlaceholderLicense(manifest.license)) {
+		warn(
+			`Module ${manifest.moduleid} declares the scaffolding placeholder as its license: "${manifest.license}" (${manifestFile})`
+		);
 	}
 
 	const platform = platformAliases[manifest.platform] || manifest.platform;
