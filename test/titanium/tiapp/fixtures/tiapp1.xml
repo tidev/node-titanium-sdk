@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ti:app xmlns:ti="http://ti.tidev.io">
+  <id>ti.testapp</id>
+  <name>testapp</name>
+  <version>1.0</version>
+  <publisher>tester</publisher>
+  <url>https://titaniumsdk.com</url>
+  <description>not specified</description>
+  <copyright>2022 by tester</copyright>
+  <icon>appicon.png</icon>
+  <persistent-wifi>false</persistent-wifi>
+  <prerendered-icon>false</prerendered-icon>
+  <statusbar-style>default</statusbar-style>
+  <statusbar-hidden>false</statusbar-hidden>
+  <guid>088dc83c-64af-4a81-b57c-7407649453f0</guid>
+  <property name="ti.ui.defaultunit">system</property>
+  <encryption>ti.crypt</encryption>
+  <android xmlns:android="http://schemas.android.com/apk/res/android" />
+  <modules />
+</ti:app>

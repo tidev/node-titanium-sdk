@@ -1,0 +1,59 @@
+# `tiapp.xml`
+
+Supported tags:
+
+- android
+  - abi
+  - activities
+  - manifest
+  - merge-module-maven-repositories
+  - services
+  - tool-api-level
+- copyright
+- default-lang
+- deployment-targets
+  - target
+- description
+- fullscreen
+- guid
+- icon
+- id
+- ios
+  - capabilities
+  - default-background-color
+  - enable-launch-screen-storyboard
+  - entitlements
+  - extensions
+  - log-server-port
+  - min-ios-ver
+  - plist
+  - team-id
+  - use-app-thinning
+  - use-autolayout
+  - use-jscore-framework
+  - use-new-build-system
+- modules
+  - module
+- name
+- navbar-hidden
+- override-permissions
+- persistent-wifi
+- prerendered-icon
+- properties
+  - android.javac.maxMemory
+  - ti.android.compilejs
+  - ti.android.debug
+  - ti.android.loadfromsdcard
+  - ti.deployType
+  - ti.facebook.appid
+  - ti.skipAppIdValidation
+  - ti.skipVersionValidation
+  - ti.ui.defaultunit
+  - transpile
+- publisher
+- sdk-version
+- source-maps
+- statusbar-hidden
+- statusbar-style
+- url
+- version

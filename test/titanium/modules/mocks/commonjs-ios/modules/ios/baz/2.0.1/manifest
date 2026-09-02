@@ -1,0 +1,16 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 1.0
+description: This is an ambiguous module that will conflict with a commonjs module
+author: Tester
+license: Apache Public License
+copyright: Copyright (c) 2022 by Your Company
+
+# these should not be edited
+name: baz
+moduleid: baz
+guid: 8d99922e-7727-4f64-90b9-325992eddb1c
+platform: iphone
+minsdk: 3.0

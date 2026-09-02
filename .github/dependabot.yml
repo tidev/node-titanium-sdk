@@ -1,7 +1,17 @@
 version: 2
 updates:
-- package-ecosystem: npm
-  directory: "/"
-  schedule:
-    interval: weekly
-  open-pull-requests-limit: 10 
+  - package-ecosystem: 'npm'
+    directory: '/'
+    labels:
+      - 'dependencies'
+    schedule:
+      interval: 'weekly'
+      day: 'thursday'
+      time: '02:34'
+    commit-message:
+      include: 'scope'
+      prefix: 'chore(deps): '
+    allow:
+      - dependency-type: 'all'
+    cooldown:
+      default-days: 2
