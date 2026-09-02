@@ -20,7 +20,8 @@ const { log, warn } = snooplogg('ti:modules');
 const PLACEHOLDER_LICENSES = new Set(['specify your license', 'your license here']);
 
 /**
- * Whether a manifest's `license` is a scaffolding default rather than a licence.
+ * Whether a manifest's `license` is one of the template defaults, meaning no
+ * licence was ever chosen.
  *
  * Exported so a packaging or release step can reject what this only warns about:
  * failing an app build because a *dependency's* metadata is unfilled would
@@ -358,7 +359,8 @@ async function readManifest(manifestFile: string) {
 
 	if (isPlaceholderLicense(manifest.license)) {
 		warn(
-			`Module ${manifest.moduleid} declares the scaffolding placeholder as its license: "${manifest.license}" (${manifestFile})`
+			`Module ${manifest.moduleid} has not set a license (${manifestFile}): ` +
+				`choose an SPDX license such as "Apache-2.0".`
 		);
 	}
 
